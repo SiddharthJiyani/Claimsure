@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Bell, Mail, Send, CheckCircle2 } from "lucide-react";
 import { apiFetch, appFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { notificationCaseHref } from "@/lib/notification-href";
 import { useNotifications } from "@/lib/use-workspace-data";
 import { useAuth } from "@/lib/auth-context";
 import { EmptyState } from "@/components/EmptyState";
@@ -88,26 +91,27 @@ export function NotificationList() {
                 <p className="mt-1 text-sm leading-6 text-muted">{item.message}</p>
                 <p className="mt-2 text-xs text-muted font-mono">{relativeTime(item.created_at)}</p>
               </div>
-
-              <div className="shrink-0 pt-1">
-                {!item.is_read ? (
-                  <button
-                    type="button"
-                    onClick={() => void markRead(item.id)}
-                    className="cs-btn cs-btn-ghost text-xs text-accent"
-                  >
-                    Mark read
-                  </button>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-xs text-muted">
-                    <CheckCircle2 size={12} /> Read
-                  </span>
-                )}
-              </div>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                {item.message}
+              </p>
+              <p className="mt-2 text-xs text-muted">
+                {relativeTime(item.created_at)}
+              </p>
             </div>
-          </li>
-        );
-      })}
+            {!item.is_read ? (
+              <button
+                type="button"
+                onClick={() => void markRead(item.id)}
+                className="shrink-0 text-xs text-accent"
+              >
+                Mark read
+              </button>
+            ) : (
+              <span className="shrink-0 text-xs text-muted">Read</span>
+            )}
+          </div>
+        </li>
+      ))}
     </ul>
   );
 }

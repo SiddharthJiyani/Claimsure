@@ -8,18 +8,20 @@ import { CaseTimeline } from "@/components/CaseTimeline";
 import { DocumentList } from "@/components/DocumentList";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { EvidencePanel } from "@/components/EvidencePanel";
+import { MissingDocumentsPanel } from "@/components/MissingDocumentsPanel";
 import { PatientAppealPanel } from "@/components/PatientAppealPanel";
 import { WorkspaceFrame } from "@/components/PageHeader";
 import { QueueSkeleton } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { appFetch } from "@/lib/api";
+import { appFetch, appUpload } from "@/lib/api";
+import { agentMissingLabels, unresolvedMissingLabels } from "@/lib/missing-evidence";
 import type { ClaimCase } from "@/lib/types";
 
 export default function PatientCasePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [claim, setClaim] = useState<ClaimCase | null>(null);
-  const [fileName, setFileName] = useState("");
+  const [extraFile, setExtraFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -40,19 +42,27 @@ export default function PatientCasePage() {
     void load();
   }, [params.id]);
 
-  async function upload(event: React.FormEvent) {
+  useEffect(() => {
+    if (claim?.status !== "ACTION_REQUIRED" && claim?.status !== "ANALYZING") {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      void load();
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [claim?.status, params.id]);
+
+  async function uploadExtra(event: React.FormEvent) {
     event.preventDefault();
-    if (!claim) return;
+    if (!claim || !extraFile) return;
     setBusy(true);
     try {
-      await appFetch(`/api/workspace/cases/${claim.id}/documents`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: fileName,
-          document_type: "clinical_note",
-        }),
-      });
-      setFileName("");
+      const form = new FormData();
+      form.set("file", extraFile);
+      form.set("name", extraFile.name);
+      form.set("document_type", "other");
+      await appUpload(`/api/workspace/cases/${claim.id}/documents`, form);
+      setExtraFile(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -93,6 +103,9 @@ export default function PatientCasePage() {
   }
 
   const denial = claim.denials?.[0];
+  const agentMissing = agentMissingLabels(claim.agent_state);
+  const needed = unresolvedMissingLabels(claim.documents, claim.agent_state);
+  const missingCount = needed.length;
   const logs = [...(claim.audit_logs ?? [])].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -137,6 +150,24 @@ export default function PatientCasePage() {
         <ErrorCallout message={error} onRetry={() => void load()} />
       ) : null}
 
+      {missingCount > 0 ? (
+        <section className="cs-panel rounded-2xl border border-warn/40 p-5">
+          <p className="cs-kicker text-warn">Action required</p>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            Healthcare asked for more records before they can finish this
+            claim. Upload each missing item below. They will see an alert as
+            soon as you respond.
+          </p>
+          {agentMissing.length ? (
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
+              {agentMissing.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="cs-panel rounded-2xl p-5">
         <p className="cs-kicker">What happened</p>
         <p className="mt-3 text-sm leading-6 text-muted">
@@ -154,33 +185,49 @@ export default function PatientCasePage() {
         <section className="cs-panel rounded-2xl p-5">
           <p className="cs-kicker">Evidence checklist</p>
           <div className="mt-4">
-            <EvidencePanel documents={claim.documents ?? []} />
+            <EvidencePanel
+              documents={claim.documents ?? []}
+              extraMissing={agentMissing}
+            />
           </div>
         </section>
         <section className="cs-panel rounded-2xl p-5">
-          <p className="cs-kicker">Upload a missing record</p>
-          <p className="mt-3 text-sm text-muted">
-            Files are stored as metadata for now. Uploading a missing note moves
-            the case back to analysis.
-          </p>
-          <form onSubmit={upload} className="mt-4 space-y-3">
+          <p className="cs-kicker">What you need to upload</p>
+          <div className="mt-4">
+            <MissingDocumentsPanel
+              caseId={claim.id}
+              documents={claim.documents ?? []}
+              requestedLabels={agentMissing}
+              onUploaded={() => void load()}
+            />
+          </div>
+          <form onSubmit={uploadExtra} className="mt-5 space-y-3 border-t border-border pt-4">
+            <p className="text-sm font-medium">Add another record</p>
+            <p className="text-xs text-muted">
+              Use this if healthcare asked for something that is not listed, or
+              to replace a file you already sent.
+            </p>
             <input
-              required
-              value={fileName}
-              onChange={(event) => setFileName(event.target.value)}
-              placeholder="Clinical note — Dr. Patel 2026-08-02"
+              type="file"
+              accept="image/jpeg,image/png,application/pdf"
+              onChange={(event) => setExtraFile(event.target.files?.[0] ?? null)}
               className="cs-input"
             />
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || !extraFile}
               className="cs-btn cs-btn-primary"
             >
-              {busy ? "Uploading…" : "Mark document uploaded"}
+              {busy ? "Uploading…" : "Upload additional file"}
             </button>
           </form>
           <div className="mt-5">
-            <DocumentList documents={claim.documents ?? []} />
+            <DocumentList
+              caseId={claim.id}
+              documents={claim.documents ?? []}
+              allowReplace
+              onChanged={() => void load()}
+            />
           </div>
         </section>
       </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { relativeTime } from "@/lib/format";
+import { unresolvedMissingLabels } from "@/lib/missing-evidence";
 import type { ClaimCase } from "@/lib/types";
 
 export function CaseQueueTable({
@@ -24,8 +25,10 @@ export function CaseQueueTable({
       </div>
       <ul>
         {cases.map((claim) => {
-          const missing =
-            claim.documents?.filter((doc) => doc.is_missing).length ?? 0;
+          const missing = unresolvedMissingLabels(
+            claim.documents,
+            claim.agent_state,
+          ).length;
           return (
             <li
               key={claim.id}

@@ -5,10 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { apiFetch, appFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { notificationCaseHref } from "@/lib/notification-href";
 import type { NotificationItem } from "@/lib/types";
 
 export function NotificationBell() {
   const pathname = usePathname();
+  const { profile } = useAuth();
   const inboxHref = pathname.startsWith("/insurance")
     ? "/insurance/notifications"
     : "/patient/notifications";
@@ -35,6 +38,10 @@ export function NotificationBell() {
 
   useEffect(() => {
     void load();
+    const timer = window.setInterval(() => {
+      void load();
+    }, 12000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const unread = items.filter((item) => !item.is_read).length;
@@ -92,13 +99,10 @@ export function NotificationBell() {
                 No notifications yet.
               </li>
             ) : (
-              items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => void markRead(item.id)}
-                    className="w-full px-3 py-3 text-left hover:bg-surface-2"
-                  >
+              items.map((item) => {
+                const href = notificationCaseHref(profile?.role, item.case_id);
+                const inner = (
+                  <>
                     <p className="text-sm font-medium">{item.title}</p>
                     <p className="mt-1 text-xs leading-5 text-muted">
                       {item.message}
@@ -106,9 +110,33 @@ export function NotificationBell() {
                     {!item.is_read ? (
                       <p className="mt-1 text-[11px] text-accent">Unread</p>
                     ) : null}
-                  </button>
-                </li>
-              ))
+                  </>
+                );
+                return (
+                  <li key={item.id}>
+                    {href ? (
+                      <Link
+                        href={href}
+                        onClick={() => {
+                          setOpen(false);
+                          if (!item.is_read) void markRead(item.id);
+                        }}
+                        className="block w-full px-3 py-3 text-left hover:bg-surface-2"
+                      >
+                        {inner}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void markRead(item.id)}
+                        className="w-full px-3 py-3 text-left hover:bg-surface-2"
+                      >
+                        {inner}
+                      </button>
+                    )}
+                  </li>
+                );
+              })
             )}
           </ul>
         </div>

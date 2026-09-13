@@ -11,6 +11,7 @@ import { QueueSkeleton, StatCard } from "@/components/StatCard";
 import { appFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { dayGreeting, displayName } from "@/lib/format";
+import { claimNeedsPatientAction } from "@/lib/missing-evidence";
 import { useCases } from "@/lib/use-workspace-data";
 
 export default function PatientDashboardPage() {
@@ -43,9 +44,8 @@ export default function PatientDashboardPage() {
       open: casesList.filter(
         (claim) => !["RESOLVED", "CLOSED"].includes(claim?.status),
       ).length,
-      action: casesList.filter((claim) => claim?.status === "ACTION_REQUIRED")
-        .length,
-      resolved: casesList.filter((claim) => claim?.status === "RESOLVED").length,
+      action: cases.filter((claim) => claimNeedsPatientAction(claim)).length,
+      resolved: cases.filter((claim) => claim.status === "RESOLVED").length,
     }),
     [casesList],
   );
