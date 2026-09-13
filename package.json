@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "start": "concurrently \"npm run start:client\" \"npm run start:server\" \"npm run start:ai\"",
-    "start:client": "cd client && pnpm dev",
-    "start:server": "cd server && pnpm dev",
-    "start:ai": "cd ai-server && source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    "start:client": "npm run dev --prefix client",
+    "start:server": "npm run dev --prefix server",
+    "setup:ai": "python3 -m venv ai-server/.venv && ai-server/.venv/bin/pip install -r ai-server/requirements.txt",
+    "start:ai": "cd ai-server && (test -x .venv/bin/python || python3 -m venv .venv) && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
   },
   "dependencies": {
     "googleapis": "^180.0.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
-  }
+  },
+  "packageManager": "pnpm@12.4.1+sha512.2e81e399d73fe8390dab25e06aa788ab7a5908248d2f5a370f82b481147a6a7a367bf8048f9a6fdb6460f21a66f0542dedb8b94ca2c8723596741920b1656d4c"
 }

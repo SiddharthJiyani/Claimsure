@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProfile, getSessionUser } from "@/lib/auth";
+import { createCaseReviewEvent } from "@/lib/google-calendar";
+import { appendCaseRow } from "@/lib/google-sheets";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const CASE_LIST_SELECT =
@@ -171,7 +173,57 @@ export async function POST(request: Request) {
       sent_at: new Date().toISOString(),
     });
 
-    return NextResponse.json({ case: data }, { status: 201 });
+    const patientName = profile.full_name?.trim() || user.email || "";
+    const driveUrl = typeof body.drive_url === "string" ? body.drive_url : "";
+
+    let sheetsError: string | null = null;
+    try {
+      await appendCaseRow({
+        case_number: data.case_number,
+        status: data.status,
+        service_type: data.service_type,
+        service_code: data.service_code,
+        patient_id: data.patient_id,
+        insurer_org_id: data.insurer_org_id,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        patient_name: patientName,
+        disease,
+        claim_purpose: purpose,
+        drive_url: driveUrl,
+      });
+    } catch (err) {
+      sheetsError = err instanceof Error ? err.message : "Sheets sync failed";
+      console.error("[google-sheets]", sheetsError);
+    }
+
+    let calendar:
+      | { event_id: string; html_link: string | null; start_date: string }
+      | null = null;
+    let calendarError: string | null = null;
+    try {
+      calendar = await createCaseReviewEvent({
+        caseNumber: data.case_number,
+        patientName,
+        serviceType: data.service_type,
+        disease,
+        claimPurpose: purpose,
+        driveUrl,
+      });
+    } catch (err) {
+      calendarError =
+        err instanceof Error ? err.message : "Calendar event failed";
+    }
+
+    return NextResponse.json(
+      {
+        case: data,
+        sheets_error: sheetsError,
+        calendar,
+        calendar_error: calendarError,
+      },
+      { status: 201 },
+    );
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Could not create claim";

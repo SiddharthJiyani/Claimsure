@@ -4,6 +4,8 @@ from typing import Dict, Any, Optional
 from app.agents.state import CaseState
 from app.agents.graph import ClaimsureAgentGraph
 from app.services.document_parser import DocumentParser
+from app.services.google_calendar import create_case_review_event
+from app.services.google_sheets import upsert_case_row
 
 def sanitize_input(val: Optional[str]) -> Optional[str]:
     if val is None:
@@ -44,7 +46,10 @@ class DenialWorkflow:
         )
 
         final_state = self.graph.run(state)
-        return final_state.model_dump()
+        result = final_state.model_dump()
+        result["sheets_error"] = upsert_case_row(result)
+        result["calendar_error"] = create_case_review_event(result)
+        return result
 
     def process_file_upload(
         self,
@@ -112,6 +117,8 @@ class DenialWorkflow:
         final_state = self.graph.run(state)
         result = final_state.model_dump()
         result["extracted_text_preview"] = extracted_text[:400]
+        result["sheets_error"] = upsert_case_row(result)
+        result["calendar_error"] = create_case_review_event(result)
         return result
 
     def verify_evidence_update(

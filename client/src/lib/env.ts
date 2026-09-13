@@ -34,6 +34,14 @@ export function googleDriveRootFolderId() {
   return process.env.GOOGLE_DRIVE_FOLDER_ID ?? "";
 }
 
+export function googleSheetsId() {
+  return process.env.GOOGLE_SHEETS_ID ?? "";
+}
+
+export function googleCalendarId() {
+  return process.env.GOOGLE_CALENDAR_ID ?? "";
+}
+
 export function googleOAuth() {
   return {
     clientId: process.env.GOOGLE_OAUTH_CLIENT_ID ?? "",

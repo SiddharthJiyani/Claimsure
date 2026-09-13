@@ -1,16 +1,14 @@
 /**
  * Google Sheets service — mirrors case state to a shared spreadsheet.
- * The sheet acts as a live dashboard visible to judges during the demo.
- * Row format: [CaseNumber, Status, PatientId, InsurerOrg, ServiceType, UpdatedAt]
  */
 
-import { google, type sheets_v4 } from 'googleapis';
-import { env } from '../config/env.js';
-import { logger } from '../lib/logger.js';
-import type { Case } from '../types/index.js';
-import { getGoogleAuth } from './google-auth.js';
+import { google, type sheets_v4 } from "googleapis";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
+import type { Case } from "../types/index.js";
+import { getGoogleAuth } from "./google-auth.js";
 
-const SHEET_NAME = "Cases";
+const PREFERRED_TAB = "Cases";
 const HEADER_ROW = [
   "Case Number",
   "Status",
@@ -20,14 +18,30 @@ const HEADER_ROW = [
   "Insurer Org ID",
   "Created At",
   "Updated At",
+  "Patient Name",
+  "Disease",
+  "Claim Purpose",
+  "Drive URL",
 ];
+const LAST_COL = "L";
 
-function getSheetsClient(): sheets_v4.Sheets {
-  const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
-  return google.sheets({ version: 'v4', auth });
+export type CaseSheetExtras = {
+  patient_name?: string;
+  disease?: string;
+  claim_purpose?: string;
+  drive_url?: string;
+};
+
+function quotedTab(name: string) {
+  return `'${name.replace(/'/g, "''")}'`;
 }
 
-function caseToRow(c: Case): string[] {
+function getSheetsClient(): sheets_v4.Sheets {
+  const auth = getGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return google.sheets({ version: "v4", auth });
+}
+
+function caseToRow(c: Case, extras: CaseSheetExtras = {}): string[] {
   return [
     c.case_number,
     c.status,
@@ -37,139 +51,108 @@ function caseToRow(c: Case): string[] {
     c.insurer_org_id,
     c.created_at,
     c.updated_at,
+    extras.patient_name ?? "",
+    extras.disease ?? c.payer_id ?? "",
+    extras.claim_purpose ?? "",
+    extras.drive_url ?? "",
   ];
 }
 
-async function ensureCaseSheet(sheets: sheets_v4.Sheets): Promise<void> {
-  if (!env.GOOGLE_SHEETS_ID) return;
-
+async function resolveSheetName(sheets: sheets_v4.Sheets): Promise<string> {
   const spreadsheet = await sheets.spreadsheets.get({
     spreadsheetId: env.GOOGLE_SHEETS_ID,
-    fields: 'sheets(properties(title))',
+    fields: "sheets(properties(title))",
   });
-
-  const sheetExists = (spreadsheet.data.sheets ?? []).some(
-    (sheet) => sheet.properties?.title === SHEET_NAME,
-  );
-
-  if (!sheetExists) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: env.GOOGLE_SHEETS_ID,
-      requestBody: {
-        requests: [
-          {
-            addSheet: {
-              properties: {
-                title: SHEET_NAME,
-              },
-            },
-          },
-        ],
-      },
-    });
-    logger.info('Sheets tab created', { sheetName: SHEET_NAME });
-  }
+  const titles = (spreadsheet.data.sheets ?? [])
+    .map((sheet) => sheet.properties?.title)
+    .filter((title): title is string => Boolean(title));
+  return titles.includes(PREFERRED_TAB) ? PREFERRED_TAB : titles[0] ?? PREFERRED_TAB;
 }
 
-export async function ensureHeaderRow(): Promise<void> {
-  if (env.DRY_RUN || !env.GOOGLE_SHEETS_ID) return;
+export async function ensureHeaderRow(): Promise<string> {
+  if (env.DRY_RUN || !env.GOOGLE_SHEETS_ID) return PREFERRED_TAB;
 
-  try {
-    const sheets = getSheetsClient();
-    await ensureCaseSheet(sheets);
-
-    const res = await sheets.spreadsheets.values.get({
+  const sheets = getSheetsClient();
+  const sheetName = await resolveSheetName(sheets);
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: env.GOOGLE_SHEETS_ID,
+    range: `${quotedTab(sheetName)}!A1:${LAST_COL}1`,
+  });
+  const firstRow = res.data.values?.[0] ?? [];
+  const empty = firstRow.every((cell) => !String(cell ?? "").trim());
+  if (empty) {
+    await sheets.spreadsheets.values.update({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
-      range: `${SHEET_NAME}!A1:H1`,
+      range: `${quotedTab(sheetName)}!A1:${LAST_COL}1`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: [HEADER_ROW] },
     });
-
-    const firstRow = res.data.values?.[0] ?? [];
-    const hasExpectedHeader = HEADER_ROW.every((header, index) => firstRow[index] === header);
-
-    if (!hasExpectedHeader) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: env.GOOGLE_SHEETS_ID,
-        range: `${SHEET_NAME}!A1:H1`,
-        valueInputOption: 'RAW',
-        requestBody: { values: [HEADER_ROW] },
-      });
-    }
-  } catch (err) {
-    logger.warn('Failed to ensure Sheets header row', { err });
-    throw err;
   }
+  return sheetName;
 }
 
-export async function appendCaseRow(caseData: Case): Promise<void> {
+export async function appendCaseRow(
+  caseData: Case,
+  extras: CaseSheetExtras = {},
+): Promise<void> {
   if (env.DRY_RUN) {
-    logger.debug("DRY_RUN: appendCaseRow", {
-      caseNumber: caseData.case_number,
-    });
+    logger.debug("DRY_RUN: appendCaseRow", { caseNumber: caseData.case_number });
     return;
   }
 
   if (!env.GOOGLE_SHEETS_ID) {
-    logger.warn("GOOGLE_SHEETS_ID not configured, skipping Sheets update");
-    return;
+    throw new Error("GOOGLE_SHEETS_ID is not configured");
   }
 
-  try {
-    const sheets = getSheetsClient();
-    await ensureHeaderRow();
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: env.GOOGLE_SHEETS_ID,
-      range: `${SHEET_NAME}!A:H`,
-      valueInputOption: "RAW",
-      requestBody: { values: [caseToRow(caseData)] },
-    });
-    logger.info("Sheets row appended", { caseNumber: caseData.case_number });
-  } catch (err) {
-    logger.error('Sheets append failed', err);
-    throw err;
+  const sheets = getSheetsClient();
+  const sheetName = await ensureHeaderRow();
+  const result = await sheets.spreadsheets.values.append({
+    spreadsheetId: env.GOOGLE_SHEETS_ID,
+    range: `${quotedTab(sheetName)}!A:${LAST_COL}`,
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [caseToRow(caseData, extras)] },
+  });
+  if (!result.data.updates?.updatedRows) {
+    throw new Error("Google Sheets accepted the request but wrote 0 rows.");
   }
+  logger.info("Sheets row appended", {
+    caseNumber: caseData.case_number,
+    sheetName,
+    range: result.data.updates.updatedRange,
+  });
 }
 
-export async function updateCaseRow(caseData: Case): Promise<void> {
+export async function updateCaseRow(
+  caseData: Case,
+  extras: CaseSheetExtras = {},
+): Promise<void> {
   if (env.DRY_RUN) {
-    logger.debug("DRY_RUN: updateCaseRow", {
-      caseNumber: caseData.case_number,
-    });
+    logger.debug("DRY_RUN: updateCaseRow", { caseNumber: caseData.case_number });
     return;
   }
 
   if (!env.GOOGLE_SHEETS_ID) return;
 
-  try {
-    const sheets = getSheetsClient();
-    await ensureHeaderRow();
+  const sheets = getSheetsClient();
+  const sheetName = await ensureHeaderRow();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: env.GOOGLE_SHEETS_ID,
+    range: `${quotedTab(sheetName)}!A:A`,
+  });
+  const rows = res.data.values ?? [];
+  const rowIndex = rows.findIndex((row) => row[0] === caseData.case_number);
 
-    // Find the row with matching case number (column A)
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: env.GOOGLE_SHEETS_ID,
-      range: `${SHEET_NAME}!A:A`,
-    });
-
-    const rows = res.data.values ?? [];
-    const rowIndex = rows.findIndex((row) => row[0] === caseData.case_number);
-
-    if (rowIndex === -1) {
-      // Row not found — append instead
-      await appendCaseRow(caseData);
-      return;
-    }
-
-    const range = `${SHEET_NAME}!A${rowIndex + 1}:H${rowIndex + 1}`;
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: env.GOOGLE_SHEETS_ID,
-      range,
-      valueInputOption: "RAW",
-      requestBody: { values: [caseToRow(caseData)] },
-    });
-
-    logger.info("Sheets row updated", { caseNumber: caseData.case_number });
-  } catch (err) {
-    logger.error('Sheets update failed', err);
-    throw err;
+  if (rowIndex === -1) {
+    await appendCaseRow(caseData, extras);
+    return;
   }
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: env.GOOGLE_SHEETS_ID,
+    range: `${quotedTab(sheetName)}!A${rowIndex + 1}:${LAST_COL}${rowIndex + 1}`,
+    valueInputOption: "USER_ENTERED",
+    requestBody: { values: [caseToRow(caseData, extras)] },
+  });
+  logger.info("Sheets row updated", { caseNumber: caseData.case_number, sheetName });
 }

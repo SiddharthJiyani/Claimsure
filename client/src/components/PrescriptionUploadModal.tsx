@@ -90,7 +90,10 @@ export function PrescriptionUploadModal({
     setCreating(true);
     setError(null);
     try {
-      await appFetch("/api/workspace/cases", {
+      const created = await appFetch<{
+        sheets_error?: string | null;
+        calendar_error?: string | null;
+      }>("/api/workspace/cases", {
         method: "POST",
         body: JSON.stringify({
           service_type: draft.service_type.trim(),
@@ -104,6 +107,9 @@ export function PrescriptionUploadModal({
         }),
       });
       await onCreated();
+      if (created.sheets_error) {
+        throw new Error(`Claim saved, but Sheets sync failed: ${created.sheets_error}`);
+      }
       close();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create claim");
