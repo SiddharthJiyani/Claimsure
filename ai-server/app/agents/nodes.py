@@ -225,8 +225,12 @@ class AgentNodes:
 
         else:
             # Generic / Unlisted check
-            if any(term in raw_context for term in ["biohacking", "longevity", "whole body"]):
-                missing.append("Documented symptoms, medical diagnosis, or covered clinical indication")
+            if any(term in raw_context for term in [
+                "biohacking", "longevity", "whole body", "holistic",
+                "rejuvenation", "elective", "unproven", "wellness",
+                "high-dose intravenous", "iv vitamin", "vitamin c",
+            ]):
+                missing.append("Evidence of a covered, medically necessary indication under the payer policy")
             elif not state.policy_requirements or "09999" in sc:
                 missing.append("Recognized clinical guideline and approved FDA indication")
             else:
@@ -253,10 +257,15 @@ class AgentNodes:
 
         # CODE-ENFORCED SAFETY BOUNDARY (100% safety recall target)
         # 1. Experimental / non-covered techniques
-        if any(kw in all_text for kw in ["upright mri", "positional", "unlisted experimental", "biohacking", "longevity", "whole body"]):
+        if any(kw in all_text for kw in [
+            "upright mri", "positional", "unlisted experimental", "biohacking",
+            "longevity", "whole body", "holistic", "rejuvenation", "elective",
+            "unproven", "wellness", "high-dose intravenous", "iv vitamin",
+            "vitamin c",
+        ]):
             state.route = "abstain"
             state.safety_escalation = True
-            state.safety_reason = "Code-enforced constraint: Experimental or non-covered indication requires physician review"
+            state.safety_reason = "Code-enforced constraint: Elective, unproven, wellness, or experimental service requires physician review"
             state.status = "ESCALATED"
             state.record_node("route", f"Abstained & Escalated: {state.safety_reason}", {"route": "abstain"})
             return state
@@ -280,6 +289,17 @@ class AgentNodes:
             return state
 
         # 4. Missing policy coverage
+        if not re.match(r"^CPT-\d{4,5}[A-Z]?$", state.service_code.upper()):
+            state.route = "abstain"
+            state.safety_escalation = True
+            state.safety_reason = (
+                "Code-enforced constraint: The submitted code is not a recognized CPT procedure code; "
+                "coverage requires manual clinical review."
+            )
+            state.status = "ESCALATED"
+            state.record_node("route", f"Abstained & Escalated: {state.safety_reason}", {"route": "abstain"})
+            return state
+
         if not state.policy_requirements or state.confidence < 0.25:
             state.route = "abstain"
             state.safety_escalation = True
@@ -447,17 +467,28 @@ Claimsure Autonomous Recovery Agent
 
     # Node 9: verify (Agent checks its own work / closes the loop)
     def verify(self, state: CaseState) -> CaseState:
+        if state.safety_escalation or state.route == "abstain":
+            state.verified = False
+            state.status = "ESCALATED"
+            state.verification_notes = state.safety_reason or "Automated approval was blocked by a safety rule."
+            state.record_node(
+                node_name="verify",
+                summary="Verification blocked: safety escalation remains unresolved",
+                details={"verified": False, "notes": state.verification_notes},
+            )
+            return state
+
         # Re-evaluates evidence gap
         self.compute_gap(state)
 
         if len(state.missing_evidence) == 0:
             state.verified = True
-            state.status = "RESOLVED"
-            state.verification_notes = "Verification confirmed: All required clinical criteria satisfied and verified against policy."
+            state.status = "AWAITING_REVIEW"
+            state.verification_notes = "Verification confirmed: All required clinical criteria satisfied and verified against policy. Recommended for approval by Insurance Provider."
         else:
             state.verified = False
             state.status = "ACTION_REQUIRED"
-            state.verification_notes = f"Verification failed: {len(state.missing_evidence)} required clinical items remain unverified."
+            state.verification_notes = f"Verification incomplete: {len(state.missing_evidence)} required clinical items remain unverified."
 
         state.record_node(
             node_name="verify",

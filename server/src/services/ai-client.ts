@@ -23,6 +23,8 @@ export interface ProcessCaseResult {
   evidence_found: string[];
   evidence_missing: string[];
   route_decision: "automatable" | "human_review" | "abstain";
+  safety_escalation?: boolean;
+  safety_reason?: string;
   actions_taken: string[];
   audit_trail: Array<{
     node: string;
@@ -73,6 +75,8 @@ interface WorkflowProcessResponse {
     found_evidence?: string[];
     missing_evidence?: string[];
     route?: 'act' | 'await_human' | 'abstain';
+    safety_escalation?: boolean;
+    safety_reason?: string;
     actions_dispatched?: Array<{ app: string; action_type: string; status: string }>;
     node_trace?: Array<{
       node: string;
@@ -154,6 +158,10 @@ export async function processCase(
     evidence_found: state.found_evidence ?? [],
     evidence_missing: state.missing_evidence ?? [],
     route_decision: routeDecision,
+    ...(state.safety_escalation !== undefined
+      ? { safety_escalation: state.safety_escalation }
+      : {}),
+    ...(state.safety_reason ? { safety_reason: state.safety_reason } : {}),
     actions_taken: (state.actions_dispatched ?? []).map((action) =>
       `${action.app}:${action.action_type}:${action.status}`,
     ),

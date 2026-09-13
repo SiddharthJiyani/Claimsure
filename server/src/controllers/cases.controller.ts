@@ -291,23 +291,19 @@ export async function processCase(
           await ensureMissingDocuments(id, missing).catch(() => {});
         }
 
-        const finalStatus =
-          result.final_node === "resolved"
-            ? "RESOLVED"
-            : result.status === "ESCALATED" || result.final_node === "escalated"
-              ? "ESCALATED"
-              : missing.length
-                ? "ACTION_REQUIRED"
-              : result.status === "APPEAL_READY" || result.final_node === "assemble_appeal"
-                ? "APPEAL_READY"
-                : result.route_decision === "human_review" || result.status === "AWAITING_REVIEW"
-                  ? "AWAITING_REVIEW"
-                  : result.status &&
-                      ["AWAITING_REVIEW", "ACTION_REQUIRED", "ESCALATED", "APPEAL_READY", "RESOLVED"].includes(
-                        result.status,
-                      )
-                    ? (result.status as CaseStatus)
-                    : "AWAITING_REVIEW";
+        // The agent analyzes & verifies evidence, but NEVER auto-approves a claim.
+        // The Insurance Provider must make the final determination.
+        const finalStatus: CaseStatus =
+          result.status === "ESCALATED" ||
+          result.final_node === "escalated" ||
+          result.route_decision === "abstain" ||
+          result.safety_escalation === true
+            ? "ESCALATED"
+            : missing.length
+              ? "ACTION_REQUIRED"
+            : result.status === "APPEAL_READY"
+              ? "APPEAL_READY"
+            : "AWAITING_REVIEW";
 
         await updateCaseStatus(id, finalStatus).catch(() => {});
         sheetsService.updateCaseRow({ ...existing, status: finalStatus }).catch(() => {});
