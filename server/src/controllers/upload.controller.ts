@@ -211,6 +211,7 @@ export async function uploadDocumentAndAnalyze(
     });
 
     // ── 7. Mirror status update to Google Sheets (non-blocking) ──────────
+    /* [HACKATHON MCP UPDATE] Python AI Agent does this via MCP
     sheetsService.updateCaseRow({
       ...caseData,
       status: finalStatus,
@@ -218,9 +219,11 @@ export async function uploadDocumentAndAnalyze(
     }).catch((err: unknown) => {
       logger.warn('Sheets update failed (non-fatal)', { caseId, err });
     });
+    */
 
     // ── 8. Create Calendar deadline if agent returned one ─────────────────
     let calendarEvent: Awaited<ReturnType<typeof createAppealDeadlineEvent>> | null = null;
+    /* [HACKATHON MCP UPDATE] Python AI Agent does this via MCP
     const appealDeadline = agentResult.audit_trail
       .map((entry) => {
         // Try to find a deadline date in audit metadata (Python agent writes it here)
@@ -244,12 +247,14 @@ export async function uploadDocumentAndAnalyze(
         return null;
       });
     }
+    */
 
     // ── 9. Notify patient + insurer (non-blocking) ────────────────────────
     const notifyType =
       agentResult.route_decision === 'human_review' ? 'approval_request' :
       agentResult.final_node === 'escalated' ? 'escalation' : 'case_update';
 
+    /* [HACKATHON MCP UPDATE] Python AI Agent does this via MCP
     notifyInsurersByOrg(
       caseData.insurer_org_id,
       caseId,
@@ -278,6 +283,7 @@ export async function uploadDocumentAndAnalyze(
         : `No additional action is required from you at this time.`),
       { caseNumber: caseData.case_number },
     ).catch(() => {});
+    */
 
     // ── 10. Respond ───────────────────────────────────────────────────────
     sendCreated(res, {

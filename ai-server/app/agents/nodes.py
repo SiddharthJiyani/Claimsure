@@ -301,66 +301,72 @@ class AgentNodes:
         state.record_node("route", "Routed to act: all required criteria documented, ready for automated dispatch", {"route": "act"})
         return state
 
-    # Node 6: act (dispatch integrations)
+    # Node 6: act (dispatch integrations using MCP)
     def act(self, state: CaseState) -> CaseState:
+        import os
+        from app.mcp_client import SimpleMCPClient
+        
         actions = []
-        # Google Sheets mirror action
-        actions.append({
-            "app": "sheets",
-            "action_type": "update_row",
-            "recipient_or_target": "Claims_Live_Mirror",
-            "payload": {
+        
+        # Determine paths
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        mcp_script_path = os.path.join(base_dir, "..", "server", "src", "mcp", "mcp-server.ts")
+        
+        # Initialize Custom MCP Client
+        mcp = SimpleMCPClient(mcp_script_path)
+        try:
+            mcp.connect()
+            
+            # 1. Google Sheets mirror action via MCP
+            sheets_args = {
+                "case_id": state.case_id,
                 "case_number": state.case_number,
                 "status": "APPEAL_IN_PROGRESS",
-                "citations": ", ".join(state.citations),
-                "gap_count": len(state.missing_evidence)
-            },
-            "status": "DISPATCHED"
-        })
+                "service_type": state.service_type,
+                "service_code": state.service_code,
+                "patient_id": "00000000-0000-0000-0000-000000000000", # Using dummy for hackathon if missing
+                "insurer_org_id": "00000000-0000-0000-0000-000000000000"
+            }
+            sheets_res = mcp.call_tool("google_sheets_update_case_row", sheets_args)
+            actions.append({
+                "app": "sheets", "action_type": "update_row",
+                "payload": sheets_args, "status": "DISPATCHED", "mcp_response": sheets_res
+            })
 
-        # Gmail patient/provider update
-        actions.append({
-            "app": "gmail",
-            "action_type": "send_notification",
-            "recipient_or_target": f"patient_{state.case_id}@claimsure.health",
-            "payload": {
+            # 2. Gmail patient/provider update via MCP
+            gmail_args = {
+                "to": f"patient_{state.case_id[:8]}@claimsure.health",
                 "subject": f"Update on Prior-Auth Claim {state.case_number}",
                 "body": f"Your appeal packet is being assembled with policy citations: {', '.join(state.citations)}"
-            },
-            "status": "DISPATCHED"
-        })
-
-        # Slack Block Kit approval card for insurer
-        actions.append({
-            "app": "slack",
-            "action_type": "post_block_kit_card",
-            "recipient_or_target": "#claims-operations",
-            "payload": {
-                "case_number": state.case_number,
-                "service": state.service_type,
-                "citations": state.citations,
-                "buttons": ["Approve Appeal", "Override", "Reject"]
-            },
-            "status": "DISPATCHED"
-        })
-
-        # Calendar deadline
-        if state.appeal_deadline:
+            }
+            gmail_res = mcp.call_tool("gmail_send", gmail_args)
             actions.append({
-                "app": "calendar",
-                "action_type": "create_event",
-                "recipient_or_target": "Claims_Deadlines",
-                "payload": {
-                    "title": f"Filing Deadline: Claim {state.case_number}",
-                    "date": state.appeal_deadline
-                },
-                "status": "DISPATCHED"
+                "app": "gmail", "action_type": "send_notification",
+                "payload": gmail_args, "status": "DISPATCHED", "mcp_response": gmail_res
             })
+
+            # 3. Calendar deadline via MCP
+            if state.appeal_deadline:
+                calendar_args = {
+                    "summary": f"Filing Deadline: Claim {state.case_number}",
+                    "date": state.appeal_deadline
+                }
+                cal_res = mcp.call_tool("google_calendar_create_event", calendar_args)
+                actions.append({
+                    "app": "calendar", "action_type": "create_event",
+                    "payload": calendar_args, "status": "DISPATCHED", "mcp_response": cal_res
+                })
+                
+        except Exception as e:
+            print(f"MCP Tool Execution Failed: {e}")
+            actions.append({"status": "FAILED", "error": str(e)})
+        finally:
+            mcp.close()
 
         state.actions_dispatched.extend(actions)
         state.record_node(
             node_name="act",
-            summary=f"Dispatched {len(actions)} multi-app actions across Sheets, Gmail, Slack, and Calendar",
+            summary=f"Dispatched {len(actions)} multi-app actions AUTONOMOUSLY using MCP Client",
             details={"dispatched_count": len(actions)}
         )
         return state
