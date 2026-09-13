@@ -34,7 +34,9 @@ router.get("/", requireAuth, async (req, res, next) => {
     const scope = scopeFilter(user);
     const { data, error } = await getServiceClient()
       .from("cases")
-      .select("*, denials(id), documents(id, is_missing)")
+      .select(
+        "*, denials(id, denial_reason), documents(id, name, document_type, is_missing, created_at)",
+      )
       .eq(scope.column, scope.value)
       .order("updated_at", { ascending: false });
 

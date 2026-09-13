@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { AuthShell } from "@/components/AuthShell";
 import { GoogleButton } from "@/components/GoogleButton";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured, siteUrl } from "@/lib/env";
@@ -63,80 +64,71 @@ function LoginForm() {
   }
 
   return (
-    <div className="auth-grid grid min-h-full place-items-center px-4 py-10">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-surface p-8">
-        <p className="text-sm text-accent">Claimsure</p>
-        <h1 className="mt-1 text-2xl font-semibold">Sign in</h1>
-        <p className="mt-2 text-sm text-muted">
-          Patients and healthcare teams use the same door — your role routes the
-          rest.
+    <AuthShell
+      title="Sign in"
+      subtitle="One door for patients and healthcare teams. Your role opens the right workspace."
+    >
+      {!configured ? (
+        <p className="mb-4 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm text-warn">
+          Add your Supabase keys to{" "}
+          <span className="font-mono">client/.env.local</span>.
         </p>
-
-        {!configured ? (
-          <p className="mt-4 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm text-warn">
-            Add your Supabase URL and anon/publishable key to{" "}
-            <span className="font-mono">client/.env.local</span>.
-          </p>
-        ) : null}
-
-        <form onSubmit={onSubmit} className="mt-6 space-y-3">
-          <label className="block text-sm">
-            Email
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-          <label className="block text-sm">
-            Password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-          <div className="flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-xs text-muted hover:text-accent"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-          <button
-            type="submit"
-            disabled={busy || !configured}
-            className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-background disabled:opacity-60"
+      ) : null}
+      <form onSubmit={onSubmit} className="space-y-3">
+        <label className="block text-sm">
+          Email
+          <input
+            className="cs-input mt-1"
+            type="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </label>
+        <label className="block text-sm">
+          Password
+          <input
+            className="cs-input mt-1"
+            type="password"
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-muted hover:text-accent"
           >
-            {busy ? "Signing in…" : "Sign in with email"}
-          </button>
-        </form>
-
-        <div className="my-5 flex items-center gap-3 text-xs text-muted">
-          <span className="h-px flex-1 bg-border" />
-          or
-          <span className="h-px flex-1 bg-border" />
-        </div>
-        <GoogleButton
-          label="Continue with Google"
-          onClick={() => void onGoogle()}
-          disabled={!configured}
-        />
-
-        <p className="mt-6 text-center text-sm text-muted">
-          New here?{" "}
-          <Link href="/signup" className="text-accent hover:underline">
-            Create an account
+            Forgot password?
           </Link>
-        </p>
+        </div>
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        <button
+          type="submit"
+          disabled={busy || !configured}
+          className="cs-btn cs-btn-primary w-full"
+        >
+          {busy ? "Signing in…" : "Sign in with email"}
+        </button>
+      </form>
+      <div className="my-5 flex items-center gap-3 text-xs text-muted">
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
       </div>
-    </div>
+      <GoogleButton
+        label="Continue with Google"
+        onClick={() => void onGoogle()}
+        disabled={!configured}
+      />
+      <p className="mt-6 text-center text-sm text-muted">
+        New here?{" "}
+        <Link href="/signup" className="text-accent hover:underline">
+          Create an account
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
 

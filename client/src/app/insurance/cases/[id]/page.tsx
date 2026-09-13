@@ -71,7 +71,7 @@ export default function InsuranceCasePage() {
             type="button"
             disabled={busy}
             onClick={() => void trigger()}
-            className="inline-flex items-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-semibold text-background disabled:opacity-60"
+            className="cs-btn cs-btn-primary"
           >
             <Bot size={16} />
             {busy ? "Queuing…" : "Trigger AI agent"}
@@ -82,7 +82,7 @@ export default function InsuranceCasePage() {
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-3xl border border-border bg-surface p-5">
+        <section className="cs-panel rounded-3xl p-5">
           <h2 className="text-lg font-semibold">Denial</h2>
           <p className="mt-2 text-sm text-muted">
             {denial?.denial_reason ?? "No denial letter parsed yet."}
@@ -93,7 +93,7 @@ export default function InsuranceCasePage() {
             </p>
           ) : null}
         </section>
-        <section className="rounded-3xl border border-border bg-surface p-5">
+        <section className="cs-panel rounded-3xl p-5">
           <h2 className="text-lg font-semibold">Evidence</h2>
           <div className="mt-3">
             <EvidencePanel documents={claim.documents ?? []} />
@@ -101,7 +101,7 @@ export default function InsuranceCasePage() {
         </section>
       </div>
 
-      <section className="rounded-3xl border border-border bg-surface p-5">
+      <section className="cs-panel rounded-3xl p-5">
         <h2 className="text-lg font-semibold">Agent reasoning</h2>
         <div className="mt-3">
           <AgentTrace states={claim.agent_state ?? []} />
@@ -117,7 +117,7 @@ export default function InsuranceCasePage() {
         </p>
       )}
 
-      <section className="rounded-3xl border border-border bg-surface p-5">
+      <section className="cs-panel rounded-3xl p-5">
         <h2 className="text-lg font-semibold">Audit trail</h2>
         <div className="mt-4">
           <CaseTimeline logs={logs} />
