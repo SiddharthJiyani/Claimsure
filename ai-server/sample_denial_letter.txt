@@ -1,0 +1,25 @@
+PAYER A HEALTH PLAN - PRIOR AUTHORIZATION NOTICE OF ADVERSE DETERMINATION
+===========================================================================
+Date: August 28, 2026
+Member Name: Jessica Taylor
+Claim / Prior-Auth ID: R1007
+Requesting Physician: Dr. Robert Vance, MD (Orthopedics)
+Requested Procedure: CPT-72148 - Magnetic Resonance Imaging (MRI) Lumbar Spine without contrast
+
+DENIAL DETERMINATION:
+Your request for CPT-72148 has been DENIED.
+
+REASON FOR ADVERSE DETERMINATION (DENIAL CODE: CO-50):
+The submitted clinical documentation does not establish medical necessity under Payer A 
+Clinical Policy Bulletin POL-A-2026-DIAG (Clause 1.2). 
+
+Specific Deficiency Identified:
+1. Authorization requires documented completion of at least six (6) continuous weeks of 
+   conservative therapy (such as supervised physical therapy or rehabilitation). The record 
+   contains notes for only two (2) weeks of treatment.
+2. Prior standing plain lumbar spine radiographs (X-ray) were not included in the submission.
+
+APPEAL RIGHTS & DEADLINE:
+You have the right to appeal this adverse determination. Formal appeals must be submitted in 
+writing within sixty (60) calendar days of this notice (Appeal Deadline: October 27, 2026).
+Please submit full physical therapy attendance notes and recent lumbar X-ray reports.
