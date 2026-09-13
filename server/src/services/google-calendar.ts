@@ -31,6 +31,39 @@ export interface CreateEventInput {
   attendeeEmails?: string[];
 }
 
+function datePlusDays(days: number) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export async function createCaseReviewEvent(input: {
+  caseNumber: string;
+  patientName?: string;
+  serviceType?: string;
+  disease?: string;
+  claimPurpose?: string;
+  driveUrl?: string;
+  reviewInDays?: number;
+}): Promise<CalendarEvent> {
+  const startDate = datePlusDays(input.reviewInDays ?? 3);
+  return createAppealDeadlineEvent({
+    summary: `Claim review: ${input.caseNumber}`,
+    description: [
+      `Case: ${input.caseNumber}`,
+      input.patientName ? `Patient: ${input.patientName}` : "",
+      input.serviceType ? `Service: ${input.serviceType}` : "",
+      input.disease ? `Disease: ${input.disease}` : "",
+      input.claimPurpose ? `Purpose: ${input.claimPurpose}` : "",
+      input.driveUrl ? `Drive: ${input.driveUrl}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    startDate,
+    endDate: datePlusDays((input.reviewInDays ?? 3) + 1),
+  });
+}
+
 export async function createAppealDeadlineEvent(
   input: CreateEventInput,
 ): Promise<CalendarEvent> {

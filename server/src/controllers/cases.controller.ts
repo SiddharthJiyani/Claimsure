@@ -15,6 +15,7 @@ import { createAuditLog } from "../database/queries/audit.js";
 import { createDenialForCase } from "../database/queries/denials.js";
 import * as aiClient from "../services/ai-client.js";
 import * as sheetsService from "../services/google-sheets.js";
+import { createCaseReviewEvent } from "../services/google-calendar.js";
 import {
   notifyPatient,
   notifyInsurersByOrg,
@@ -140,8 +141,15 @@ export async function createNewCase(
       metadata: { created_by: user.email },
     });
 
-    // Mirror to Sheets (non-blocking)
-    sheetsService.appendCaseRow(newCase).catch(() => {});
+    // Mirror to Sheets and Calendar (non-blocking)
+    sheetsService.appendCaseRow(newCase).catch((err) => {
+      console.error("[google-sheets]", err instanceof Error ? err.message : err);
+    });
+    createCaseReviewEvent({
+      caseNumber: newCase.case_number,
+      serviceType: newCase.service_type,
+      disease: newCase.payer_id ?? undefined,
+    }).catch(() => {});
 
     // Notify patient
     notifyPatient(

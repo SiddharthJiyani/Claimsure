@@ -11,7 +11,7 @@ import { EvidencePanel } from "@/components/EvidencePanel";
 import { WorkspaceFrame } from "@/components/PageHeader";
 import { QueueSkeleton } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { apiFetch, appFetch } from "@/lib/api";
+import { appFetch } from "@/lib/api";
 import type { ClaimCase } from "@/lib/types";
 
 export default function PatientCasePage() {
@@ -28,14 +28,8 @@ export default function PatientCasePage() {
       );
       setClaim(data.case);
       setError(null);
-    } catch {
-      try {
-        const data = await apiFetch<{ case: ClaimCase }>(`/cases/${params.id}`);
-        setClaim(data.case);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not load case");
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load case");
     }
   }
 
@@ -48,10 +42,9 @@ export default function PatientCasePage() {
     if (!claim) return;
     setBusy(true);
     try {
-      await apiFetch("/documents", {
+      await appFetch(`/api/workspace/cases/${claim.id}/documents`, {
         method: "POST",
         body: JSON.stringify({
-          case_id: claim.id,
           name: fileName,
           document_type: "clinical_note",
         }),
