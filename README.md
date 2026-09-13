@@ -443,6 +443,18 @@ Railway / Render
 ```
 
 ---
+## 🖥️ Screenshot (References) 
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/fb3b71ca-42c3-4a66-ab66-ae4768b5af8d" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/98f7a2be-aa67-44ef-baf6-bc72e7735d21" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/ff6aa437-3254-4151-9247-67f24b35879f" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/ed84af47-81b9-4ac4-a938-0903b177efca" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/4a430504-8b10-447d-8d2a-bf89221713bb" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/5cf54eef-d16c-4388-bd8e-bb49a62ff475" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/372437bb-e040-4c49-a3ed-edc764cdb021" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/f944afba-0a4b-4cef-972e-a20f2d465bc1" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/137551cf-b048-4568-bb5e-19081de48196" />
+<img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/9bbaafbf-a863-454c-b4c9-9c657fed520d" />
+
 
 ## 🚧 Project Status
 
