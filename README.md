@@ -455,6 +455,14 @@ Railway / Render
 <img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/137551cf-b048-4568-bb5e-19081de48196" />
 <img width="2940" height="1662" alt="image" src="https://github.com/user-attachments/assets/9bbaafbf-a863-454c-b4c9-9c657fed520d" />
 
+Screenshots for Google Mail and Calender apps 
+<img width="1486" height="725" alt="Screenshot 2026-09-13 at 6 46 57 PM" src="https://github.com/user-attachments/assets/e573033c-8aa2-43c5-9432-6da5a0c68797" />
+<img width="1198" height="386" alt="Screenshot 2026-09-13 at 6 48 36 PM" src="https://github.com/user-attachments/assets/f876848e-d3ae-4371-a0fc-d06c11f20e2e" />
+<img width="1187" height="557" alt="Screenshot 2026-09-13 at 6 48 09 PM" src="https://github.com/user-attachments/assets/a681a589-a7ed-4277-a23e-7ce4284ec0ff" />
+<img width="1199" height="564" alt="Screenshot 2026-09-13 at 6 48 00 PM" src="https://github.com/user-attachments/assets/c76af7c8-1fb7-47ce-ab9a-ac92b5ef6672" />
+
+
+
 
 ## 🚧 Project Status
 
