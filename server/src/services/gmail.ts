@@ -4,18 +4,18 @@
  * or falls back to SMTP configuration if configured.
  */
 
-import { google } from 'googleapis';
-import { env } from '../config/env.js';
-import { logger } from '../lib/logger.js';
+import { google } from "googleapis";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
 
 function getGmailClient() {
   const auth = new google.auth.GoogleAuth({
     keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/gmail.send'],
+    scopes: ["https://www.googleapis.com/auth/gmail.send"],
     // For service account with domain-wide delegation:
     clientOptions: { subject: env.GMAIL_SENDER_EMAIL },
   });
-  return google.gmail({ version: 'v1', auth });
+  return google.gmail({ version: "v1", auth });
 }
 
 export interface SendEmailInput {
@@ -27,28 +27,33 @@ export interface SendEmailInput {
 }
 
 function buildRawEmail(input: SendEmailInput, from: string): string {
-  const toAddr = Array.isArray(input.to) ? input.to.join(', ') : input.to;
+  const toAddr = Array.isArray(input.to) ? input.to.join(", ") : input.to;
   const lines = [
     `From: Claimsure <${from}>`,
     `To: ${toAddr}`,
     `Subject: ${input.subject}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=utf-8',
-    '',
+    "MIME-Version: 1.0",
+    "Content-Type: text/html; charset=utf-8",
+    "",
     input.htmlBody,
   ];
-  return Buffer.from(lines.join('\r\n')).toString('base64url');
+  return Buffer.from(lines.join("\r\n")).toString("base64url");
 }
 
-export async function sendEmail(input: SendEmailInput): Promise<{ messageId: string }> {
+export async function sendEmail(
+  input: SendEmailInput,
+): Promise<{ messageId: string }> {
   if (env.DRY_RUN) {
-    logger.debug('DRY_RUN: sendEmail', { to: input.to, subject: input.subject });
-    return { messageId: 'DRY_RUN_MSG_ID' };
+    logger.debug("DRY_RUN: sendEmail", {
+      to: input.to,
+      subject: input.subject,
+    });
+    return { messageId: "DRY_RUN_MSG_ID" };
   }
 
   if (!env.GMAIL_SENDER_EMAIL || !env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    logger.warn('Gmail not configured, skipping email send');
-    return { messageId: 'NOT_CONFIGURED' };
+    logger.warn("Gmail not configured, skipping email send");
+    return { messageId: "NOT_CONFIGURED" };
   }
 
   try {
@@ -56,15 +61,15 @@ export async function sendEmail(input: SendEmailInput): Promise<{ messageId: str
     const raw = buildRawEmail(input, env.GMAIL_SENDER_EMAIL);
 
     const res = await gmail.users.messages.send({
-      userId: 'me',
+      userId: "me",
       requestBody: { raw },
     });
 
-    logger.info('Email sent', { to: input.to, messageId: res.data.id });
-    return { messageId: res.data.id ?? 'unknown' };
+    logger.info("Email sent", { to: input.to, messageId: res.data.id });
+    return { messageId: res.data.id ?? "unknown" };
   } catch (err) {
-    logger.error('Gmail send failed', err);
-    throw new Error('Failed to send email');
+    logger.error("Gmail send failed", err);
+    throw new Error("Failed to send email");
   }
 }
 
@@ -75,7 +80,7 @@ export function buildCaseUpdateEmail(params: {
   caseNumber: string;
   status: string;
   message: string;
-}): Pick<SendEmailInput, 'subject' | 'htmlBody'> {
+}): Pick<SendEmailInput, "subject" | "htmlBody"> {
   return {
     subject: `Claimsure Update: Case ${params.caseNumber} — ${params.status}`,
     htmlBody: `
@@ -99,8 +104,8 @@ export function buildActionRequiredEmail(params: {
   caseNumber: string;
   missingDocs: string[];
   deadline?: string;
-}): Pick<SendEmailInput, 'subject' | 'htmlBody'> {
-  const docList = params.missingDocs.map((d) => `<li>${d}</li>`).join('');
+}): Pick<SendEmailInput, "subject" | "htmlBody"> {
+  const docList = params.missingDocs.map((d) => `<li>${d}</li>`).join("");
   return {
     subject: `Action Required: Missing Documents for Case ${params.caseNumber}`,
     htmlBody: `
@@ -109,7 +114,7 @@ export function buildActionRequiredEmail(params: {
         <p>Hi ${params.patientName},</p>
         <p>The following documents are required to process your appeal for case <strong>${params.caseNumber}</strong>:</p>
         <ul>${docList}</ul>
-        ${params.deadline ? `<p><strong>Please submit by:</strong> ${params.deadline}</p>` : ''}
+        ${params.deadline ? `<p><strong>Please submit by:</strong> ${params.deadline}</p>` : ""}
         <p style="margin-top: 24px; color: #666; font-size: 12px;">
           This is an automated notification from Claimsure.
         </p>

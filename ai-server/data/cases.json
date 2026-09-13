@@ -33,7 +33,10 @@
     ],
     "expected_missing": [],
     "expected_route": "act",
-    "expected_citations": ["POL-A-2026-DIAG:Clause 1.2", "POL-A-2026-DIAG:Clause 1.4"],
+    "expected_citations": [
+      "POL-A-2026-DIAG:Clause 1.2",
+      "POL-A-2026-DIAG:Clause 1.4"
+    ],
     "is_safety_escalation": false,
     "golden_label": {
       "classification": "CONSERVATIVE_THERAPY_DOCUMENTED",
@@ -68,7 +71,10 @@
       "Prior plain lumbar radiograph (X-ray) report"
     ],
     "expected_route": "await_human",
-    "expected_citations": ["POL-A-2026-DIAG:Clause 1.2", "POL-A-2026-DIAG:Clause 1.4"],
+    "expected_citations": [
+      "POL-A-2026-DIAG:Clause 1.2",
+      "POL-A-2026-DIAG:Clause 1.4"
+    ],
     "is_safety_escalation": false,
     "golden_label": {
       "classification": "MISSING_CLINICAL_EVIDENCE",
@@ -139,7 +145,10 @@
     ],
     "expected_missing": [],
     "expected_route": "act",
-    "expected_citations": ["POL-A-2026-DIAG:Clause 2.2", "POL-A-2026-DIAG:Clause 2.3"],
+    "expected_citations": [
+      "POL-A-2026-DIAG:Clause 2.2",
+      "POL-A-2026-DIAG:Clause 2.3"
+    ],
     "is_safety_escalation": false,
     "golden_label": {
       "classification": "CRITERIA_SATISFIED",
@@ -168,9 +177,7 @@
       "Clause 2.2: 4 weeks conservative therapy",
       "Clause 2.3: Standing plain radiographs"
     ],
-    "expected_missing": [
-      "Standing 3-view plain radiographs report"
-    ],
+    "expected_missing": ["Standing 3-view plain radiographs report"],
     "expected_route": "await_human",
     "expected_citations": ["POL-A-2026-DIAG:Clause 2.3"],
     "is_safety_escalation": false,
@@ -326,7 +333,10 @@
     ],
     "expected_missing": [],
     "expected_route": "act",
-    "expected_citations": ["POL-B-2026-SPINE:Clause 1.2", "POL-B-2026-SPINE:Clause 1.4"],
+    "expected_citations": [
+      "POL-B-2026-SPINE:Clause 1.2",
+      "POL-B-2026-SPINE:Clause 1.4"
+    ],
     "is_safety_escalation": false,
     "golden_label": {
       "classification": "XRAY_DOCUMENTED_UPON_REVIEW",
@@ -362,7 +372,10 @@
     ],
     "expected_missing": [],
     "expected_route": "act",
-    "expected_citations": ["POL-A-2026-DIAG:Clause 3.2", "POL-A-2026-DIAG:Clause 3.3"],
+    "expected_citations": [
+      "POL-A-2026-DIAG:Clause 3.2",
+      "POL-A-2026-DIAG:Clause 3.3"
+    ],
     "is_safety_escalation": false,
     "golden_label": {
       "classification": "CONTRAINDICATION_DISPROVEN",
@@ -453,9 +466,7 @@
     "expected_requirements": [
       "Clause 1.4: Prior plain radiograph (X-ray) within 12 months"
     ],
-    "expected_missing": [
-      "Lumbar spine X-ray report within 12 months"
-    ],
+    "expected_missing": ["Lumbar spine X-ray report within 12 months"],
     "expected_route": "await_human",
     "expected_citations": ["POL-A-2026-DIAG:Clause 1.4"],
     "is_safety_escalation": false,
@@ -493,7 +504,10 @@
     ],
     "expected_missing": [],
     "expected_route": "act",
-    "expected_citations": ["POL-A-2026-DIAG:Clause 2.2", "POL-A-2026-DIAG:Clause 2.3"],
+    "expected_citations": [
+      "POL-A-2026-DIAG:Clause 2.2",
+      "POL-A-2026-DIAG:Clause 2.3"
+    ],
     "is_safety_escalation": false,
     "golden_label": {
       "classification": "CRITERIA_MET_UPON_RECITATION",

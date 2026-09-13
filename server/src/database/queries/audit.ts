@@ -3,8 +3,8 @@
  * NEVER delete or update rows — only INSERT.
  */
 
-import { supabase } from '../supabase.js';
-import type { AuditLog, ActorType, PolicyCitation } from '../../types/index.js';
+import { supabase } from "../supabase.js";
+import type { AuditLog, ActorType, PolicyCitation } from "../../types/index.js";
 
 export interface CreateAuditLogInput {
   case_id?: string;
@@ -23,8 +23,14 @@ export interface CreateAuditLogInput {
   metadata?: Record<string, unknown>;
 }
 
-export async function createAuditLog(input: CreateAuditLogInput): Promise<AuditLog> {
-  const { data, error } = await supabase.from('audit_logs').insert(input).select().single();
+export async function createAuditLog(
+  input: CreateAuditLogInput,
+): Promise<AuditLog> {
+  const { data, error } = await supabase
+    .from("audit_logs")
+    .insert(input)
+    .select()
+    .single();
 
   if (error) throw new Error(error.message);
   return data as AuditLog;
@@ -32,21 +38,23 @@ export async function createAuditLog(input: CreateAuditLogInput): Promise<AuditL
 
 export async function getAuditLogsByCase(caseId: string): Promise<AuditLog[]> {
   const { data, error } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('case_id', caseId)
-    .order('created_at', { ascending: true });
+    .from("audit_logs")
+    .select("*")
+    .eq("case_id", caseId)
+    .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
   return (data ?? []) as AuditLog[];
 }
 
-export async function getAuditLogsByActor(actorId: string): Promise<AuditLog[]> {
+export async function getAuditLogsByActor(
+  actorId: string,
+): Promise<AuditLog[]> {
   const { data, error } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('actor_id', actorId)
-    .order('created_at', { ascending: false });
+    .from("audit_logs")
+    .select("*")
+    .eq("actor_id", actorId)
+    .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
   return (data ?? []) as AuditLog[];

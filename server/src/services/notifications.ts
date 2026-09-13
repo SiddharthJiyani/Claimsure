@@ -4,16 +4,16 @@
  * Services and controllers call this; it decides what to send where.
  */
 
-import { createNotification } from '../database/queries/notifications.js';
-import { getProfileById } from '../database/queries/profiles.js';
-import * as gmailService from './gmail.js';
-import * as slackService from './slack.js';
-import { env } from '../config/env.js';
-import { logger } from '../lib/logger.js';
-import type { NotificationType } from '../types/index.js';
+import { createNotification } from "../database/queries/notifications.js";
+import { getProfileById } from "../database/queries/profiles.js";
+import * as gmailService from "./gmail.js";
+import * as slackService from "./slack.js";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
+import type { NotificationType } from "../types/index.js";
 
 export interface NotifyParams {
-  userId: string;           // recipient user
+  userId: string; // recipient user
   caseId?: string;
   type: NotificationType;
   title: string;
@@ -44,16 +44,16 @@ export async function notify(params: NotifyParams): Promise<void> {
       type,
       title,
       message,
-      channel: 'in_app',
+      channel: "in_app",
     });
   } catch (err) {
-    logger.error('Failed to create in-app notification', err);
+    logger.error("Failed to create in-app notification", err);
   }
 
   // Get user's role to decide channels
-  let role: string = 'patient';
-  let email: string = '';
-  let fullName: string = '';
+  let role: string = "patient";
+  let email: string = "";
+  let fullName: string = "";
 
   try {
     const profile = await getProfileById(userId);
@@ -61,23 +61,23 @@ export async function notify(params: NotifyParams): Promise<void> {
     email = profile.email;
     fullName = profile.full_name;
   } catch (err) {
-    logger.warn('Could not load profile for notification routing', { userId });
+    logger.warn("Could not load profile for notification routing", { userId });
   }
 
   // ─── Email Channel ───────────────────────────────────────────────────────
   const emailEvents: NotificationType[] = [
-    'case_update',
-    'action_required',
-    'appeal_submitted',
-    'case_resolved',
+    "case_update",
+    "action_required",
+    "appeal_submitted",
+    "case_resolved",
   ];
 
   if (emailEvents.includes(type) && email) {
     try {
-      if (type === 'action_required' && metadata.missingDocs) {
+      if (type === "action_required" && metadata.missingDocs) {
         const template = gmailService.buildActionRequiredEmail({
           patientName: fullName,
-          caseNumber: metadata.caseNumber ?? '',
+          caseNumber: metadata.caseNumber ?? "",
           missingDocs: metadata.missingDocs,
           deadline: metadata.deadline,
         });
@@ -85,7 +85,7 @@ export async function notify(params: NotifyParams): Promise<void> {
       } else {
         const template = gmailService.buildCaseUpdateEmail({
           patientName: fullName,
-          caseNumber: metadata.caseNumber ?? '',
+          caseNumber: metadata.caseNumber ?? "",
           status: type.toUpperCase(),
           message,
         });
@@ -98,33 +98,36 @@ export async function notify(params: NotifyParams): Promise<void> {
         type,
         title,
         message,
-        channel: 'email',
+        channel: "email",
       });
     } catch (err) {
-      logger.error('Email notification failed', err);
+      logger.error("Email notification failed", err);
     }
   }
 
   // ─── Slack Channel ────────────────────────────────────────────────────────
   // Slack is for insurance_provider only (approval requests, escalations)
-  const slackInsuranceEvents: NotificationType[] = ['approval_request', 'escalation'];
+  const slackInsuranceEvents: NotificationType[] = [
+    "approval_request",
+    "escalation",
+  ];
 
-  if (role === 'insurance_provider' && slackInsuranceEvents.includes(type)) {
+  if (role === "insurance_provider" && slackInsuranceEvents.includes(type)) {
     try {
-      if (type === 'approval_request' && metadata.caseNumber && caseId) {
+      if (type === "approval_request" && metadata.caseNumber && caseId) {
         await slackService.sendApprovalRequest({
           caseId,
           caseNumber: metadata.caseNumber,
-          serviceType: metadata.serviceType ?? '',
-          denialReason: metadata.denialReason ?? '',
+          serviceType: metadata.serviceType ?? "",
+          denialReason: metadata.denialReason ?? "",
           agentSummary: metadata.agentSummary ?? message,
           confidence: metadata.confidence ?? 0,
         });
-      } else if (type === 'escalation' && metadata.caseNumber && caseId) {
+      } else if (type === "escalation" && metadata.caseNumber && caseId) {
         await slackService.sendEscalationAlert({
           caseId,
           caseNumber: metadata.caseNumber,
-          serviceType: metadata.serviceType ?? '',
+          serviceType: metadata.serviceType ?? "",
           reason: message,
         });
       }
@@ -135,14 +138,14 @@ export async function notify(params: NotifyParams): Promise<void> {
         type,
         title,
         message,
-        channel: 'slack',
+        channel: "slack",
       });
     } catch (err) {
-      logger.error('Slack notification failed', err);
+      logger.error("Slack notification failed", err);
     }
   }
 
-  logger.info('Notification dispatched', { userId, type, caseId });
+  logger.info("Notification dispatched", { userId, type, caseId });
 }
 
 /**
@@ -154,7 +157,7 @@ export async function notifyPatient(
   type: NotificationType,
   title: string,
   message: string,
-  metadata?: NotifyParams['metadata'],
+  metadata?: NotifyParams["metadata"],
 ): Promise<void> {
   return notify({ userId: patientId, caseId, type, title, message, metadata });
 }
@@ -169,14 +172,14 @@ export async function notifyInsurersByOrg(
   type: NotificationType,
   title: string,
   message: string,
-  metadata?: NotifyParams['metadata'],
+  metadata?: NotifyParams["metadata"],
 ): Promise<void> {
   // Only fetch users from DB — no hardcoded IDs
-  const { getProfilesByOrg } = await import('../database/queries/profiles.js');
+  const { getProfilesByOrg } = await import("../database/queries/profiles.js");
 
   try {
     const profiles = await getProfilesByOrg(orgId);
-    const insurers = profiles.filter((p) => p.role === 'insurance_provider');
+    const insurers = profiles.filter((p) => p.role === "insurance_provider");
 
     await Promise.allSettled(
       insurers.map((p) =>
@@ -184,7 +187,7 @@ export async function notifyInsurersByOrg(
       ),
     );
   } catch (err) {
-    logger.error('Failed to notify insurers by org', err, { orgId });
+    logger.error("Failed to notify insurers by org", err, { orgId });
   }
 }
 

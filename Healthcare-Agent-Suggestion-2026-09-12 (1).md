@@ -2,13 +2,13 @@
 
 > **ContextCarrier Export** — Attach this file to a new chat to continue your conversation.
 
-| Field | Value |
-|-------|-------|
-| **Source** | ChatGPT |
-| **Date** | 12/09/2026, 18:36:39 |
-| **Export Mode** | Last 5 Messages |
-| **Total Messages** | 5 |
-| **Exported Messages** | 5 |
+| Field                 | Value                |
+| --------------------- | -------------------- |
+| **Source**            | ChatGPT              |
+| **Date**              | 12/09/2026, 18:36:39 |
+| **Export Mode**       | Last 5 Messages      |
+| **Total Messages**    | 5                    |
+| **Exported Messages** | 5                    |
 
 ---
 
@@ -28,7 +28,7 @@ You are being provided with exported context from a previous conversation that r
 
 Yes — if you want this to stand out, I would **move away from the obvious “AI doctor/chatbot” idea**.
 
-The best opportunities are in healthcare problems where there is a lot of **coordination, documentation, fragmented information, and repetitive decision-making**. That is where an AI agent can actually *take actions*, not just answer questions.
+The best opportunities are in healthcare problems where there is a lot of **coordination, documentation, fragmented information, and repetitive decision-making**. That is where an AI agent can actually _take actions_, not just answer questions.
 
 Recent healthcare literature and physician surveys specifically point to administrative burden, prior authorization, care coordination, documentation, and patient communication as high-value AI opportunities. [PubMed+1](https://pubmed.ncbi.nlm.nih.gov/41055647/?utm_source=chatgpt.com)
 
@@ -596,15 +596,15 @@ This is a **very good AI-agent project** because you can measure:
 
 If I were actually doing this assignment, I'd rank them:
 
-| Rank | Agent | Uniqueness | Real-world value | Technical depth |
-| --- | --- | --- | --- | --- |
-| 🥇 | Insurance Denial & Appeal Agent | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| 🥈 | Referral Failure Recovery Agent | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| 🥉 | Clinical Trial Recruitment Agent | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| 4 | Healthcare Information Reconciliation Agent | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| 5 | Discharge Gap Detector | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| 6 | Appointment Recovery Agent | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| 7 | Patient Follow-Up Agent | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Rank | Agent                                       | Uniqueness | Real-world value | Technical depth |
+| ---- | ------------------------------------------- | ---------- | ---------------- | --------------- |
+| 🥇   | Insurance Denial & Appeal Agent             | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐      |
+| 🥈   | Referral Failure Recovery Agent             | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐      |
+| 🥉   | Clinical Trial Recruitment Agent            | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐      |
+| 4    | Healthcare Information Reconciliation Agent | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐         | ⭐⭐⭐⭐⭐      |
+| 5    | Discharge Gap Detector                      | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐       | ⭐⭐⭐⭐        |
+| 6    | Appointment Recovery Agent                  | ⭐⭐⭐⭐   | ⭐⭐⭐⭐         | ⭐⭐⭐⭐        |
+| 7    | Patient Follow-Up Agent                     | ⭐⭐⭐     | ⭐⭐⭐⭐⭐       | ⭐⭐⭐⭐        |
 
 ---
 
@@ -1125,20 +1125,20 @@ This gives you **explainability + traceability**, which is particularly valuable
 
 # Your final tech stack could therefore look like
 
-| Component | Technology |
-| --- | --- |
-| Agent | LLM + agent framework |
-| Frontend | Streamlit |
-| Documents | Google Drive |
-| Structured data | Google Sheets |
-| Communication | Gmail |
-| Scheduling | Google Calendar |
-| Team escalation | Slack |
-| Patient input | Google Forms |
-| Vector search | FAISS / Chroma |
-| Audit logs | SQLite / PostgreSQL |
-| Authentication | OAuth |
-| Data | Synthetic/de-identified |
+| Component       | Technology              |
+| --------------- | ----------------------- |
+| Agent           | LLM + agent framework   |
+| Frontend        | Streamlit               |
+| Documents       | Google Drive            |
+| Structured data | Google Sheets           |
+| Communication   | Gmail                   |
+| Scheduling      | Google Calendar         |
+| Team escalation | Slack                   |
+| Patient input   | Google Forms            |
+| Vector search   | FAISS / Chroma          |
+| Audit logs      | SQLite / PostgreSQL     |
+| Authentication  | OAuth                   |
+| Data            | Synthetic/de-identified |
 
 You don't necessarily need **all** of these. For a hackathon, I'd target **5 external integrations**:
 
@@ -1266,11 +1266,11 @@ This becomes your **case management database**.
 
 Example:
 
-| Case | Service | Payer | Status | Denial | Next Action |
-| --- | --- | --- | --- | --- | --- |
-| R1001 | MRI | Payer A | Denied | Missing documentation | Retrieve MRI report |
-| R1002 | CT | Payer B | Pending | — | Monitor |
-| R1003 | Surgery | Payer A | Denied | Criteria not met | Human review |
+| Case  | Service | Payer   | Status  | Denial                | Next Action         |
+| ----- | ------- | ------- | ------- | --------------------- | ------------------- |
+| R1001 | MRI     | Payer A | Denied  | Missing documentation | Retrieve MRI report |
+| R1002 | CT      | Payer B | Pending | —                     | Monitor             |
+| R1003 | Surgery | Payer A | Denied  | Criteria not met      | Human review        |
 
 This is also extremely useful for your demo because the evaluator can see the agent changing the state.
 
@@ -1685,13 +1685,13 @@ Create a controlled test set.
 
 For example:
 
-| Case | Expected Reason | Agent Reason | Correct? |
-| --- | --- | --- | --- |
-| R001 | Missing document | Missing document | ✅ |
-| R002 | Wrong coding | Wrong coding | ✅ |
-| R003 | Prior authorization required | PA required | ✅ |
-| R004 | Incomplete clinical evidence | Incomplete evidence | ✅ |
-| R005 | Human review | Human review | ✅ |
+| Case | Expected Reason              | Agent Reason        | Correct? |
+| ---- | ---------------------------- | ------------------- | -------- |
+| R001 | Missing document             | Missing document    | ✅       |
+| R002 | Wrong coding                 | Wrong coding        | ✅       |
+| R003 | Prior authorization required | PA required         | ✅       |
+| R004 | Incomplete clinical evidence | Incomplete evidence | ✅       |
+| R005 | Human review                 | Human review        | ✅       |
 
 Then report:
 
@@ -1815,4 +1815,4 @@ If you give me the **hackathon name/rules/judging criteria**, I can help you opt
 
 ---
 
-*Exported with ContextCarrier on 2026-09-12*
+_Exported with ContextCarrier on 2026-09-12_

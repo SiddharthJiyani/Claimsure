@@ -4,22 +4,27 @@
  * Returns found evidence and flags missing items from a required list.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { getDocumentsByCase } from '../../database/queries/documents.js';
-import { searchFiles } from '../../services/google-drive.js';
-import { logger } from '../../lib/logger.js';
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { getDocumentsByCase } from "../../database/queries/documents.js";
+import { searchFiles } from "../../services/google-drive.js";
+import { logger } from "../../lib/logger.js";
 
 export function evidenceScanTool(server: McpServer): void {
   server.tool(
-    'evidence_scan',
-    'Scan available evidence for a case. Returns found documents and identifies missing required items.',
+    "evidence_scan",
+    "Scan available evidence for a case. Returns found documents and identifies missing required items.",
     {
-      case_id: z.string().uuid().describe('The UUID of the case to scan evidence for'),
+      case_id: z
+        .string()
+        .uuid()
+        .describe("The UUID of the case to scan evidence for"),
       required_document_types: z
         .array(z.string())
         .optional()
-        .describe('List of required document types to check for (e.g. ["clinical_note", "mri_report"])'),
+        .describe(
+          'List of required document types to check for (e.g. ["clinical_note", "mri_report"])',
+        ),
     },
     async ({ case_id, required_document_types }) => {
       try {
@@ -33,10 +38,12 @@ export function evidenceScanTool(server: McpServer): void {
         let gap: string[] = [];
         if (required_document_types && required_document_types.length > 0) {
           const foundTypes = new Set(found.map((d) => d.document_type));
-          gap = required_document_types.filter((t) => !foundTypes.has(t as never));
+          gap = required_document_types.filter(
+            (t) => !foundTypes.has(t as never),
+          );
         }
 
-        logger.debug('MCP evidence_scan completed', {
+        logger.debug("MCP evidence_scan completed", {
           case_id,
           found: found.length,
           missing: missing.length,
@@ -46,7 +53,7 @@ export function evidenceScanTool(server: McpServer): void {
         return {
           content: [
             {
-              type: 'text' as const,
+              type: "text" as const,
               text: JSON.stringify({
                 case_id,
                 evidence_found: found.map((d) => ({
@@ -68,12 +75,12 @@ export function evidenceScanTool(server: McpServer): void {
           ],
         };
       } catch (err) {
-        logger.error('MCP evidence_scan failed', err);
+        logger.error("MCP evidence_scan failed", err);
         return {
           content: [
             {
-              type: 'text' as const,
-              text: JSON.stringify({ error: 'Evidence scan failed', case_id }),
+              type: "text" as const,
+              text: JSON.stringify({ error: "Evidence scan failed", case_id }),
             },
           ],
           isError: true,

@@ -3,7 +3,7 @@
  * All API responses must go through these helpers for consistency.
  */
 
-import type { Response } from 'express';
+import type { Response } from "express";
 
 // ─── Response Envelope ────────────────────────────────────────────────────────
 
@@ -33,7 +33,11 @@ export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
 export function sendSuccess<T>(
   res: Response,
   data: T,
-  options?: { message?: string; statusCode?: number; meta?: Record<string, unknown> },
+  options?: {
+    message?: string;
+    statusCode?: number;
+    meta?: Record<string, unknown>;
+  },
 ): void {
   const { message, statusCode = 200, meta } = options ?? {};
   const body: ApiSuccess<T> = {

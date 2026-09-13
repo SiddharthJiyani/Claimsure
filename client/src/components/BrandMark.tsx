@@ -2,10 +2,12 @@ import Link from "next/link";
 
 export function BrandMark({
   href = "/",
+  name = "Claimsure",
   subtitle,
   compact = false,
 }: {
   href?: string;
+  name?: string;
   subtitle?: string;
   compact?: boolean;
 }) {
@@ -19,7 +21,7 @@ export function BrandMark({
       ) : (
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold text-foreground">
-            Claimsure
+            {name}
           </span>
           {subtitle ? (
             <span className="block truncate text-xs text-muted">

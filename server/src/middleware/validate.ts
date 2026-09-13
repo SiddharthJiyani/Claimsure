@@ -4,8 +4,8 @@
  *        validateQuery(myZodSchema) — validates req.query.
  */
 
-import type { Request, Response, NextFunction } from 'express';
-import { z, ZodError } from 'zod';
+import type { Request, Response, NextFunction } from "express";
+import { z, ZodError } from "zod";
 
 /**
  * validate — validates req.body against a Zod schema.
@@ -32,7 +32,9 @@ export function validate<T>(schema: z.ZodSchema<T>) {
 export function validateQuery<T>(schema: z.ZodSchema<T>) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
-      (req as Request & { parsedQuery: T }).parsedQuery = schema.parse(req.query);
+      (req as Request & { parsedQuery: T }).parsedQuery = schema.parse(
+        req.query,
+      );
       next();
     } catch (err) {
       next(err);
@@ -46,7 +48,9 @@ export function validateQuery<T>(schema: z.ZodSchema<T>) {
 export function validateParams<T>(schema: z.ZodSchema<T>) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
-      (req as Request & { parsedParams: T }).parsedParams = schema.parse(req.params);
+      (req as Request & { parsedParams: T }).parsedParams = schema.parse(
+        req.params,
+      );
       next();
     } catch (err) {
       next(err);
