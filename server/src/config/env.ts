@@ -51,6 +51,8 @@ const envSchema = z.object({
   SLACK_SIGNING_SECRET: z.string().optional(),
   SLACK_APP_TOKEN: z.string().optional(),
   SLACK_APPROVAL_CHANNEL_ID: z.string().optional(),
+  SLACK_WEBHOOK_URL: z.string().optional(),
+  SLACK_CHANNEL_NAME: z.string().optional(),
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),

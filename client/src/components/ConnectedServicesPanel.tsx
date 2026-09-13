@@ -3,6 +3,8 @@ import {
   googleSheetsUrl,
   googleCalendarUrl,
   googleDriveFolderUrl,
+  slackChannelName,
+  slackWorkspaceUrl,
 } from "@/lib/env";
 import type { ClaimCase } from "@/lib/types";
 import {
@@ -12,7 +14,7 @@ import {
   Cpu,
   ExternalLink,
   CheckCircle2,
-  RefreshCw,
+  Hash,
 } from "lucide-react";
 
 export function ConnectedServicesPanel({ claim }: { claim: ClaimCase }) {
@@ -38,10 +40,11 @@ export function ConnectedServicesPanel({ claim }: { claim: ClaimCase }) {
       </div>
 
       <p className="mt-2 text-xs text-muted leading-relaxed">
-        Claimsure is wired directly to your external enterprise tools. Every case transition automatically mirrors to Google Sheets, schedules deadlines on Google Calendar, stores files in Google Drive, and routes via Model Context Protocol (MCP).
+        Claimsure is wired directly to your workspace tools. Claim updates
+        sync to Google Sheets, Calendar, Drive, Slack, and MCP.
       </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {/* Google Sheets */}
         <div className="flex flex-col justify-between rounded-xl border border-border bg-surface-2 p-3.5">
           <div>
@@ -139,6 +142,41 @@ export function ConnectedServicesPanel({ claim }: { claim: ClaimCase }) {
             className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-amber-400 hover:text-amber-300"
           >
             View in Drive
+            <ExternalLink size={12} />
+          </a>
+        </div>
+
+        <div className="flex flex-col justify-between rounded-xl border border-border bg-surface-2 p-3.5">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-fuchsia-500">
+                <Hash size={16} />
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Slack
+                </span>
+              </div>
+              <span className="rounded bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-medium text-fuchsia-500">
+                Channel
+              </span>
+            </div>
+            <p className="mt-2 text-xs font-medium text-foreground">
+              #{slackChannelName()}
+            </p>
+            <p className="mt-1 text-[11px] text-muted">
+              Missing records, patient uploads, and coverage decisions post
+              here for the healthcare team.
+            </p>
+            <p className="mt-1 text-[11px] text-muted">
+              Case {claim.case_number} · {claim.status.replaceAll("_", " ")}
+            </p>
+          </div>
+          <a
+            href={slackWorkspaceUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-fuchsia-500 hover:text-foreground"
+          >
+            Open Slack
             <ExternalLink size={12} />
           </a>
         </div>

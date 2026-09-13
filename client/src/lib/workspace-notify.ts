@@ -1,4 +1,5 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
+import { postSlackChannelUpdate } from "@/lib/slack-channel";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -49,6 +50,11 @@ export async function notifyOrgProviders(
       }),
     ),
   );
+  await postSlackChannelUpdate({
+    title: input.title,
+    message: input.message,
+    event: input.type,
+  }).catch(() => {});
 }
 
 export { inferDocumentType } from "@/lib/missing-evidence";

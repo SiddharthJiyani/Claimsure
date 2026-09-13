@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   handleSlackInteraction,
+  sendSlackTest,
   webhookHealth,
 } from "../controllers/webhooks.controller.js";
 
@@ -14,6 +15,7 @@ const router: Router = Router();
  * Body: { payload: "<json string>" }
  */
 router.post("/slack", handleSlackInteraction);
+router.post("/slack/test", sendSlackTest);
 
 /**
  * GET /api/webhooks/health

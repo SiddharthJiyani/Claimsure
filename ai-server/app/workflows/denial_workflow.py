@@ -6,6 +6,7 @@ from app.agents.graph import ClaimsureAgentGraph
 from app.services.document_parser import DocumentParser
 from app.services.google_calendar import create_case_review_event
 from app.services.google_sheets import upsert_case_row
+from app.services.slack import post_channel_update
 
 def sanitize_input(val: Optional[str]) -> Optional[str]:
     if val is None:
@@ -49,6 +50,22 @@ class DenialWorkflow:
         result = final_state.model_dump()
         result["sheets_error"] = upsert_case_row(result)
         result["calendar_error"] = create_case_review_event(result)
+        if not is_dry_run:
+            missing = result.get("missing_evidence") or result.get("evidence_missing") or []
+            status = result.get("status") or result.get("route") or "updated"
+            result["slack_error"] = post_channel_update(
+                title=f"Agent update · {case_number}",
+                message=(
+                    f"Coverage review finished for {service_type}. Status: {status}."
+                    + (
+                        f" Still needed: {'; '.join(missing[:4])}."
+                        if missing
+                        else " No additional records flagged."
+                    )
+                ),
+                case_number=case_number,
+                event="agent_complete",
+            )
         return result
 
     def process_file_upload(

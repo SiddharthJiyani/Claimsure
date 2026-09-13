@@ -42,7 +42,9 @@ export interface NotifyParams {
  * notify — the main function. Creates in-app notification and dispatches
  * to email (Nodemailer SMTP) and/or Slack based on the event type.
  */
-export async function notify(params: NotifyParams): Promise<void> {
+export async function notify(
+  params: NotifyParams & { skipSlack?: boolean },
+): Promise<void> {
   const { userId, caseId, type, title, message, metadata = {} } = params;
 
   // Always create in-app notification
@@ -72,8 +74,6 @@ export async function notify(params: NotifyParams): Promise<void> {
   } catch (err) {
     logger.warn("Could not load profile for notification routing", { userId });
   }
-
-  if (!email) return;
 
   // ─── Email Dispatch ────────────────────────────────────────────────────────
 
@@ -182,38 +182,15 @@ export async function notify(params: NotifyParams): Promise<void> {
     logger.error("Email notification failed", err);
   }
 
-  // ─── Slack Channel (Insurance Providers only) ─────────────────────────────
-  const slackInsuranceEvents = ["approval_request", "escalation", "analysis_ready_for_insurer"];
-  if (role === "insurance_provider" && slackInsuranceEvents.includes(type)) {
-    try {
-      if ((type === "approval_request" || type === "analysis_ready_for_insurer") && metadata.caseNumber && caseId) {
-        await slackService.sendApprovalRequest({
-          caseId,
-          caseNumber: metadata.caseNumber,
-          serviceType: metadata.serviceType ?? "",
-          denialReason: metadata.denialReason ?? "",
-          agentSummary: metadata.agentSummary ?? message,
-          confidence: metadata.confidence ?? 0,
-        });
-      } else if (type === "escalation" && metadata.caseNumber && caseId) {
-        await slackService.sendEscalationAlert({
-          caseId,
-          caseNumber: metadata.caseNumber,
-          serviceType: metadata.serviceType ?? "",
-          reason: message,
-        });
-      }
-      await createNotification({
-        user_id: userId,
-        ...(caseId !== undefined ? { case_id: caseId } : {}),
-        type: (type as NotificationType) ?? "case_update",
-        title,
-        message,
-        channel: "slack",
-      });
-    } catch (err) {
-      logger.error("Slack notification failed", err);
-    }
+  if (!params.skipSlack) {
+    await postSlackForEvent({
+      userId,
+      caseId,
+      type,
+      title,
+      message,
+      metadata,
+    });
   }
 
   logger.info("Notification dispatched", { userId, type, caseId });
@@ -248,11 +225,102 @@ export async function notifyInsurersByOrg(
   try {
     const profiles = await getProfilesByOrg(orgId);
     const insurers = profiles.filter((p) => p.role === "insurance_provider");
+    await postSlackForEvent({
+      userId: insurers[0]?.id ?? orgId,
+      caseId,
+      type,
+      title,
+      message,
+      metadata: metadata ?? {},
+    });
     await Promise.allSettled(
-      insurers.map((p) => notify({ userId: p.id, caseId, type, title, message, ...(metadata !== undefined ? { metadata } : {}) })),
+      insurers.map((p) =>
+        notify({
+          userId: p.id,
+          caseId,
+          type,
+          title,
+          message,
+          skipSlack: true,
+          ...(metadata !== undefined ? { metadata } : {}),
+        }),
+      ),
     );
   } catch (err) {
     logger.error("Failed to notify insurers by org", err, { orgId });
+  }
+}
+
+const SLACK_EVENTS = new Set([
+  "approval_request",
+  "escalation",
+  "analysis_ready_for_insurer",
+  "action_required",
+  "case_update",
+  "claim_decision",
+  "appeal_received_by_insurer",
+  "appeal_submitted",
+]);
+
+async function postSlackForEvent(input: {
+  userId: string;
+  caseId?: string;
+  type: NotifyParams["type"];
+  title: string;
+  message: string;
+  metadata: NonNullable<NotifyParams["metadata"]>;
+}) {
+  if (!SLACK_EVENTS.has(input.type)) return;
+  try {
+    if (
+      (input.type === "approval_request" ||
+        input.type === "analysis_ready_for_insurer") &&
+      input.metadata.caseNumber &&
+      input.caseId &&
+      slackService.isSlackConfigured() &&
+      env.SLACK_BOT_TOKEN?.startsWith("xoxb-") &&
+      env.SLACK_SIGNING_SECRET
+    ) {
+      await slackService.sendApprovalRequest({
+        caseId: input.caseId,
+        caseNumber: input.metadata.caseNumber,
+        serviceType: input.metadata.serviceType ?? "",
+        denialReason: input.metadata.denialReason ?? "",
+        agentSummary: input.metadata.agentSummary ?? input.message,
+        confidence: input.metadata.confidence ?? 0,
+      });
+    } else if (
+      input.type === "escalation" &&
+      input.metadata.caseNumber &&
+      input.caseId &&
+      env.SLACK_BOT_TOKEN?.startsWith("xoxb-")
+    ) {
+      await slackService.sendEscalationAlert({
+        caseId: input.caseId,
+        caseNumber: input.metadata.caseNumber,
+        serviceType: input.metadata.serviceType ?? "",
+        reason: input.message,
+      });
+    } else {
+      await slackService.sendChannelUpdate({
+        title: input.title,
+        message: input.message,
+        caseNumber: input.metadata.caseNumber,
+        serviceType: input.metadata.serviceType,
+        event: input.type,
+      });
+    }
+
+    await createNotification({
+      user_id: input.userId,
+      ...(input.caseId !== undefined ? { case_id: input.caseId } : {}),
+      type: (input.type as NotificationType) ?? "case_update",
+      title: input.title,
+      message: input.message,
+      channel: "slack",
+    });
+  } catch (err) {
+    logger.error("Slack notification failed", err);
   }
 }
 

@@ -30,6 +30,14 @@ export function aiServerUrl() {
   ).replace(/\/$/, "");
 }
 
+export function slackChannelName() {
+  return process.env.NEXT_PUBLIC_SLACK_CHANNEL_NAME ?? "claimsure-updates";
+}
+
+export function slackWorkspaceUrl() {
+  return process.env.NEXT_PUBLIC_SLACK_WORKSPACE_URL ?? "https://slack.com";
+}
+
 export function googleDriveRootFolderId() {
   return (
     process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID ??

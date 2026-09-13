@@ -210,6 +210,112 @@ export async function sendEscalationAlert(
   }
 }
 
+function configuredWebhook() {
+  const webhook = env.SLACK_WEBHOOK_URL?.trim() ?? "";
+  return webhook.startsWith("https://hooks.slack.com/services/") ? webhook : "";
+}
+
+function configuredBot() {
+  const bot = env.SLACK_BOT_TOKEN?.trim() ?? "";
+  if (!bot.startsWith("xoxb-") || bot.includes("your-slack-bot-token")) return "";
+  return bot;
+}
+
+function configuredChannel() {
+  const channel = env.SLACK_APPROVAL_CHANNEL_ID?.trim() ?? "";
+  if (!channel || channel.includes("XXXX")) return env.SLACK_CHANNEL_NAME?.trim() || "claimsure-updates";
+  return channel;
+}
+
+export function isSlackConfigured() {
+  return Boolean(configuredWebhook() || (configuredBot() && configuredChannel()));
+}
+
+export interface ChannelUpdateParams {
+  title: string;
+  message: string;
+  caseNumber?: string;
+  serviceType?: string;
+  event?: string;
+}
+
+export async function sendChannelUpdate(
+  params: ChannelUpdateParams,
+): Promise<void> {
+  if (env.DRY_RUN) {
+    logger.debug("DRY_RUN: sendChannelUpdate", params);
+    return;
+  }
+
+  const text = params.caseNumber
+    ? `${params.title} · ${params.caseNumber}`
+    : params.title;
+  const blocks = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: params.title.slice(0, 150) },
+    },
+    {
+      type: "section",
+      text: { type: "mrkdwn", text: params.message.slice(0, 2900) },
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: [
+            params.caseNumber ? `*Case:* ${params.caseNumber}` : null,
+            params.serviceType ? `*Service:* ${params.serviceType}` : null,
+            params.event ? `*Event:* ${params.event}` : null,
+            `Channel: ${env.SLACK_CHANNEL_NAME || "Claimsure updates"}`,
+          ]
+            .filter(Boolean)
+            .join("  ·  "),
+        },
+      ],
+    },
+  ];
+
+  const webhook = configuredWebhook();
+  if (webhook) {
+    const response = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, blocks }),
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Slack webhook failed (${response.status}): ${detail}`);
+    }
+    logger.info("Slack channel update sent via webhook", {
+      title: params.title,
+    });
+    return;
+  }
+
+  const token = configuredBot();
+  const channel = configuredChannel();
+  if (!token || !channel) {
+    logger.warn("Slack not configured, skipping channel update");
+    return;
+  }
+
+  const response = await fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ channel, text, blocks }),
+  });
+  const body = (await response.json()) as { ok?: boolean; error?: string };
+  if (!body.ok) {
+    throw new Error(body.error ?? "Slack chat.postMessage failed");
+  }
+  logger.info("Slack channel update sent via bot", { title: params.title });
+}
+
 export async function sendTextMessage(
   channelId: string,
   text: string,
