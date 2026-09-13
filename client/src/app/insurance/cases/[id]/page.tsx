@@ -47,7 +47,13 @@ export default function InsuranceCasePage() {
     if (!claim) return;
     setBusy(true);
     try {
-      await apiFetch(`/cases/${claim.id}/analyze`, { method: "POST" });
+      await apiFetch(`/cases/${claim.id}/process`, {
+        method: "POST",
+        headers: {
+          "Idempotency-Key": `${claim.id}:process_agent`,
+        },
+        body: JSON.stringify({}),
+      });
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not trigger agent");

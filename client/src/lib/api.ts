@@ -16,7 +16,7 @@ export async function appFetch<T>(
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error ?? `Request failed (${response.status})`);
+    throw new Error(formatApiError(body.error) ?? `Request failed (${response.status})`);
   }
   return body as T;
 }
@@ -39,9 +39,18 @@ export async function apiFetch<T>(
   const response = await fetch(`${apiUrl()}${path}`, { ...init, headers });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error ?? `Request failed (${response.status})`);
+    throw new Error(formatApiError(body.error) ?? `Request failed (${response.status})`);
   }
   return body as T;
+}
+
+function formatApiError(error: unknown): string | null {
+  if (typeof error === "string" && error) return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" && message ? message : null;
+  }
+  return null;
 }
 
 export async function appUpload<T>(path: string, form: FormData): Promise<T> {

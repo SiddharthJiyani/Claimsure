@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ExternalLink } from "lucide-react";
 import type { DocumentRecord } from "@/lib/types";
 
 export function EvidencePanel({ documents }: { documents: DocumentRecord[] }) {
@@ -21,15 +21,27 @@ export function EvidencePanel({ documents }: { documents: DocumentRecord[] }) {
               {doc.document_type.replaceAll("_", " ")}
             </p>
           </div>
-          {doc.is_missing ? (
-            <span className="inline-flex items-center gap-1 text-xs text-warn">
-              <AlertTriangle size={14} /> Missing
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-xs text-success">
-              <CheckCircle2 size={14} /> Found
-            </span>
-          )}
+          <div className="flex shrink-0 items-center gap-3">
+            {doc.is_missing ? (
+              <span className="inline-flex items-center gap-1 text-xs text-warn">
+                <AlertTriangle size={14} /> Missing
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs text-success">
+                <CheckCircle2 size={14} /> Found
+              </span>
+            )}
+            {!doc.is_missing && doc.drive_url ? (
+              <a
+                href={doc.drive_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-accent hover:text-foreground"
+              >
+                View file <ExternalLink size={13} />
+              </a>
+            ) : null}
+          </div>
         </li>
       ))}
     </ul>
