@@ -8,6 +8,7 @@ import { ErrorCallout } from "@/components/ErrorCallout";
 import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
 import { PrescriptionUploadModal } from "@/components/PrescriptionUploadModal";
 import { QueueSkeleton, StatCard } from "@/components/StatCard";
+import { appFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { dayGreeting, displayName } from "@/lib/format";
 import { useCases } from "@/lib/use-workspace-data";
@@ -16,10 +17,25 @@ export default function PatientDashboardPage() {
   const { profile, user } = useAuth();
   const { cases, error, loading, reload } = useCases();
   const [modalOpen, setModalOpen] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const firstName = displayName({
     fullName: profile?.full_name,
     email: profile?.email ?? user?.email,
   }).split(" ")[0];
+
+  async function removeClaim(id: string, caseNumber: string) {
+    const confirmed = window.confirm(
+      `Remove claim ${caseNumber}? Healthcare will stop reviewing it.`,
+    );
+    if (!confirmed) return;
+    setRemovingId(id);
+    try {
+      await appFetch(`/api/workspace/cases/${id}`, { method: "DELETE" });
+      await reload();
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   const stats = useMemo(
     () => ({
@@ -127,6 +143,8 @@ export default function PatientDashboardPage() {
                 claim={claim}
                 href={`/patient/cases/${claim.id}`}
                 subtitle="Your claim"
+                removing={removingId === claim.id}
+                onRemove={() => void removeClaim(claim.id, claim.case_number)}
               />
             ))}
           </div>

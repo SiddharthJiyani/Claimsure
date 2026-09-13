@@ -1,15 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import { FolderOpen } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
 import { QueueSkeleton } from "@/components/StatCard";
+import { appFetch } from "@/lib/api";
 import { useCases } from "@/lib/use-workspace-data";
 
 export default function PatientClaimsPage() {
   const { cases, error, loading, reload } = useCases();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  async function removeClaim(id: string, caseNumber: string) {
+    const confirmed = window.confirm(
+      `Remove claim ${caseNumber}? Healthcare will stop reviewing it.`,
+    );
+    if (!confirmed) return;
+    setRemovingId(id);
+    try {
+      await appFetch(`/api/workspace/cases/${id}`, { method: "DELETE" });
+      await reload();
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   return (
     <WorkspaceFrame>
@@ -37,6 +54,8 @@ export default function PatientClaimsPage() {
               claim={claim}
               href={`/patient/cases/${claim.id}`}
               subtitle="Your claim"
+              removing={removingId === claim.id}
+              onRemove={() => void removeClaim(claim.id, claim.case_number)}
             />
           ))}
         </div>
