@@ -10,6 +10,7 @@ const router: Router = Router();
  * Insurance providers only.
  * Headers: Authorization: Bearer <token>
  */
+router.get("/", requireAuth, getEval);
 router.get("/results", requireAuth, getEval);
 
 /**

@@ -173,6 +173,30 @@ export type EvalMetric = {
   pass: boolean;
 };
 
+export type EvalCaseRow = {
+  case_id?: string;
+  case_number: string;
+  service_type: string;
+  service_code: string | null;
+  expected_route: string;
+  actual_route: string;
+  status: string;
+  citations: string[];
+  expected_missing: string[];
+  actual_missing: string[];
+  safety: boolean;
+  match: boolean;
+  latency_ms: number;
+};
+
+export type EvalDashboard = {
+  timestamp: string | null;
+  cases: number;
+  metrics: EvalMetric[];
+  details: EvalCaseRow[];
+  routes: Array<{ route: string; count: number }>;
+};
+
 export function isUserRole(
   value: string | null | undefined,
 ): value is UserRole {

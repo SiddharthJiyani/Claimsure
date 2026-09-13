@@ -226,7 +226,7 @@ async def verify_endpoint(payload: Dict[str, Any]):
 @app.get("/api/eval/results")
 def get_eval_results():
     """
-    Returns latest 20-case evaluation metrics table for the /insurance/eval dashboard.
+    Returns the latest evaluation metrics for the cases in the harness file.
     """
     results_path = os.path.join(os.path.dirname(__file__), "..", "eval", "results.json")
     if not os.path.exists(results_path):
@@ -235,14 +235,17 @@ def get_eval_results():
 
     try:
         with open(results_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading eval results: {str(e)}")
+            raw = f.read()
+        if "<<<<<<<" in raw:
+            return run_evaluation_harness()
+        return json.loads(raw)
+    except Exception:
+        return run_evaluation_harness()
 
 @app.post("/api/eval/run")
 def trigger_eval_run():
     """
-    Executes the 20-case evaluation harness and updates benchmark metrics.
+    Executes the evaluation harness for every case in the suite and updates metrics.
     """
     try:
         results = run_evaluation_harness()

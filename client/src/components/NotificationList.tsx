@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Mail, Send, CheckCircle2 } from "lucide-react";
+import { Bell, Mail, Send } from "lucide-react";
 import { apiFetch, appFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { notificationCaseHref } from "@/lib/notification-href";
 import { useNotifications } from "@/lib/use-workspace-data";
-import { useAuth } from "@/lib/auth-context";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { QueueSkeleton } from "@/components/StatCard";
@@ -52,66 +51,83 @@ export function NotificationList() {
       {items.map((item) => {
         const isEmail = item.channel === "email";
         const isInsurer = profile?.role === "insurance_provider";
-        const recipientLabel = isInsurer ? "To: Insurance Provider" : "To: Patient";
+        const recipientLabel = isInsurer
+          ? "To: Insurance Provider"
+          : "To: Patient";
+        const caseHref = notificationCaseHref(profile?.role, item.case_id);
 
         return (
-          <li key={item.id} className="px-5 py-4 transition hover:bg-surface-2/30">
+          <li
+            key={item.id}
+            className="px-5 py-4 transition hover:bg-surface-2/30"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <div className="mb-1.5 flex flex-wrap items-center gap-2">
                   {!item.is_read ? (
-                    <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
                   ) : null}
 
-                  {/* Recipient Badge */}
-                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] font-semibold text-foreground border border-border">
+                  <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2 px-2 py-0.5 text-[10px] font-semibold text-foreground">
                     <Send size={10} className="text-accent" />
                     {recipientLabel}
                   </span>
 
-                  {/* Channel Badge */}
                   <span
-                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold ${
+                    className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${
                       isEmail
-                        ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                        : "bg-accent/10 text-accent border border-accent/20"
+                        ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                        : "border-accent/20 bg-accent/10 text-accent"
                     }`}
                   >
                     {isEmail ? <Mail size={10} /> : <Bell size={10} />}
-                    {isEmail ? "Email (Nodemailer SMTP)" : "In-App"}
+                    {isEmail ? "Email" : "In-App"}
                   </span>
 
-                  {/* Event Type */}
-                  <span className="text-[10px] text-muted uppercase tracking-wider font-mono">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted">
                     {item.type.replace(/_/g, " ")}
                   </span>
                 </div>
 
-                <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-muted">{item.message}</p>
-                <p className="mt-2 text-xs text-muted font-mono">{relativeTime(item.created_at)}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {item.title}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-muted">
+                  {item.message}
+                </p>
+                <p className="mt-2 font-mono text-xs text-muted">
+                  {relativeTime(item.created_at)}
+                  {caseHref ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={caseHref}
+                        className="text-accent"
+                        onClick={() => {
+                          if (!item.is_read) void markRead(item.id);
+                        }}
+                      >
+                        Open claim
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
               </div>
-              <p className="mt-1 text-sm leading-6 text-muted">
-                {item.message}
-              </p>
-              <p className="mt-2 text-xs text-muted">
-                {relativeTime(item.created_at)}
-              </p>
+              {!item.is_read ? (
+                <button
+                  type="button"
+                  onClick={() => void markRead(item.id)}
+                  className="shrink-0 text-xs text-accent"
+                >
+                  Mark read
+                </button>
+              ) : (
+                <span className="shrink-0 text-xs text-muted">Read</span>
+              )}
             </div>
-            {!item.is_read ? (
-              <button
-                type="button"
-                onClick={() => void markRead(item.id)}
-                className="shrink-0 text-xs text-accent"
-              >
-                Mark read
-              </button>
-            ) : (
-              <span className="shrink-0 text-xs text-muted">Read</span>
-            )}
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }
