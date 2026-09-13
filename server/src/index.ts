@@ -1,7 +1,15 @@
-/**
- * Claimsure Express Server — Main Entrypoint
- * Boots the server with all middleware, routes, and graceful shutdown.
- */
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { isSupabaseConfigured } from "./database/supabase.js";
+import { errorHandler } from "./middleware/error-handler.js";
+import authRouter from "./routes/auth.js";
+import casesRouter from "./routes/cases.js";
+import documentsRouter from "./routes/documents.js";
+import appealsRouter from "./routes/appeals.js";
+import notificationsRouter from "./routes/notifications.js";
+import evalRouter from "./routes/eval.js";
+import demoRouter from "./routes/demo.js";
 
 import 'dotenv/config';
 import express from 'express';
@@ -18,6 +26,7 @@ import apiRoutes from './routes/index.js';
 // ─── App Init ─────────────────────────────────────────────────────────────────
 
 const app = express();
+const origin = process.env.CLIENT_ORIGIN ?? "http://localhost:3000";
 
 // ─── Security Middleware ──────────────────────────────────────────────────────
 

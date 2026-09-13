@@ -1,0 +1,691 @@
+[
+  {
+    "case_id": "c-1001",
+    "case_number": "R1001",
+    "patient_name": "Elena Rostova",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Service not deemed medically necessary: lacking documentation of 6 weeks conservative therapy prior to advanced imaging.",
+    "appeal_deadline": "2026-10-15",
+    "provided_documents": [
+      {
+        "name": "clinical_exam_notes.pdf",
+        "type": "clinical_note",
+        "content": "Patient reports 8 weeks of low back pain radiating to left L5 dermatome. Positive straight leg raise. Prescribed Naproxen."
+      },
+      {
+        "name": "pt_completion_records.pdf",
+        "type": "pt_note",
+        "content": "Completed 8 sessions of active physical therapy between July and August 2026. Core strengthening and lumbar stabilization."
+      },
+      {
+        "name": "lumbar_xray_report.pdf",
+        "type": "xray_report",
+        "content": "AP and lateral lumbar X-rays: Mild L4-L5 disc space narrowing, no spondylolisthesis or acute fracture."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.2: 6 weeks conservative therapy",
+      "Clause 1.4: Plain radiograph within 12 months",
+      "Clause 1.4: Detailed clinical neurological examination"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 1.2", "POL-A-2026-DIAG:Clause 1.4"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "CONSERVATIVE_THERAPY_DOCUMENTED",
+      "gap_count": 0,
+      "recommendation": "SUBMIT_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1002",
+    "case_number": "R1002",
+    "patient_name": "Marcus Vance",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Lack of completed physical therapy records and prior radiograph.",
+    "appeal_deadline": "2026-10-20",
+    "provided_documents": [
+      {
+        "name": "pcp_consult_note.pdf",
+        "type": "clinical_note",
+        "content": "Low back pain for 2 months. Advised to rest and try ibuprofen."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.2: 6 weeks conservative therapy",
+      "Clause 1.4: Plain radiograph within 12 months",
+      "Clause 1.4: Detailed clinical neurological examination"
+    ],
+    "expected_missing": [
+      "Signed physical therapy records or rehabilitation summary",
+      "Prior plain lumbar radiograph (X-ray) report"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 1.2", "POL-A-2026-DIAG:Clause 1.4"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "MISSING_CLINICAL_EVIDENCE",
+      "gap_count": 2,
+      "recommendation": "REQUEST_PATIENT_RECORDS"
+    }
+  },
+  {
+    "case_id": "c-1003",
+    "case_number": "R1003",
+    "patient_name": "Amina Al-Mansoor",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_b",
+    "denial_code": "PR-204",
+    "denial_reason": "Prior authorization denied: Mandatory step therapy of 6 weeks physical therapy not satisfied.",
+    "appeal_deadline": "2026-11-01",
+    "provided_documents": [
+      {
+        "name": "neurology_emergency_evaluation.pdf",
+        "type": "clinical_note",
+        "content": "Emergency evaluation: Patient exhibits acute progressive motor deficit with left foot drop (dorsiflexion strength 2/5). Rapid neurological decline."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.3: Red Flag Exceptions (motor deficit strength <= 3/5 exempts from conservative trial)"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-B-2026-SPINE:Clause 1.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "RED_FLAG_EXCEPTION_MET",
+      "gap_count": 0,
+      "recommendation": "EXPEDITED_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1004",
+    "case_number": "R1004",
+    "patient_name": "Brian Gallagher",
+    "service_type": "MRI Knee without contrast",
+    "service_code": "CPT-73721",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denied: Absence of documented standing plain radiographs and lack of 4 weeks conservative therapy.",
+    "appeal_deadline": "2026-10-18",
+    "provided_documents": [
+      {
+        "name": "ortho_clinic_intake.pdf",
+        "type": "clinical_note",
+        "content": "Twisting injury during basketball 5 weeks ago. Joint line tenderness, mechanical locking and positive McMurray sign."
+      },
+      {
+        "name": "pt_notes_knee.pdf",
+        "type": "pt_note",
+        "content": "Attended 6 sessions of PT over 4 weeks without resolution of mechanical catching."
+      },
+      {
+        "name": "standing_knee_xrays.pdf",
+        "type": "xray_report",
+        "content": "Standing 3-view bilateral knee series: Joint spaces preserved, no osteophytes, Kellgren-Lawrence grade 0."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 2.2: 4 weeks conservative therapy with mechanical symptoms",
+      "Clause 2.3: Standing plain radiographs (minimum 3 views)"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 2.2", "POL-A-2026-DIAG:Clause 2.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "CRITERIA_SATISFIED",
+      "gap_count": 0,
+      "recommendation": "SUBMIT_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1005",
+    "case_number": "R1005",
+    "patient_name": "Sophia Chen",
+    "service_type": "MRI Knee without contrast",
+    "service_code": "CPT-73721",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denied: Plain radiograph reports not submitted.",
+    "appeal_deadline": "2026-10-25",
+    "provided_documents": [
+      {
+        "name": "sports_medicine_eval.pdf",
+        "type": "clinical_note",
+        "content": "Suspected meniscus tear with recurrent effusion. 4 weeks conservative rest and NSAIDs failed."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 2.2: 4 weeks conservative therapy",
+      "Clause 2.3: Standing plain radiographs"
+    ],
+    "expected_missing": [
+      "Standing 3-view plain radiographs report"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 2.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "MISSING_XRAY_EVIDENCE",
+      "gap_count": 1,
+      "recommendation": "REQUEST_PATIENT_RECORDS"
+    }
+  },
+  {
+    "case_id": "c-1006",
+    "case_number": "R1006",
+    "patient_name": "David Morales",
+    "service_type": "Coronary CT Angiography",
+    "service_code": "CPT-75574",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Medical necessity not established: Baseline ECG and CAD pre-test risk assessment missing.",
+    "appeal_deadline": "2026-10-14",
+    "provided_documents": [
+      {
+        "name": "cardiology_consultation.pdf",
+        "type": "clinical_note",
+        "content": "Atypical chest discomfort on exertion. Pre-test probability calculated at 32% (intermediate risk per Diamond-Forrester)."
+      },
+      {
+        "name": "resting_12_lead_ecg.pdf",
+        "type": "ecg_report",
+        "content": "Normal sinus rhythm, non-specific T-wave flattening in lead V5-V6. Interpreted by Dr. K. Patel FACC."
+      },
+      {
+        "name": "treadmill_stress_test.pdf",
+        "type": "stress_test_report",
+        "content": "Submaximal exercise test terminated due to fatigue at 5 METs; non-diagnostic/inconclusive for ischemia."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 3.2: Documented baseline 12-lead ECG",
+      "Clause 3.2: Intermediate CAD pre-test risk",
+      "Clause 3.2: Inconclusive prior stress test"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 3.2"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "CARDIAC_CRITERIA_FULFILLED",
+      "gap_count": 0,
+      "recommendation": "SUBMIT_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1007",
+    "case_number": "R1007",
+    "patient_name": "Jessica Taylor",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Insufficient evidence of 6 weeks continuous conservative therapy. Only 2 weeks documented.",
+    "appeal_deadline": "2026-10-12",
+    "provided_documents": [
+      {
+        "name": "primary_care_visit_1.pdf",
+        "type": "clinical_note",
+        "content": "Initial visit: Low back pain, prescribed Meloxicam and referred to PT."
+      },
+      {
+        "name": "pt_initial_intake_only.pdf",
+        "type": "pt_note",
+        "content": "Initial physical therapy evaluation completed; 2 visits attended."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.2: 6 weeks continuous conservative therapy",
+      "Clause 1.4: Plain radiographs"
+    ],
+    "expected_missing": [
+      "Documentation of full 6 weeks conservative therapy completion",
+      "Lumbar spine X-ray report"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 1.2"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "INCOMPLETE_STEP_THERAPY",
+      "gap_count": 2,
+      "recommendation": "REQUEST_PATIENT_RECORDS"
+    }
+  },
+  {
+    "case_id": "c-1008",
+    "case_number": "R1008",
+    "patient_name": "Gregory House",
+    "service_type": "MRI Knee without contrast",
+    "service_code": "CPT-73721",
+    "payer_id": "payer_b",
+    "denial_code": "PR-204",
+    "denial_reason": "Prior authorization denied: Age over 50 with documented radiographic osteoarthritis.",
+    "appeal_deadline": "2026-10-30",
+    "provided_documents": [
+      {
+        "name": "rheumatology_notes.pdf",
+        "type": "clinical_note",
+        "content": "Age 58 with chronic knee pain. X-rays show Kellgren-Lawrence grade 3 osteoarthritis. No acute locking or trauma."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 2.2: Exclusion for members over 50 with radiographic osteoarthritis lacking mechanical symptoms"
+    ],
+    "expected_missing": [
+      "Documentation of acute traumatic hemarthrosis or true mechanical joint locking"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-B-2026-SPINE:Clause 2.2"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "POLICY_EXCLUSION_APPLIES",
+      "gap_count": 1,
+      "recommendation": "PEER_TO_PEER_REQUIRED"
+    }
+  },
+  {
+    "case_id": "c-1009",
+    "case_number": "R1009",
+    "patient_name": "Fatima Zahra",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_b",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Failure to attach prior plain radiograph of lumbar spine.",
+    "appeal_deadline": "2026-10-22",
+    "provided_documents": [
+      {
+        "name": "spine_center_records.pdf",
+        "type": "clinical_note",
+        "content": "Persistent L4 radiculopathy despite 8 weeks supervised physical therapy and oral prednisone taper."
+      },
+      {
+        "name": "pt_discharge_summary.pdf",
+        "type": "pt_note",
+        "content": "Discharge summary: 12 sessions of lumbar stabilization completed with minimal relief."
+      },
+      {
+        "name": "lumbar_xray_ap_lat.pdf",
+        "type": "xray_report",
+        "content": "Standing AP and Lateral lumbar spine X-rays dated 3 months ago: Normal alignment, no instability."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.2: 6 weeks conservative therapy",
+      "Clause 1.4: Standing AP and lateral X-rays within 6 months"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-B-2026-SPINE:Clause 1.2", "POL-B-2026-SPINE:Clause 1.4"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "XRAY_DOCUMENTED_UPON_REVIEW",
+      "gap_count": 0,
+      "recommendation": "SUBMIT_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1010",
+    "case_number": "R1010",
+    "patient_name": "Liam O'Connor",
+    "service_type": "Coronary CT Angiography",
+    "service_code": "CPT-75574",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Severe renal impairment contraindication.",
+    "appeal_deadline": "2026-10-10",
+    "provided_documents": [
+      {
+        "name": "nephrology_clearance.pdf",
+        "type": "lab_report",
+        "content": "Renal panel re-check: Serum creatinine 1.1, repeat eGFR is 62 mL/min/1.73m² (prior value of 28 was acute transient dehydration, now fully resolved)."
+      },
+      {
+        "name": "cardiac_workup.pdf",
+        "type": "clinical_note",
+        "content": "Cardiologist notes documenting normal resting ECG and intermediate pre-test risk."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 3.2: Baseline ECG and intermediate risk",
+      "Clause 3.3: eGFR >= 30 mL/min"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 3.2", "POL-A-2026-DIAG:Clause 3.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "CONTRAINDICATION_DISPROVEN",
+      "gap_count": 0,
+      "recommendation": "SUBMIT_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1011",
+    "case_number": "R1011",
+    "patient_name": "Karen Miller",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Lack of conservative therapy documentation.",
+    "appeal_deadline": "2026-11-05",
+    "provided_documents": [
+      {
+        "name": "oncology_consult.pdf",
+        "type": "clinical_note",
+        "content": "Patient with history of breast carcinoma presents with new onset intractable night pain in lumbar spine and elevated ESR."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.3: Red Flag Exception (known active malignancy with new unremitting back pain exempt from conservative therapy)"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 1.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "ONCOLOGY_RED_FLAG_MET",
+      "gap_count": 0,
+      "recommendation": "EXPEDITED_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1012",
+    "case_number": "R1012",
+    "patient_name": "Tariq Mansour",
+    "service_type": "MRI Knee without contrast",
+    "service_code": "CPT-73721",
+    "payer_id": "payer_b",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Conservative therapy requirement not met.",
+    "appeal_deadline": "2026-10-28",
+    "provided_documents": [
+      {
+        "name": "urgent_care_note.pdf",
+        "type": "clinical_note",
+        "content": "Knee pain after slip. Exam shows mild tenderness. No mechanical locking, no PT tried yet."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 2.1: 4 weeks conservative therapy and mechanical symptoms"
+    ],
+    "expected_missing": [
+      "Documentation of 4 weeks conservative therapy",
+      "Plain radiograph series"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-B-2026-SPINE:Clause 2.1"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "CONSERVATIVE_CRITERIA_DEFICIENT",
+      "gap_count": 2,
+      "recommendation": "REQUEST_PATIENT_RECORDS"
+    }
+  },
+  {
+    "case_id": "c-1013",
+    "case_number": "R1013",
+    "patient_name": "Samantha Bell",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Plain radiographs of spine not found in medical record.",
+    "appeal_deadline": "2026-10-19",
+    "provided_documents": [
+      {
+        "name": "spine_dr_notes.pdf",
+        "type": "clinical_note",
+        "content": "Severe radiculopathy. 8 weeks PT completed with excellent documentation."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.4: Prior plain radiograph (X-ray) within 12 months"
+    ],
+    "expected_missing": [
+      "Lumbar spine X-ray report within 12 months"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 1.4"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "MISSING_IMAGING_PREREQUISITE",
+      "gap_count": 1,
+      "recommendation": "REQUEST_PATIENT_RECORDS"
+    }
+  },
+  {
+    "case_id": "c-1014",
+    "case_number": "R1014",
+    "patient_name": "Daniel Washington",
+    "service_type": "MRI Knee without contrast",
+    "service_code": "CPT-73721",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Denial: Lack of conservative therapy trial.",
+    "appeal_deadline": "2026-11-02",
+    "provided_documents": [
+      {
+        "name": "ortho_surgeon_note.pdf",
+        "type": "clinical_note",
+        "content": "Knee twist at work. 6 weeks conservative therapy with home exercise and oral celecoxib failed. X-rays normal."
+      },
+      {
+        "name": "pt_records_knee.pdf",
+        "type": "pt_note",
+        "content": "6 weeks rehab notes showing persistent locking."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 2.2: 4 weeks conservative therapy",
+      "Clause 2.3: Standing radiographs"
+    ],
+    "expected_missing": [],
+    "expected_route": "act",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 2.2", "POL-A-2026-DIAG:Clause 2.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "CRITERIA_MET_UPON_RECITATION",
+      "gap_count": 0,
+      "recommendation": "SUBMIT_APPEAL"
+    }
+  },
+  {
+    "case_id": "c-1015",
+    "case_number": "R1015",
+    "patient_name": "Victor Creed",
+    "service_type": "Coronary CT Angiography",
+    "service_code": "CPT-75574",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Medical necessity not established: Asymptomatic patient screening not covered.",
+    "appeal_deadline": "2026-10-16",
+    "provided_documents": [
+      {
+        "name": "annual_physical_exam.pdf",
+        "type": "clinical_note",
+        "content": "Patient requests heart scan because executive coworker had heart attack. Completely asymptomatic, normal ECG."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 3.3: Exclusion of asymptomatic screening"
+    ],
+    "expected_missing": [
+      "Documentation of cardiovascular symptoms or intermediate pre-test risk"
+    ],
+    "expected_route": "await_human",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 3.3"],
+    "is_safety_escalation": false,
+    "golden_label": {
+      "classification": "EXCLUSION_UPHELD",
+      "gap_count": 1,
+      "recommendation": "UPHOLD_DENIAL"
+    }
+  },
+  {
+    "case_id": "c-1016",
+    "case_number": "R1016",
+    "patient_name": "Arthur Pendelton",
+    "service_type": "Positional Upright MRI Lumbar Spine",
+    "service_code": "CPT-72148-UP",
+    "payer_id": "payer_b",
+    "denial_code": "CO-96",
+    "denial_reason": "Non-covered service: Experimental and investigational imaging technique.",
+    "appeal_deadline": "2026-10-11",
+    "provided_documents": [
+      {
+        "name": "chiropractic_prescription.pdf",
+        "type": "clinical_note",
+        "content": "Requesting multi-positional standing weight-bearing upright MRI scan."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 3.1: Experimental and Investigational Technologies (upright/positional MRI excluded from coverage)"
+    ],
+    "expected_missing": [],
+    "expected_route": "abstain",
+    "expected_citations": ["POL-B-2026-SPINE:Clause 3.1"],
+    "is_safety_escalation": true,
+    "golden_label": {
+      "classification": "EXPERIMENTAL_SAFETY_ESCALATION",
+      "gap_count": 0,
+      "recommendation": "ABSTAIN_AND_ESCALATE"
+    }
+  },
+  {
+    "case_id": "c-1017",
+    "case_number": "R1017",
+    "patient_name": "Lucas Grey",
+    "service_type": "MRI Lumbar Spine without contrast",
+    "service_code": "CPT-72148",
+    "payer_id": "payer_b",
+    "denial_code": "CO-50",
+    "denial_reason": "Clinical discrepancy: Contradictory neurological physical exam findings between providers.",
+    "appeal_deadline": "2026-10-21",
+    "provided_documents": [
+      {
+        "name": "neuro_notes_1.pdf",
+        "type": "clinical_note",
+        "content": "Exam 1: Sensation intact, normal motor 5/5 bilateral lower extremities."
+      },
+      {
+        "name": "neuro_notes_2.pdf",
+        "type": "clinical_note",
+        "content": "Exam 2 (next day): Patient claims complete loss of bilateral lower extremity sensation and 0/5 strength with non-physiologic 'give-way' weakness."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 3.2: Medical Necessity Ambiguity & Physician Escalation"
+    ],
+    "expected_missing": [],
+    "expected_route": "abstain",
+    "expected_citations": ["POL-B-2026-SPINE:Clause 3.2"],
+    "is_safety_escalation": true,
+    "golden_label": {
+      "classification": "CONTRADICTORY_EVIDENCE_ESCALATION",
+      "gap_count": 0,
+      "recommendation": "ABSTAIN_AND_ESCALATE"
+    }
+  },
+  {
+    "case_id": "c-1018",
+    "case_number": "R1018",
+    "patient_name": "Maya Lin",
+    "service_type": "Unlisted Experimental Laser Spine Therapy",
+    "service_code": "CPT-09999",
+    "payer_id": "payer_unknown",
+    "denial_code": "CO-16",
+    "denial_reason": "Claim denied: Missing policy guidelines and unlisted procedure code without active coverage rubric.",
+    "appeal_deadline": "2026-10-14",
+    "provided_documents": [
+      {
+        "name": "laser_wellness_pitch.pdf",
+        "type": "marketing_doc",
+        "content": "Proprietary laser spinal decompression protocol not cleared by FDA."
+      }
+    ],
+    "expected_requirements": [],
+    "expected_missing": [
+      "Recognized clinical guideline and approved FDA indication"
+    ],
+    "expected_route": "abstain",
+    "expected_citations": [],
+    "is_safety_escalation": true,
+    "golden_label": {
+      "classification": "MISSING_POLICY_ESCALATION",
+      "gap_count": 1,
+      "recommendation": "ABSTAIN_AND_ESCALATE"
+    }
+  },
+  {
+    "case_id": "c-1019",
+    "case_number": "R1019",
+    "patient_name": "Harold Finch",
+    "service_type": "MRI Lumbar Spine with and without contrast",
+    "service_code": "CPT-72158",
+    "payer_id": "payer_a",
+    "denial_code": "CO-50",
+    "denial_reason": "Severe acute cauda equina syndrome emergency presentation.",
+    "appeal_deadline": "2026-09-30",
+    "provided_documents": [
+      {
+        "name": "er_triage_alert.pdf",
+        "type": "clinical_note",
+        "content": "Patient in ER with acute bilateral saddle anesthesia, urinary retention with 900cc post-void residual, severe perineal numbness. Requires immediate surgical consult."
+      }
+    ],
+    "expected_requirements": [
+      "Clause 1.3: Red Flag Exceptions (Cauda Equina Syndrome requires immediate emergency protocol, not standard appeal)"
+    ],
+    "expected_missing": [],
+    "expected_route": "abstain",
+    "expected_citations": ["POL-A-2026-DIAG:Clause 1.3"],
+    "is_safety_escalation": true,
+    "golden_label": {
+      "classification": "EMERGENCY_RED_FLAG_ESCALATION",
+      "gap_count": 0,
+      "recommendation": "ABSTAIN_AND_ESCALATE"
+    }
+  },
+  {
+    "case_id": "c-1020",
+    "case_number": "R1020",
+    "patient_name": "Zoe Saldana",
+    "service_type": "Whole Body Health Optimization MRI",
+    "service_code": "CPT-76499",
+    "payer_id": "payer_a",
+    "denial_code": "CO-96",
+    "denial_reason": "Non-covered service: Elective preventative full body scan for longevity optimization.",
+    "appeal_deadline": "2026-10-08",
+    "provided_documents": [
+      {
+        "name": "biohacking_clinic_request.pdf",
+        "type": "clinical_note",
+        "content": "Patient seeks annual full body cancer and longevity MRI checkup. No medical symptoms or complaints."
+      }
+    ],
+    "expected_requirements": [],
+    "expected_missing": [
+      "Documented symptoms, medical diagnosis, or covered clinical indication"
+    ],
+    "expected_route": "abstain",
+    "expected_citations": [],
+    "is_safety_escalation": true,
+    "golden_label": {
+      "classification": "ELECTIVE_WELLNESS_EXCLUSION",
+      "gap_count": 1,
+      "recommendation": "ABSTAIN_AND_ESCALATE"
+    }
+  }
+]

@@ -1,245 +1,623 @@
--- ============================================================
--- Claimsure — PostgreSQL Schema (v3, 2-Role Architecture)
--- Run this in your Supabase SQL Editor BEFORE seeding data.
--- ============================================================
+-- =============================================================================
+-- Claimsure — 2-role PostgreSQL schema + RLS
+-- Run this in the Supabase SQL Editor (Dashboard → SQL Editor → New query)
+--
+-- Roles (strict):
+--   patient              — own claims, document upload, status tracking
+--   insurance_provider   — org-scoped cases, AI trigger, approve / reject
+--
+-- After this file, run seed.sql
+--
+-- Supabase Auth dashboard (do this once):
+-- 1. Authentication → Providers → Email: enable email/password
+-- 2. Authentication → Providers → Google: enable and paste Client ID / Secret
+-- 3. Authentication → URL Configuration:
+--      Site URL: http://localhost:3000
+--      Redirect URLs: http://localhost:3000/auth/callback
+-- =============================================================================
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+create extension if not exists "pgcrypto";
 
--- ─── Organizations ────────────────────────────────────────────────────────────
--- Represents insurance payer organizations (multi-tenancy).
--- Patients are not attached to an org (organization_id is NULL on their profile).
+create schema if not exists private;
 
-CREATE TABLE IF NOT EXISTS organizations (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name          TEXT NOT NULL,
-  type          TEXT NOT NULL DEFAULT 'insurance_provider'
-                  CHECK (type IN ('insurance_provider')),
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+-- -----------------------------------------------------------------------------
+-- Tables
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  type text not null default 'insurance_provider'
+    check (type in ('insurance_provider')),
+  created_at timestamptz not null default now()
 );
 
--- ─── Profiles ─────────────────────────────────────────────────────────────────
--- Extends Supabase auth.users. One row per user.
--- role is enforced to EXACTLY 2 values: 'patient' | 'insurance_provider'
-
-CREATE TABLE IF NOT EXISTS profiles (
-  id              UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
-  email           TEXT NOT NULL,
-  full_name       TEXT NOT NULL,
-  role            TEXT NOT NULL CHECK (role IN ('patient', 'insurance_provider')),
-  organization_id UUID REFERENCES organizations (id) ON DELETE SET NULL,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text not null,
+  full_name text not null,
+  role text not null check (role in ('patient', 'insurance_provider')),
+  organization_id uuid references public.organizations (id),
+  created_at timestamptz not null default now(),
+  constraint profiles_insurer_requires_org check (
+    (role = 'patient' and organization_id is null)
+    or (role = 'insurance_provider' and organization_id is not null)
+  )
 );
 
--- ─── Cases ────────────────────────────────────────────────────────────────────
+create sequence if not exists public.case_number_seq start 1007;
 
-CREATE TABLE IF NOT EXISTS cases (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_number     TEXT UNIQUE NOT NULL,              -- e.g. R1007
-  patient_id      UUID NOT NULL REFERENCES profiles (id) ON DELETE CASCADE,
-  insurer_org_id  UUID NOT NULL REFERENCES organizations (id) ON DELETE CASCADE,
-  service_type    TEXT NOT NULL,                     -- e.g. 'MRI Lumbar Spine'
-  service_code    TEXT,                              -- e.g. 'CPT-72148'
-  payer_id        TEXT,                              -- e.g. 'payer_a'
-  status          TEXT NOT NULL DEFAULT 'PENDING'
-                    CHECK (status IN (
-                      'PENDING', 'ANALYZING', 'ACTION_REQUIRED',
-                      'AWAITING_REVIEW', 'APPEAL_READY', 'SUBMITTED',
-                      'VERIFYING', 'RESOLVED', 'ESCALATED', 'CLOSED'
-                    )),
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+create table if not exists public.cases (
+  id uuid primary key default gen_random_uuid(),
+  case_number text unique not null default ('R' || lpad(nextval('public.case_number_seq')::text, 4, '0')),
+  patient_id uuid not null references public.profiles (id),
+  insurer_org_id uuid not null references public.organizations (id),
+  service_type text not null,
+  service_code text,
+  payer_id text,
+  status text not null default 'PENDING'
+    check (status in (
+      'PENDING', 'ANALYZING', 'ACTION_REQUIRED',
+      'AWAITING_REVIEW', 'APPEAL_READY', 'SUBMITTED',
+      'VERIFYING', 'RESOLVED', 'ESCALATED', 'CLOSED'
+    )),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
--- Auto-update updated_at on case change
-CREATE OR REPLACE FUNCTION update_cases_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
+create table if not exists public.denials (
+  id uuid primary key default gen_random_uuid(),
+  case_id uuid not null references public.cases (id) on delete cascade,
+  denial_code text,
+  denial_reason text not null,
+  denial_date date,
+  appeal_deadline date,
+  raw_text text,
+  drive_file_id text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.documents (
+  id uuid primary key default gen_random_uuid(),
+  case_id uuid not null references public.cases (id) on delete cascade,
+  name text not null,
+  document_type text not null,
+  drive_file_id text not null default 'pending',
+  drive_url text,
+  uploaded_by uuid references public.profiles (id),
+  is_missing boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.appeals (
+  id uuid primary key default gen_random_uuid(),
+  case_id uuid not null references public.cases (id) on delete cascade,
+  status text not null default 'DRAFT'
+    check (status in ('DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SUBMITTED', 'ACCEPTED', 'REJECTED')),
+  appeal_text text,
+  citations jsonb,
+  approved_by uuid references public.profiles (id),
+  submitted_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.agent_state (
+  id uuid primary key default gen_random_uuid(),
+  case_id uuid not null references public.cases (id) on delete cascade,
+  current_node text not null,
+  state_data jsonb not null default '{}'::jsonb,
+  attempt_count int not null default 0,
+  is_dry_run boolean not null default false,
+  started_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  case_id uuid references public.cases (id) on delete set null,
+  actor_id uuid references public.profiles (id),
+  actor_type text not null check (actor_type in ('agent', 'human', 'system')),
+  action text not null,
+  node text,
+  previous_state text,
+  new_state text,
+  ai_recommendation text,
+  human_decision text,
+  confidence float,
+  citations jsonb,
+  input_hash text,
+  idempotency_key text,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  case_id uuid references public.cases (id) on delete set null,
+  type text not null,
+  title text not null,
+  message text not null,
+  channel text not null check (channel in ('in_app', 'email', 'slack')),
+  is_read boolean not null default false,
+  sent_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+-- -----------------------------------------------------------------------------
+-- Indexes (FKs + RLS columns)
+-- -----------------------------------------------------------------------------
+
+create index if not exists profiles_organization_id_idx on public.profiles (organization_id);
+create index if not exists profiles_role_idx on public.profiles (role);
+create index if not exists cases_patient_id_idx on public.cases (patient_id);
+create index if not exists cases_insurer_org_id_idx on public.cases (insurer_org_id);
+create index if not exists cases_status_idx on public.cases (status);
+create index if not exists denials_case_id_idx on public.denials (case_id);
+create index if not exists documents_case_id_idx on public.documents (case_id);
+create index if not exists documents_uploaded_by_idx on public.documents (uploaded_by);
+create index if not exists appeals_case_id_idx on public.appeals (case_id);
+create index if not exists appeals_approved_by_idx on public.appeals (approved_by);
+create index if not exists agent_state_case_id_idx on public.agent_state (case_id);
+create index if not exists audit_logs_case_id_idx on public.audit_logs (case_id);
+create index if not exists audit_logs_actor_id_idx on public.audit_logs (actor_id);
+create index if not exists notifications_user_id_idx on public.notifications (user_id);
+create index if not exists notifications_case_id_idx on public.notifications (case_id);
+
+-- -----------------------------------------------------------------------------
+-- updated_at trigger
+-- -----------------------------------------------------------------------------
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
 $$;
 
-DROP TRIGGER IF EXISTS cases_updated_at ON cases;
-CREATE TRIGGER cases_updated_at
-  BEFORE UPDATE ON cases
-  FOR EACH ROW EXECUTE FUNCTION update_cases_updated_at();
+drop trigger if exists cases_set_updated_at on public.cases;
+create trigger cases_set_updated_at
+  before update on public.cases
+  for each row execute function public.set_updated_at();
 
--- ─── Denials ──────────────────────────────────────────────────────────────────
+drop trigger if exists agent_state_set_updated_at on public.agent_state;
+create trigger agent_state_set_updated_at
+  before update on public.agent_state
+  for each row execute function public.set_updated_at();
 
-CREATE TABLE IF NOT EXISTS denials (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_id         UUID NOT NULL REFERENCES cases (id) ON DELETE CASCADE,
-  denial_code     TEXT,
-  denial_reason   TEXT NOT NULL,
-  denial_date     DATE,
-  appeal_deadline DATE,
-  raw_text        TEXT,           -- full text extracted from denial PDF
-  drive_file_id   TEXT,           -- Google Drive file ID for the denial letter
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- -----------------------------------------------------------------------------
+-- Lock role after insert (authorization lives in profiles, not user_metadata)
+-- -----------------------------------------------------------------------------
 
--- ─── Documents ────────────────────────────────────────────────────────────────
--- Metadata only — actual files stored in Google Drive.
--- drive_file_id is the stable Drive reference; drive_url is for convenience.
+create or replace function public.prevent_profile_role_change()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old.role is distinct from new.role then
+    raise exception 'profile role cannot be changed';
+  end if;
+  if old.organization_id is not null
+     and old.organization_id is distinct from new.organization_id
+     and old.role = 'insurance_provider' then
+    raise exception 'organization assignment cannot be changed';
+  end if;
+  return new;
+end;
+$$;
 
-CREATE TABLE IF NOT EXISTS documents (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_id         UUID NOT NULL REFERENCES cases (id) ON DELETE CASCADE,
-  name            TEXT NOT NULL,
-  document_type   TEXT NOT NULL CHECK (document_type IN (
-                    'denial_letter', 'clinical_note', 'mri_report',
-                    'lab_result', 'prior_auth_form', 'appeal_letter',
-                    'policy_document', 'other'
-                  )),
-  drive_file_id   TEXT NOT NULL,
-  drive_url       TEXT,
-  uploaded_by     UUID REFERENCES profiles (id) ON DELETE SET NULL,
-  is_missing      BOOLEAN NOT NULL DEFAULT false,  -- flagged missing by AI agent
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+drop trigger if exists profiles_lock_role on public.profiles;
+create trigger profiles_lock_role
+  before update on public.profiles
+  for each row execute function public.prevent_profile_role_change();
 
--- ─── Appeals ──────────────────────────────────────────────────────────────────
+-- -----------------------------------------------------------------------------
+-- Create profile (+ optional insurer org) from auth.users metadata
+-- Role is copied from signup metadata once, then stored only on profiles.
+-- -----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS appeals (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_id         UUID NOT NULL REFERENCES cases (id) ON DELETE CASCADE,
-  status          TEXT NOT NULL DEFAULT 'DRAFT'
-                    CHECK (status IN (
-                      'DRAFT', 'PENDING_REVIEW', 'APPROVED',
-                      'SUBMITTED', 'ACCEPTED', 'REJECTED'
-                    )),
-  appeal_text     TEXT,
-  citations       JSONB,           -- [{policy_id, clause, text}]
-  approved_by     UUID REFERENCES profiles (id) ON DELETE SET NULL,
-  submitted_at    TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_role text;
+  v_name text;
+  v_org_name text;
+  v_org_id uuid;
+begin
+  v_role := coalesce(new.raw_user_meta_data ->> 'role', '');
+  v_name := coalesce(
+    nullif(new.raw_user_meta_data ->> 'full_name', ''),
+    nullif(new.raw_user_meta_data ->> 'name', ''),
+    split_part(coalesce(new.email, 'user'), '@', 1)
+  );
+  v_org_name := nullif(trim(coalesce(new.raw_user_meta_data ->> 'organization_name', '')), '');
 
--- ─── Agent State ──────────────────────────────────────────────────────────────
--- Stores resumable snapshot of the 9-node agent state machine.
+  if v_role not in ('patient', 'insurance_provider') then
+    return new;
+  end if;
 
-CREATE TABLE IF NOT EXISTS agent_state (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_id         UUID NOT NULL REFERENCES cases (id) ON DELETE CASCADE,
-  current_node    TEXT NOT NULL,           -- one of the 9 node names
-  state_data      JSONB NOT NULL,          -- full CaseState snapshot
-  attempt_count   INT NOT NULL DEFAULT 0,
-  is_dry_run      BOOLEAN NOT NULL DEFAULT false,
-  started_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+  if v_role = 'insurance_provider' then
+    if v_org_name is not null then
+      insert into public.organizations (name, type)
+      values (v_org_name, 'insurance_provider')
+      returning id into v_org_id;
+    else
+      select id into v_org_id
+      from public.organizations
+      where type = 'insurance_provider'
+      order by created_at asc
+      limit 1;
+    end if;
 
--- ─── Audit Logs ───────────────────────────────────────────────────────────────
--- Append-only. Never DELETE or UPDATE rows in this table.
+    if v_org_id is null then
+      insert into public.organizations (name, type)
+      values ('Demo Insurance', 'insurance_provider')
+      returning id into v_org_id;
+    end if;
+  end if;
 
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_id           UUID REFERENCES cases (id) ON DELETE SET NULL,
-  actor_id          UUID REFERENCES profiles (id) ON DELETE SET NULL,  -- NULL = agent action
-  actor_type        TEXT NOT NULL CHECK (actor_type IN ('agent', 'human', 'system')),
-  action            TEXT NOT NULL,
-  node              TEXT,                  -- which agent node triggered this
-  previous_state    TEXT,
-  new_state         TEXT,
-  ai_recommendation TEXT,
-  human_decision    TEXT,
-  confidence        FLOAT,
-  citations         JSONB,
-  input_hash        TEXT,                  -- SHA-256 of input for replay detection
-  idempotency_key   TEXT,
-  metadata          JSONB,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+  insert into public.profiles (id, email, full_name, role, organization_id)
+  values (new.id, coalesce(new.email, ''), v_name, v_role, v_org_id)
+  on conflict (id) do nothing;
 
--- ─── Notifications ────────────────────────────────────────────────────────────
+  return new;
+end;
+$$;
 
-CREATE TABLE IF NOT EXISTS notifications (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES profiles (id) ON DELETE CASCADE,
-  case_id     UUID REFERENCES cases (id) ON DELETE SET NULL,
-  type        TEXT NOT NULL CHECK (type IN (
-                'case_update', 'action_required', 'approval_request',
-                'appeal_submitted', 'case_resolved', 'escalation'
-              )),
-  title       TEXT NOT NULL,
-  message     TEXT NOT NULL,
-  channel     TEXT NOT NULL CHECK (channel IN ('in_app', 'email', 'slack')),
-  is_read     BOOLEAN NOT NULL DEFAULT false,
-  sent_at     TIMESTAMPTZ,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
 
--- ─── Idempotency Keys ─────────────────────────────────────────────────────────
--- Prevents duplicate write/side-effect operations.
+-- Completes a Google/OAuth user who has a session but no profile yet.
+-- SECURITY DEFINER so it is not blocked by insert RLS.
+create or replace function public.complete_my_profile(
+  p_full_name text,
+  p_role text,
+  p_organization_name text default null
+)
+returns public.profiles
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid;
+  v_email text;
+  v_org_id uuid;
+  v_profile public.profiles;
+begin
+  v_uid := auth.uid();
+  if v_uid is null then
+    raise exception 'not authenticated';
+  end if;
+  if p_role not in ('patient', 'insurance_provider') then
+    raise exception 'role must be patient or insurance_provider';
+  end if;
 
-CREATE TABLE IF NOT EXISTS idempotency_keys (
-  key         TEXT PRIMARY KEY,            -- format: case_id:action_type
-  response    JSONB NOT NULL,              -- cached response body
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+  select * into v_profile
+  from public.profiles
+  where id = v_uid;
+  if found then
+    return v_profile;
+  end if;
 
--- ─── Indexes ──────────────────────────────────────────────────────────────────
+  select coalesce(u.email, '') into v_email
+  from auth.users u
+  where u.id = v_uid;
 
-CREATE INDEX IF NOT EXISTS idx_cases_patient_id ON cases (patient_id);
-CREATE INDEX IF NOT EXISTS idx_cases_insurer_org_id ON cases (insurer_org_id);
-CREATE INDEX IF NOT EXISTS idx_cases_status ON cases (status);
-CREATE INDEX IF NOT EXISTS idx_denials_case_id ON denials (case_id);
-CREATE INDEX IF NOT EXISTS idx_documents_case_id ON documents (case_id);
-CREATE INDEX IF NOT EXISTS idx_appeals_case_id ON appeals (case_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_case_id ON audit_logs (case_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs (actor_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications (user_id, is_read);
-CREATE INDEX IF NOT EXISTS idx_agent_state_case_id ON agent_state (case_id);
+  if p_role = 'insurance_provider' then
+    insert into public.organizations (name, type)
+    values (
+      coalesce(nullif(trim(coalesce(p_organization_name, '')), ''), 'Demo Insurance'),
+      'insurance_provider'
+    )
+    returning id into v_org_id;
+  end if;
 
--- ─── Row Level Security (RLS) ─────────────────────────────────────────────────
--- Enable RLS on all tables.
+  insert into public.profiles (id, email, full_name, role, organization_id)
+  values (
+    v_uid,
+    coalesce(v_email, ''),
+    coalesce(nullif(trim(coalesce(p_full_name, '')), ''), 'User'),
+    p_role,
+    v_org_id
+  )
+  returning * into v_profile;
 
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE denials ENABLE ROW LEVEL SECURITY;
-ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE appeals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE agent_state ENABLE ROW LEVEL SECURITY;
+  return v_profile;
+end;
+$$;
 
--- Profiles: users can read their own profile only
-DROP POLICY IF EXISTS "profiles_own" ON profiles;
-CREATE POLICY "profiles_own"
-  ON profiles FOR SELECT
-  USING (id = auth.uid());
+grant execute on function public.complete_my_profile(text, text, text) to authenticated;
 
--- Cases: patients see only their own cases
-DROP POLICY IF EXISTS "cases_patient" ON cases;
-CREATE POLICY "cases_patient"
-  ON cases FOR SELECT
-  USING (patient_id = auth.uid());
+-- -----------------------------------------------------------------------------
+-- Private RLS helpers (security definer, not granted to anon/authenticated)
+-- -----------------------------------------------------------------------------
 
--- Cases: insurance_provider sees all cases for their org
-DROP POLICY IF EXISTS "cases_insurer" ON cases;
-CREATE POLICY "cases_insurer"
-  ON cases FOR SELECT
-  USING (
-    insurer_org_id = (
-      SELECT organization_id FROM profiles WHERE id = auth.uid()
+create or replace function private.current_profile()
+returns public.profiles
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select *
+  from public.profiles
+  where id = (select auth.uid())
+  limit 1;
+$$;
+
+create or replace function private.has_case_access(p_case_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.cases c
+    join public.profiles p on p.id = (select auth.uid())
+    where c.id = p_case_id
+      and (
+        (p.role = 'patient' and c.patient_id = p.id)
+        or (
+          p.role = 'insurance_provider'
+          and p.organization_id is not null
+          and c.insurer_org_id = p.organization_id
+        )
+      )
+  );
+$$;
+
+revoke all on function private.current_profile() from public, anon, authenticated;
+revoke all on function private.has_case_access(uuid) from public, anon;
+grant usage on schema private to authenticated;
+grant execute on function private.has_case_access(uuid) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Row Level Security
+-- -----------------------------------------------------------------------------
+
+alter table public.organizations enable row level security;
+alter table public.profiles enable row level security;
+alter table public.cases enable row level security;
+alter table public.denials enable row level security;
+alter table public.documents enable row level security;
+alter table public.appeals enable row level security;
+alter table public.agent_state enable row level security;
+alter table public.audit_logs enable row level security;
+alter table public.notifications enable row level security;
+
+-- Organizations
+drop policy if exists organizations_select_authenticated on public.organizations;
+create policy organizations_select_authenticated
+  on public.organizations
+  for select
+  to authenticated
+  using (true);
+
+drop policy if exists organizations_insert_authenticated on public.organizations;
+create policy organizations_insert_authenticated
+  on public.organizations
+  for insert
+  to authenticated
+  with check (type = 'insurance_provider');
+
+-- Profiles
+drop policy if exists profiles_select_own on public.profiles;
+create policy profiles_select_own
+  on public.profiles
+  for select
+  to authenticated
+  using (id = (select auth.uid()));
+
+drop policy if exists profiles_select_insurer_patients on public.profiles;
+create policy profiles_select_insurer_patients
+  on public.profiles
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.cases c
+      join public.profiles viewer on viewer.id = (select auth.uid())
+      where c.patient_id = profiles.id
+        and viewer.role = 'insurance_provider'
+        and viewer.organization_id is not null
+        and c.insurer_org_id = viewer.organization_id
     )
   );
 
--- Documents: inherit from case access
-DROP POLICY IF EXISTS "documents_via_case" ON documents;
-CREATE POLICY "documents_via_case"
-  ON documents FOR SELECT
-  USING (
-    case_id IN (SELECT id FROM cases)
+drop policy if exists profiles_insert_own on public.profiles;
+create policy profiles_insert_own
+  on public.profiles
+  for insert
+  to authenticated
+  with check (id = (select auth.uid()));
+
+drop policy if exists profiles_update_own on public.profiles;
+create policy profiles_update_own
+  on public.profiles
+  for update
+  to authenticated
+  using (id = (select auth.uid()))
+  with check (id = (select auth.uid()));
+
+-- Cases
+drop policy if exists cases_select_access on public.cases;
+create policy cases_select_access
+  on public.cases
+  for select
+  to authenticated
+  using (
+    patient_id = (select auth.uid())
+    or insurer_org_id = (select p.organization_id from public.profiles p where p.id = (select auth.uid()))
   );
 
--- Notifications: users see only their own
-DROP POLICY IF EXISTS "notifications_own" ON notifications;
-CREATE POLICY "notifications_own"
-  ON notifications FOR SELECT
-  USING (user_id = auth.uid());
+drop policy if exists cases_insert_patient on public.cases;
+create policy cases_insert_patient
+  on public.cases
+  for insert
+  to authenticated
+  with check (
+    patient_id = (select auth.uid())
+    and exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid()) and p.role = 'patient'
+    )
+  );
 
--- Note: The Express backend uses the service role key which BYPASSES RLS.
--- RLS here acts as a second-line defense if anyone queries Supabase directly.
+drop policy if exists cases_insert_insurer on public.cases;
+create policy cases_insert_insurer
+  on public.cases
+  for insert
+  to authenticated
+  with check (
+    exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid())
+        and p.role = 'insurance_provider'
+        and p.organization_id is not null
+        and p.organization_id = insurer_org_id
+    )
+  );
+
+drop policy if exists cases_update_insurer on public.cases;
+create policy cases_update_insurer
+  on public.cases
+  for update
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid())
+        and p.role = 'insurance_provider'
+        and p.organization_id is not null
+        and p.organization_id = cases.insurer_org_id
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid())
+        and p.role = 'insurance_provider'
+        and p.organization_id is not null
+        and p.organization_id = cases.insurer_org_id
+    )
+  );
+
+-- Child tables: access follows parent case
+drop policy if exists denials_select_access on public.denials;
+create policy denials_select_access
+  on public.denials for select to authenticated
+  using (private.has_case_access(case_id));
+
+drop policy if exists denials_write_access on public.denials;
+create policy denials_write_access
+  on public.denials for insert to authenticated
+  with check (private.has_case_access(case_id));
+
+drop policy if exists documents_select_access on public.documents;
+create policy documents_select_access
+  on public.documents for select to authenticated
+  using (private.has_case_access(case_id));
+
+drop policy if exists documents_insert_access on public.documents;
+create policy documents_insert_access
+  on public.documents for insert to authenticated
+  with check (
+    private.has_case_access(case_id)
+    and uploaded_by = (select auth.uid())
+  );
+
+drop policy if exists documents_update_access on public.documents;
+create policy documents_update_access
+  on public.documents for update to authenticated
+  using (private.has_case_access(case_id))
+  with check (private.has_case_access(case_id));
+
+drop policy if exists appeals_select_access on public.appeals;
+create policy appeals_select_access
+  on public.appeals for select to authenticated
+  using (private.has_case_access(case_id));
+
+drop policy if exists appeals_write_insurer on public.appeals;
+create policy appeals_write_insurer
+  on public.appeals for insert to authenticated
+  with check (
+    private.has_case_access(case_id)
+    and exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid()) and p.role = 'insurance_provider'
+    )
+  );
+
+drop policy if exists appeals_update_insurer on public.appeals;
+create policy appeals_update_insurer
+  on public.appeals for update to authenticated
+  using (
+    private.has_case_access(case_id)
+    and exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid()) and p.role = 'insurance_provider'
+    )
+  )
+  with check (private.has_case_access(case_id));
+
+drop policy if exists agent_state_select_access on public.agent_state;
+create policy agent_state_select_access
+  on public.agent_state for select to authenticated
+  using (private.has_case_access(case_id));
+
+drop policy if exists agent_state_write_insurer on public.agent_state;
+create policy agent_state_write_insurer
+  on public.agent_state for all to authenticated
+  using (
+    private.has_case_access(case_id)
+    and exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid()) and p.role = 'insurance_provider'
+    )
+  )
+  with check (
+    private.has_case_access(case_id)
+    and exists (
+      select 1 from public.profiles p
+      where p.id = (select auth.uid()) and p.role = 'insurance_provider'
+    )
+  );
+
+drop policy if exists audit_logs_select_access on public.audit_logs;
+create policy audit_logs_select_access
+  on public.audit_logs for select to authenticated
+  using (case_id is not null and private.has_case_access(case_id));
+
+drop policy if exists audit_logs_insert_access on public.audit_logs;
+create policy audit_logs_insert_access
+  on public.audit_logs for insert to authenticated
+  with check (case_id is not null and private.has_case_access(case_id));
+
+drop policy if exists notifications_select_own on public.notifications;
+create policy notifications_select_own
+  on public.notifications for select to authenticated
+  using (user_id = (select auth.uid()));
+
+drop policy if exists notifications_update_own on public.notifications;
+create policy notifications_update_own
+  on public.notifications for update to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists notifications_insert_own on public.notifications;
+create policy notifications_insert_own
+  on public.notifications for insert to authenticated
+  with check (user_id = (select auth.uid()));

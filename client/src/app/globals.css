@@ -1,26 +1,414 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Custom tokens must not be named --background / --foreground.
+   Tailwind v4 @theme also emits those names on :root and freezes the color. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--cs-bg);
+  --color-foreground: var(--cs-fg);
+  --color-surface: var(--cs-surface);
+  --color-surface-2: var(--cs-surface-2);
+  --color-border: var(--cs-border);
+  --color-muted: var(--cs-muted);
+  --color-accent: var(--cs-accent);
+  --color-accent-2: var(--cs-accent-2);
+  --color-accent-ink: var(--cs-accent-ink);
+  --color-placeholder: var(--cs-placeholder);
+  --color-danger: var(--cs-danger);
+  --color-warn: var(--cs-warn);
+  --color-success: var(--cs-success);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root,
+[data-theme="dark"] {
+  --cs-bg: #070b12;
+  --cs-fg: #f3f6fb;
+  --cs-surface: #0e1522;
+  --cs-surface-2: #151d2d;
+  --cs-sidebar: #0b1220;
+  --cs-header: rgb(7 11 18 / 0.78);
+  --cs-border: #243247;
+  --cs-muted: #9aabc2;
+  --cs-accent: #2dd4bf;
+  --cs-accent-2: #60a5fa;
+  --cs-accent-ink: #04201c;
+  --cs-danger: #fb7185;
+  --cs-warn: #fbbf24;
+  --cs-success: #34d399;
+  --cs-overlay: rgb(2 8 20 / 0.62);
+  --cs-placeholder: #7f93ab;
+  --cs-code: #121b2c;
+  --cs-ring: rgb(45 212 191 / 0.28);
+  --cs-shadow-panel: 0 18px 40px -28px rgb(2 8 20 / 0.9);
+  --cs-shadow-popover: 0 24px 50px -18px rgb(2 8 20 / 0.85);
+  --cs-grid: rgb(255 255 255 / 0.03);
+  --cs-glow-a: rgb(45 212 191 / 0.12);
+  --cs-glow-b: rgb(96 165 250 / 0.1);
+  --cs-on-danger: #ffffff;
+  --status-pending-bg: rgb(148 163 184 / 0.16);
+  --status-pending-fg: #e2e8f0;
+  --status-pending-bd: rgb(148 163 184 / 0.32);
+  --status-analyzing-bg: rgb(14 165 233 / 0.16);
+  --status-analyzing-fg: #bae6fd;
+  --status-analyzing-bd: rgb(56 189 248 / 0.32);
+  --status-action-bg: rgb(245 158 11 / 0.16);
+  --status-action-fg: #fde68a;
+  --status-action-bd: rgb(251 191 36 / 0.32);
+  --status-review-bg: rgb(139 92 246 / 0.16);
+  --status-review-fg: #ddd6fe;
+  --status-review-bd: rgb(167 139 250 / 0.32);
+  --status-appeal-bg: rgb(20 184 166 / 0.16);
+  --status-appeal-fg: #99f6e4;
+  --status-appeal-bd: rgb(45 212 191 / 0.32);
+  --status-submitted-bg: rgb(59 130 246 / 0.16);
+  --status-submitted-fg: #bfdbfe;
+  --status-submitted-bd: rgb(96 165 250 / 0.32);
+  --status-verifying-bg: rgb(6 182 212 / 0.16);
+  --status-verifying-fg: #a5f3fc;
+  --status-verifying-bd: rgb(34 211 238 / 0.32);
+  --status-resolved-bg: rgb(16 185 129 / 0.16);
+  --status-resolved-fg: #a7f3d0;
+  --status-resolved-bd: rgb(52 211 153 / 0.32);
+  --status-escalated-bg: rgb(244 63 94 / 0.16);
+  --status-escalated-fg: #fecdd3;
+  --status-escalated-bd: rgb(251 113 133 / 0.32);
+  --status-closed-bg: rgb(113 113 122 / 0.16);
+  --status-closed-fg: #d4d4d8;
+  --status-closed-bd: rgb(161 161 170 / 0.32);
+  color-scheme: dark;
+}
+
+html[data-theme="light"],
+[data-theme="light"] {
+  --cs-bg: #f3f6fb;
+  --cs-fg: #102033;
+  --cs-surface: #ffffff;
+  --cs-surface-2: #e8eef6;
+  --cs-sidebar: #ffffff;
+  --cs-header: #fffffff0;
+  --cs-border: #d0dae8;
+  --cs-muted: #4b5d73;
+  --cs-accent: #0c8a7e;
+  --cs-accent-2: #2563eb;
+  --cs-accent-ink: #04201c;
+  --cs-danger: #dc2656;
+  --cs-warn: #c2410c;
+  --cs-success: #047857;
+  --cs-overlay: rgb(16 32 51 / 0.35);
+  --cs-placeholder: #7b8ea3;
+  --cs-code: #eef3f8;
+  --cs-ring: rgb(12 138 126 / 0.28);
+  --cs-shadow-panel:
+    0 1px 2px rgb(16 32 51 / 0.05), 0 14px 32px -20px rgb(16 32 51 / 0.18);
+  --cs-shadow-popover: 0 18px 44px -18px rgb(16 32 51 / 0.28);
+  --cs-grid: rgb(16 32 51 / 0.07);
+  --cs-glow-a: rgb(12 138 126 / 0.1);
+  --cs-glow-b: rgb(37 99 235 / 0.08);
+  --cs-on-danger: #ffffff;
+  --status-pending-bg: #e8edf4;
+  --status-pending-fg: #334155;
+  --status-pending-bd: #c5d0de;
+  --status-analyzing-bg: #e0f2fe;
+  --status-analyzing-fg: #075985;
+  --status-analyzing-bd: #bae6fd;
+  --status-action-bg: #ffedd5;
+  --status-action-fg: #9a3412;
+  --status-action-bd: #fdba74;
+  --status-review-bg: #ede9fe;
+  --status-review-fg: #5b21b6;
+  --status-review-bd: #ddd6fe;
+  --status-appeal-bg: #ccfbf1;
+  --status-appeal-fg: #115e59;
+  --status-appeal-bd: #99f6e4;
+  --status-submitted-bg: #dbeafe;
+  --status-submitted-fg: #1e40af;
+  --status-submitted-bd: #bfdbfe;
+  --status-verifying-bg: #cffafe;
+  --status-verifying-fg: #155e75;
+  --status-verifying-bd: #a5f3fc;
+  --status-resolved-bg: #d1fae5;
+  --status-resolved-fg: #065f46;
+  --status-resolved-bd: #a7f3d0;
+  --status-escalated-bg: #ffe4e6;
+  --status-escalated-fg: #9f1239;
+  --status-escalated-bd: #fecdd3;
+  --status-closed-bg: #e4e4e7;
+  --status-closed-fg: #3f3f46;
+  --status-closed-bd: #d4d4d8;
+  color-scheme: light;
+}
+
+* {
+  border-color: var(--cs-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  background-color: var(--cs-bg);
+  color: var(--cs-fg);
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--cs-accent) 28%, transparent);
+  color: var(--cs-fg);
+}
+
+::placeholder {
+  color: var(--cs-placeholder);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cs-ring);
+  outline-offset: 2px;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--cs-muted) 45%, var(--cs-border));
+  border-radius: 999px;
+  border: 2px solid var(--cs-bg);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.auth-grid,
+.app-canvas {
+  background-color: var(--cs-bg);
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 0% 0%,
+      var(--cs-glow-a),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 0%,
+      var(--cs-glow-b),
+      transparent 50%
+    );
+}
+
+.app-canvas {
+  background-image:
+    linear-gradient(to right, var(--cs-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--cs-grid) 1px, transparent 1px),
+    radial-gradient(
+      ellipse 80% 50% at 0% 0%,
+      var(--cs-glow-a),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 0%,
+      var(--cs-glow-b),
+      transparent 50%
+    );
+  background-size:
+    72px 72px,
+    72px 72px,
+    auto,
+    auto;
+}
+
+[data-theme="light"] .app-canvas,
+[data-theme="light"] .auth-grid {
+  background-color: #f3f6fb !important;
+}
+
+[data-theme="dark"] .app-canvas,
+[data-theme="dark"] .auth-grid {
+  background-color: #070b12 !important;
+}
+
+.cs-panel {
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  box-shadow: var(--cs-shadow-panel);
+}
+
+.cs-kicker {
+  color: var(--cs-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cs-input {
+  width: 100%;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  color: var(--cs-fg);
+  border-radius: 0.8rem;
+  padding: 0.65rem 0.85rem;
+  outline: none;
+}
+
+.cs-input:focus {
+  border-color: color-mix(in oklab, var(--cs-accent) 70%, var(--cs-border));
+  box-shadow: 0 0 0 3px var(--cs-ring);
+}
+
+.cs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 0.8rem;
+  padding: 0.62rem 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cs-btn-primary {
+  background: var(--cs-accent);
+  color: var(--cs-accent-ink);
+}
+
+.cs-btn-primary:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.cs-btn-primary:disabled {
+  opacity: 0.55;
+}
+
+.cs-btn-ghost {
+  border: 1px solid var(--cs-border);
+  color: var(--cs-fg);
+  background: var(--cs-surface-2);
+}
+
+.cs-btn-ghost:hover {
+  filter: brightness(0.98);
+}
+
+.cs-sidebar {
+  background: var(--cs-sidebar);
+}
+
+.cs-header {
+  background: var(--cs-header);
+}
+
+.cs-overlay {
+  background: var(--cs-overlay);
+}
+
+.cs-popover {
+  background: var(--cs-surface);
+  box-shadow: var(--cs-shadow-popover);
+}
+
+.cs-code {
+  background: var(--cs-code);
+}
+
+.cs-status {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cs-status-pending {
+  background: var(--status-pending-bg);
+  color: var(--status-pending-fg);
+  border-color: var(--status-pending-bd);
+}
+.cs-status-analyzing {
+  background: var(--status-analyzing-bg);
+  color: var(--status-analyzing-fg);
+  border-color: var(--status-analyzing-bd);
+}
+.cs-status-action {
+  background: var(--status-action-bg);
+  color: var(--status-action-fg);
+  border-color: var(--status-action-bd);
+}
+.cs-status-review {
+  background: var(--status-review-bg);
+  color: var(--status-review-fg);
+  border-color: var(--status-review-bd);
+}
+.cs-status-appeal {
+  background: var(--status-appeal-bg);
+  color: var(--status-appeal-fg);
+  border-color: var(--status-appeal-bd);
+}
+.cs-status-submitted {
+  background: var(--status-submitted-bg);
+  color: var(--status-submitted-fg);
+  border-color: var(--status-submitted-bd);
+}
+.cs-status-verifying {
+  background: var(--status-verifying-bg);
+  color: var(--status-verifying-fg);
+  border-color: var(--status-verifying-bd);
+}
+.cs-status-resolved {
+  background: var(--status-resolved-bg);
+  color: var(--status-resolved-fg);
+  border-color: var(--status-resolved-bd);
+}
+.cs-status-escalated {
+  background: var(--status-escalated-bg);
+  color: var(--status-escalated-fg);
+  border-color: var(--status-escalated-bd);
+}
+.cs-status-closed {
+  background: var(--status-closed-bg);
+  color: var(--status-closed-fg);
+  border-color: var(--status-closed-bd);
+}
+
+.cs-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--cs-surface-2) 0%,
+    color-mix(in oklab, var(--cs-surface) 70%, var(--cs-surface-2)) 50%,
+    var(--cs-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: cs-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes cs-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }

@@ -1,62 +1,79 @@
-/**
- * Auth middleware — validates Supabase JWT from the Authorization header.
- * Attaches the verified user to req.user for downstream use.
- */
+import type { NextFunction, Request, Response } from "express";
+import { getAnonClient, getServiceClient } from "../database/supabase.js";
+import { HttpError } from "./error-handler.js";
+import type { AuthedRequest, Profile } from "../types.js";
+import { isUserRole } from "../types.js";
 
-import type { Request, Response, NextFunction } from 'express';
-import { supabaseAnon } from '../database/supabase.js';
-import { getProfileById } from '../database/queries/profiles.js';
-import { AuthenticationError } from '../lib/errors.js';
-import type { AuthUser } from '../types/index.js';
+function readBearer(req: Request): string | null {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) return null;
+  return header.slice(7).trim() || null;
+}
 
-// Extend Express Request with our user type
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthUser;
-    }
+async function loadSession(req: Request) {
+  const token = readBearer(req);
+  if (!token) {
+    throw new HttpError(401, "Missing Authorization bearer token");
+  }
+
+  const { data, error } = await getAnonClient().auth.getUser(token);
+  if (error || !data.user) {
+    throw new HttpError(401, "Invalid or expired session");
+  }
+
+  const { data: profile, error: profileError } = await getServiceClient()
+    .from("profiles")
+    .select("id, email, full_name, role, organization_id, created_at")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    throw new HttpError(500, "Failed to load profile", profileError.message);
+  }
+
+  return {
+    id: data.user.id,
+    email: data.user.email ?? profile?.email ?? "",
+    profile: profile && isUserRole(profile.role) ? (profile as Profile) : null,
+  };
+}
+
+export async function requireSession(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
+  try {
+    const session = await loadSession(req);
+    (req as AuthedRequest).user = {
+      id: session.id,
+      email: session.email,
+      profile: session.profile as Profile,
+    };
+    next();
+  } catch (err) {
+    next(err);
   }
 }
 
-/**
- * requireAuth — verifies the Bearer JWT and attaches req.user.
- * Throws AuthenticationError if the token is missing or invalid.
- */
 export async function requireAuth(
   req: Request,
   _res: Response,
   next: NextFunction,
-): Promise<void> {
+) {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new AuthenticationError('Bearer token required');
+    const session = await loadSession(req);
+    if (!session.profile) {
+      throw new HttpError(
+        403,
+        "Profile is incomplete. Finish role selection first.",
+      );
     }
-
-    const token = authHeader.slice(7);
-
-    // Verify token against Supabase
-    const {
-      data: { user },
-      error,
-    } = await supabaseAnon.auth.getUser(token);
-
-    if (error || !user) {
-      throw new AuthenticationError('Invalid or expired token');
-    }
-
-    // Load profile (role + org) from DB
-    const profile = await getProfileById(user.id);
-
-    req.user = {
-      id: profile.id,
-      email: profile.email,
-      role: profile.role,
-      organization_id: profile.organization_id,
-      full_name: profile.full_name,
+    (req as AuthedRequest).user = {
+      id: session.id,
+      email: session.email,
+      profile: session.profile,
     };
-
     next();
   } catch (err) {
     next(err);
