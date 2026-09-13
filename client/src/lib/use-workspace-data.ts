@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, appFetch } from "@/lib/api";
 import type { ClaimCase, NotificationItem } from "@/lib/types";
 
 export function useCases() {
@@ -11,11 +11,19 @@ export function useCases() {
 
   const reload = useCallback(async () => {
     try {
-      const data = await apiFetch<{ cases: ClaimCase[] }>("/cases");
+      const data = await appFetch<{ cases: ClaimCase[] }>(
+        "/api/workspace/cases",
+      );
       setCases(data.cases);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load cases");
+    } catch {
+      try {
+        const data = await apiFetch<{ cases: ClaimCase[] }>("/cases");
+        setCases(data.cases);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not load cases");
+      }
     } finally {
       setLoading(false);
     }
@@ -31,18 +39,29 @@ export function useCases() {
 export function useNotifications() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
     try {
-      const data = await apiFetch<{ notifications: NotificationItem[] }>(
-        "/notifications",
+      const data = await appFetch<{ notifications: NotificationItem[] }>(
+        "/api/workspace/notifications",
       );
       setItems(data.notifications);
       setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load notifications",
-      );
+    } catch {
+      try {
+        const data = await apiFetch<{ notifications: NotificationItem[] }>(
+          "/notifications",
+        );
+        setItems(data.notifications);
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Could not load notifications",
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -50,5 +69,5 @@ export function useNotifications() {
     void reload();
   }, [reload]);
 
-  return { items, error, reload, setItems };
+  return { items, error, loading, reload, setItems };
 }

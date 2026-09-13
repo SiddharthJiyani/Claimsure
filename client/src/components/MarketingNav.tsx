@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const LINKS = [
   { href: "/#product", label: "Product" },
@@ -25,6 +26,7 @@ export function MarketingNav() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle compact />
           <Link href="/login" className="cs-btn cs-btn-ghost px-3 py-2">
             Sign in
           </Link>

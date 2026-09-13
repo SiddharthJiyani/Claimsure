@@ -1,64 +1,73 @@
 "use client";
 
-import { apiFetch } from "@/lib/api";
+import { Bell } from "lucide-react";
+import { apiFetch, appFetch } from "@/lib/api";
 import { useNotifications } from "@/lib/use-workspace-data";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorCallout } from "@/components/ErrorCallout";
+import { QueueSkeleton } from "@/components/StatCard";
+import { relativeTime } from "@/lib/format";
 
 export function NotificationList() {
-  const { items, error, setItems } = useNotifications();
+  const { items, error, loading, reload, setItems } = useNotifications();
 
   async function markRead(id: string) {
     try {
-      await apiFetch(`/notifications/${id}/read`, { method: "PATCH" });
-      setItems((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, is_read: true } : item,
-        ),
-      );
+      await appFetch(`/api/workspace/notifications/${id}`, { method: "PATCH" });
     } catch {
-      // Keep the list usable if the API is offline.
+      try {
+        await apiFetch(`/notifications/${id}/read`, { method: "PATCH" });
+      } catch {
+        return;
+      }
     }
-  }
-
-  if (error) {
-    return (
-      <p className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
-        {error}
-      </p>
+    setItems((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, is_read: true } : item,
+      ),
     );
   }
+
+  if (loading) return <QueueSkeleton rows={3} />;
+  if (error) return <ErrorCallout message={error} onRetry={() => void reload()} />;
 
   if (items.length === 0) {
     return (
       <EmptyState
-        title="No alerts yet"
-        description="Case updates, missing-document requests, and approval asks will land here."
+        icon={Bell}
+        title="Inbox is clear"
+        description="Approval requests, missing-document asks, and agent completions will appear here."
       />
     );
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className="cs-panel divide-y divide-border overflow-hidden rounded-2xl">
       {items.map((item) => (
-        <li key={item.id} className="cs-panel rounded-2xl p-4">
+        <li key={item.id} className="px-5 py-4">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold">{item.title}</p>
-              <p className="mt-1 text-sm text-muted">{item.message}</p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                {!item.is_read ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                ) : null}
+                <p className="text-sm font-semibold">{item.title}</p>
+              </div>
+              <p className="mt-1 text-sm leading-6 text-muted">{item.message}</p>
               <p className="mt-2 text-xs text-muted">
-                {new Date(item.created_at).toLocaleString()}
+                {relativeTime(item.created_at)}
               </p>
             </div>
             {!item.is_read ? (
               <button
                 type="button"
                 onClick={() => void markRead(item.id)}
-                className="text-xs text-accent"
+                className="shrink-0 text-xs text-accent"
               >
                 Mark read
               </button>
             ) : (
-              <span className="text-xs text-muted">Read</span>
+              <span className="shrink-0 text-xs text-muted">Read</span>
             )}
           </div>
         </li>

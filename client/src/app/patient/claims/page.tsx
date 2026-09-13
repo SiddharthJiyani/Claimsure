@@ -1,23 +1,31 @@
 "use client";
 
+import { FolderOpen } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { EmptyState } from "@/components/EmptyState";
-import { PageHeader } from "@/components/PageHeader";
+import { ErrorCallout } from "@/components/ErrorCallout";
+import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
+import { QueueSkeleton } from "@/components/StatCard";
 import { useCases } from "@/lib/use-workspace-data";
 
 export default function PatientClaimsPage() {
-  const { cases, error } = useCases();
+  const { cases, error, loading, reload } = useCases();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <WorkspaceFrame>
       <PageHeader
         eyebrow="Patient"
         title="My claims"
         description="Every personal case, with status and missing-evidence flags."
       />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {cases.length === 0 ? (
+      {error ? (
+        <ErrorCallout message={error} onRetry={() => void reload()} />
+      ) : null}
+      {loading ? (
+        <QueueSkeleton rows={4} />
+      ) : cases.length === 0 ? (
         <EmptyState
+          icon={FolderOpen}
           title="No claims yet"
           description="Submit a denied or pending service from Overview. This list stays empty until you do."
         />
@@ -33,6 +41,6 @@ export default function PatientClaimsPage() {
           ))}
         </div>
       )}
-    </div>
+    </WorkspaceFrame>
   );
 }

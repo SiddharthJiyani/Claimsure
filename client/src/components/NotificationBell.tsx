@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, appFetch } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
 
 export function NotificationBell() {
@@ -17,12 +17,19 @@ export function NotificationBell() {
 
   async function load() {
     try {
-      const data = await apiFetch<{ notifications: NotificationItem[] }>(
-        "/notifications",
+      const data = await appFetch<{ notifications: NotificationItem[] }>(
+        "/api/workspace/notifications",
       );
       setItems(data.notifications);
     } catch {
-      setItems([]);
+      try {
+        const data = await apiFetch<{ notifications: NotificationItem[] }>(
+          "/notifications",
+        );
+        setItems(data.notifications);
+      } catch {
+        setItems([]);
+      }
     }
   }
 
@@ -34,15 +41,19 @@ export function NotificationBell() {
 
   async function markRead(id: string) {
     try {
-      await apiFetch(`/notifications/${id}/read`, { method: "PATCH" });
-      setItems((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, is_read: true } : item,
-        ),
-      );
+      await appFetch(`/api/workspace/notifications/${id}`, { method: "PATCH" });
     } catch {
-      // Keep the dropdown usable even if the API is offline.
+      try {
+        await apiFetch(`/notifications/${id}/read`, { method: "PATCH" });
+      } catch {
+        return;
+      }
     }
+    setItems((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, is_read: true } : item,
+      ),
+    );
   }
 
   return (
@@ -77,7 +88,7 @@ export function NotificationBell() {
           </div>
           <ul className="max-h-80 overflow-auto">
             {items.length === 0 ? (
-              <li className="px-3 py-6 text-sm text-muted">
+              <li className="px-3 py-8 text-center text-sm text-muted">
                 No notifications yet.
               </li>
             ) : (
@@ -89,7 +100,9 @@ export function NotificationBell() {
                     className="w-full px-3 py-3 text-left hover:bg-surface-2"
                   >
                     <p className="text-sm font-medium">{item.title}</p>
-                    <p className="mt-1 text-xs text-muted">{item.message}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">
+                      {item.message}
+                    </p>
                     {!item.is_read ? (
                       <p className="mt-1 text-[11px] text-accent">Unread</p>
                     ) : null}
