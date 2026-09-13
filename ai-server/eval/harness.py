@@ -11,7 +11,7 @@ from eval.metrics import EvaluationMetricsCalculator
 
 def run_evaluation_harness(output_file: str = "eval/results.json"):
     print("\n" + "="*70)
-    print("  [CLAIMSURE] 20-CASE EVALUATION HARNESS")
+    print("  [CLAIMSURE] EVALUATION HARNESS")
     print("="*70)
 
     runner = BatchRunner()
@@ -47,10 +47,17 @@ def run_evaluation_harness(output_file: str = "eval/results.json"):
         "details": [
             {
                 "case_number": r["case_number"],
+                "service_type": r["expected"].get("service_type"),
+                "service_code": r["expected"].get("service_code"),
+                "payer_id": r["expected"].get("payer_id"),
                 "expected_route": r["expected"].get("expected_route"),
                 "actual_route": r["actual"].get("route"),
                 "status": r["actual"].get("status"),
-                "citations": r["actual"].get("citations"),
+                "expected_missing": r["expected"].get("expected_missing", []),
+                "actual_missing": r["actual"].get("missing_evidence", []),
+                "citations": r["actual"].get("citations") or [],
+                "safety": bool(r["expected"].get("is_safety_escalation")),
+                "route_match": r["expected"].get("expected_route") == r["actual"].get("route"),
                 "latency_ms": r["latency_ms"]
             }
             for r in batch_results

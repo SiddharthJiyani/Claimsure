@@ -9,6 +9,10 @@ import { healthCheck } from "../services/ai-client.js";
 import { sendSuccess } from "../lib/response.js";
 import { ForbiddenError } from "../lib/errors.js";
 
+function normalizeEvalPayload(results: unknown) {
+  return results;
+}
+
 // ─── Get Evaluation Results ───────────────────────────────────────────────────
 
 export async function getEval(
@@ -26,7 +30,7 @@ export async function getEval(
     }
 
     const results = await getEvalResults();
-    sendSuccess(res, results, "Evaluation results retrieved");
+    sendSuccess(res, normalizeEvalPayload(results), "Evaluation results retrieved");
   } catch (err) {
     next(err);
   }
