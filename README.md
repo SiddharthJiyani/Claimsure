@@ -324,12 +324,101 @@ http://localhost:3000
         │
         ▼
 Backend
-http://localhost:5000
+http://localhost:5001
         │
         ▼
 AI Server
 http://localhost:8000
 ```
+
+---
+
+## 🔌 MCP Server and AI Verification
+
+The MCP server uses stdio, not HTTP. Start the AI server first, then open another terminal for MCP:
+
+```bash
+cd server
+pnpm install
+pnpm exec tsx src/mcp/mcp-server.ts
+```
+
+Expected logs:
+
+```text
+MCP server initialized with 5 tools
+Claimsure MCP server running on stdio
+```
+
+The process waiting without more output is normal. Keep it running while an MCP client is connected.
+
+### MCP Inspector
+
+Start the Inspector from `server/` in another terminal:
+
+```bash
+cd server
+pnpm dlx @modelcontextprotocol/inspector ./node_modules/.bin/tsx src/mcp/mcp-server.ts
+```
+
+Open the URL printed by the Inspector, usually `http://localhost:6274`. The Tools tab should list:
+
+- `policy_search`
+- `denial_parse`
+- `evidence_scan`
+- `case_update`
+- `send_notification`
+
+Test `policy_search` with:
+
+```json
+{
+  "query": "What documents are required for prior authorization?",
+  "payer_id": "payer_a",
+  "service_code": "MRI"
+}
+```
+
+The request path is:
+
+```text
+MCP Inspector
+  -> server/src/mcp/tools/policy-search.ts
+  -> GET http://localhost:8000/api/rag/search
+  -> ai-server/app/rag/retriever.py
+  -> ai-server/data/embeddings.json
+```
+
+Verify the AI server directly:
+
+```bash
+curl http://localhost:8000/health
+curl "http://localhost:8000/api/rag/search?q=prior%20authorization&payer_id=payer_a&service_code=MRI"
+```
+
+The RAG response should contain `policy_id`, `clause`, `text`, and `score` fields.
+
+### MCP Troubleshooting
+
+If your prompt already shows `server`, do not run `cd server` again. Use:
+
+```bash
+pnpm exec tsx src/mcp/mcp-server.ts
+```
+
+Use `pnpm`, not `npx`, because this project declares pnpm in `devEngines`:
+
+```bash
+pnpm dlx @modelcontextprotocol/inspector ./node_modules/.bin/tsx src/mcp/mcp-server.ts
+```
+
+If `policy_search` returns `Policy search unavailable`, verify that the AI server is running at `http://localhost:8000`. If Python reports a missing package such as `numpy`, run this from `ai-server/`:
+
+```bash
+pip install -r requirements.txt
+```
+
+For initial testing, use synthetic data and set `DRY_RUN=true` in `server/.env` where supported. Test `send_notification` last because it can perform real email or Slack actions.
 
 ---
 

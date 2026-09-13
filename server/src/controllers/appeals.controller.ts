@@ -33,7 +33,7 @@ export async function getAppeal(
 ): Promise<void> {
   try {
     const user = req.user!;
-    const { id: caseId } = req.params;
+    const caseId = req.params.id as string;
 
     const caseData = await getCaseById(caseId);
 
@@ -64,7 +64,7 @@ export async function createNewAppeal(
 ): Promise<void> {
   try {
     const user = req.user!;
-    const { id: caseId } = req.params;
+    const caseId = req.params.id as string;
     const body = req.body as CreateAppealInput;
 
     if (user.role !== "insurance_provider") {
@@ -83,8 +83,8 @@ export async function createNewAppeal(
 
     const appeal = await createAppeal({
       case_id: caseId,
-      appeal_text: body.appeal_text,
-      citations: body.citations,
+      ...(body.appeal_text !== undefined ? { appeal_text: body.appeal_text } : {}),
+      ...(body.citations !== undefined ? { citations: body.citations } : {}),
     });
 
     // Update case status
@@ -114,7 +114,8 @@ export async function updateAppeal(
 ): Promise<void> {
   try {
     const user = req.user!;
-    const { id: caseId, appealId } = req.params;
+    const caseId = req.params.id as string;
+    const appealId = req.params.appealId as string;
     const body = req.body as UpdateAppealInput;
 
     if (user.role !== "insurance_provider") {

@@ -4,6 +4,23 @@
  * Tools reuse the same services as the REST API — zero duplicated logic.
  */
 
+<<<<<<< HEAD
+import 'dotenv/config';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+
+// Import individual tools
+import { policySearchTool } from './tools/policy-search.js';
+import { denyParseTool } from './tools/denial-parse.js';
+import { evidenceScanTool } from './tools/evidence-scan.js';
+import { caseUpdateTool } from './tools/case-update.js';
+import { sendNotificationTool } from './tools/send-notification.js';
+import { googleDriveTools } from './tools/google-drive.js';
+import { googleSheetsTools } from './tools/google-sheets.js';
+import { googleCalendarTools } from './tools/google-calendar.js';
+import { gmailTools } from './tools/gmail.js';
+=======
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -14,6 +31,7 @@ import { denyParseTool } from "./tools/denial-parse.js";
 import { evidenceScanTool } from "./tools/evidence-scan.js";
 import { caseUpdateTool } from "./tools/case-update.js";
 import { sendNotificationTool } from "./tools/send-notification.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 import { logger } from "../lib/logger.js";
 
@@ -31,8 +49,16 @@ export function createMcpServer(): McpServer {
   evidenceScanTool(server);
   caseUpdateTool(server);
   sendNotificationTool(server);
+  googleDriveTools(server);
+  googleSheetsTools(server);
+  googleCalendarTools(server);
+  gmailTools(server);
 
+<<<<<<< HEAD
+  logger.info('MCP server initialized with 11 tools');
+=======
   logger.info("MCP server initialized with 5 tools");
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   return server;
 }
 

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { getEval, getHealth } from "../controllers/eval.controller.js";
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * GET /api/eval/results

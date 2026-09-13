@@ -32,6 +32,15 @@ function format(
 
 export const logger = {
   debug(message: string, meta?: Record<string, unknown>): void {
+<<<<<<< HEAD
+    if (shouldLog('debug')) console.error(format('debug', message, meta));
+  },
+  info(message: string, meta?: Record<string, unknown>): void {
+    if (shouldLog('info')) console.error(format('info', message, meta));
+  },
+  warn(message: string, meta?: Record<string, unknown>): void {
+    if (shouldLog('warn')) console.error(format('warn', message, meta));
+=======
     if (shouldLog("debug")) console.debug(format("debug", message, meta));
   },
   info(message: string, meta?: Record<string, unknown>): void {
@@ -39,6 +48,7 @@ export const logger = {
   },
   warn(message: string, meta?: Record<string, unknown>): void {
     if (shouldLog("warn")) console.warn(format("warn", message, meta));
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   },
   error(
     message: string,

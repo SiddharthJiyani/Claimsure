@@ -4,7 +4,7 @@ import {
   webhookHealth,
 } from "../controllers/webhooks.controller.js";
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * POST /api/webhooks/slack

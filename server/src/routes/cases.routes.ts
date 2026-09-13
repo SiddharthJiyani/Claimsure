@@ -20,7 +20,7 @@ import {
   processCaseSchema,
 } from "../validators/cases.validator.js";
 
-const router = Router();
+const router: Router = Router();
 
 // All case routes require authentication
 router.use(requireAuth);

@@ -1,8 +1,18 @@
 /**
  * Auth controller — handles signup, login, logout, and session.
- * Proxies to Supabase Auth; enriches profile table on signup.
+ * Uses Supabase Admin client for signup to bypass email rate limits in dev.
+ * Production: switch signUp back to getAnonClient() and enable email confirmation in Supabase dashboard.
  */
 
+<<<<<<< HEAD
+import type { Request, Response, NextFunction } from 'express';
+import { getAnonClient, getServiceClient } from '../database/supabase.js';
+import { createProfile, getProfileById } from '../database/queries/profiles.js';
+import { sendSuccess, sendCreated } from '../lib/response.js';
+import { AuthenticationError, ConflictError } from '../lib/errors.js';
+import type { AuthUser } from '../types/index.js';
+import type { SignUpInput, LoginInput, ResetPasswordInput } from '../validators/auth.validator.js';
+=======
 import type { Request, Response, NextFunction } from "express";
 import { supabaseAnon } from "../database/supabase.js";
 import { createProfile, upsertProfile } from "../database/queries/profiles.js";
@@ -13,6 +23,7 @@ import type {
   LoginInput,
   ResetPasswordInput,
 } from "../validators/auth.validator.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 export async function signUp(
   req: Request,
@@ -22,28 +33,41 @@ export async function signUp(
   try {
     const body = req.body as SignUpInput;
 
-    // 1. Create auth user in Supabase
-    const { data, error } = await supabaseAnon.auth.signUp({
+    // Use admin.createUser so we can:
+    // 1. Skip email confirmation (email_confirm: true) — avoids Supabase rate limits in dev
+    // 2. Store full_name and role in user_metadata for the login flow to reference
+    const { data, error } = await getServiceClient().auth.admin.createUser({
       email: body.email,
       password: body.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: body.full_name,
+        role: body.role,
+      },
     });
 
     if (error) {
+<<<<<<< HEAD
+      const msg = error.message.toLowerCase();
+      if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique')) {
+        throw new ConflictError('An account with this email already exists');
+=======
       if (error.message.toLowerCase().includes("already registered")) {
         throw new ConflictError("An account with this email already exists");
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
       }
       throw new AuthenticationError(error.message);
     }
 
     if (!data.user) throw new AuthenticationError("Failed to create user");
 
-    // 2. Create profile row (role + org)
+    // Create the profile row with role + org scoping
     const profile = await createProfile({
       id: data.user.id,
       email: body.email,
       full_name: body.full_name,
       role: body.role,
-      organization_id: body.organization_id,
+      ...(body.organization_id !== undefined ? { organization_id: body.organization_id } : {}),
     });
 
     sendCreated(
@@ -58,8 +82,12 @@ export async function signUp(
         },
         session: data.session,
       },
+<<<<<<< HEAD
+    }, 'Account created. You can log in immediately.');
+=======
       "Account created. Please check your email for verification.",
     );
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
@@ -73,7 +101,7 @@ export async function login(
   try {
     const body = req.body as LoginInput;
 
-    const { data, error } = await supabaseAnon.auth.signInWithPassword({
+    const { data, error } = await getAnonClient().auth.signInWithPassword({
       email: body.email,
       password: body.password,
     });
@@ -82,6 +110,20 @@ export async function login(
       throw new AuthenticationError("Invalid email or password");
     }
 
+<<<<<<< HEAD
+    let profile;
+    try {
+      profile = await getProfileById(data.user.id);
+    } catch (err) {
+      // Fallback: create if missing
+      profile = await createProfile({
+        id: data.user.id,
+        email: data.user.email ?? body.email,
+        full_name: data.user.user_metadata?.['full_name'] as string ?? 'Unknown',
+        role: data.user.user_metadata?.['role'] as 'patient' | 'insurance_provider' ?? 'patient',
+      });
+    }
+=======
     // Upsert profile (handles edge cases where profile may not exist yet)
     await upsertProfile({
       id: data.user.id,
@@ -92,6 +134,7 @@ export async function login(
         (data.user.user_metadata?.["role"] as
           "patient" | "insurance_provider") ?? "patient",
     });
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
     sendSuccess(
       res,
@@ -107,8 +150,19 @@ export async function login(
           email: data.user.email,
         },
       },
+<<<<<<< HEAD
+      user: {
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        role: profile.role,
+        organization_id: profile.organization_id,
+      },
+    }, 'Login successful');
+=======
       "Login successful",
     );
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
@@ -125,8 +179,13 @@ export async function logout(
       throw new AuthenticationError("Bearer token required");
     }
 
+<<<<<<< HEAD
+    await getAnonClient().auth.signOut();
+    sendSuccess(res, null, 'Logged out successfully');
+=======
     await supabaseAnon.auth.signOut();
     sendSuccess(res, null, "Logged out successfully");
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
@@ -139,7 +198,7 @@ export async function getMe(
 ): Promise<void> {
   try {
     // req.user is already populated by the auth middleware
-    sendSuccess(res, req.user);
+    sendSuccess(res, req.user as AuthUser);
   } catch (err) {
     next(err);
   }
@@ -153,12 +212,18 @@ export async function resetPassword(
   try {
     const body = req.body as ResetPasswordInput;
 
+<<<<<<< HEAD
+    const { error } = await getAnonClient().auth.resetPasswordForEmail(body.email, {
+      redirectTo: `${process.env['CORS_ALLOWED_ORIGINS']?.split(',')[0]}/reset-password`,
+    });
+=======
     const { error } = await supabaseAnon.auth.resetPasswordForEmail(
       body.email,
       {
         redirectTo: `${process.env["CORS_ALLOWED_ORIGINS"]?.split(",")[0]}/reset-password`,
       },
     );
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
     if (error) throw new AuthenticationError(error.message);
 

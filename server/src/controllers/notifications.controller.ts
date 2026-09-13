@@ -40,7 +40,7 @@ export async function markRead(
 ): Promise<void> {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     await markNotificationRead(id, user.id);
     sendSuccess(res, null, "Notification marked as read");

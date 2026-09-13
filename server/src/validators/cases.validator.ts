@@ -1,6 +1,19 @@
 import { z } from "zod";
 
 const caseStatusEnum = z.enum([
+<<<<<<< HEAD
+  'PENDING',
+  'ANALYZING',
+  'ACTION_REQUIRED',
+  'AWAITING_REVIEW',
+  'APPEAL_READY',
+  'SUBMITTED',
+  'VERIFYING',
+  'RESOLVED',
+  'ESCALATED',
+  'CLOSED',
+] as const);
+=======
   "PENDING",
   "ANALYZING",
   "ACTION_REQUIRED",
@@ -12,6 +25,7 @@ const caseStatusEnum = z.enum([
   "ESCALATED",
   "CLOSED",
 ]);
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 export const createCaseSchema = z.object({
   patient_id: z

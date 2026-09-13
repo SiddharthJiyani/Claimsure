@@ -6,7 +6,7 @@ import {
   markAllRead,
 } from "../controllers/notifications.controller.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.use(requireAuth);
 

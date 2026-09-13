@@ -37,6 +37,23 @@ export function getAnonClient(): SupabaseClient {
   return anonClient;
 }
 
+/**
+ * Named proxy exports for backwards compatibility with query files.
+ * These are Proxy objects that lazily call getServiceClient()/getAnonClient()
+ * on first property access, so initialization order doesn't matter.
+ */
+export const supabase = new Proxy({} as ReturnType<typeof getServiceClient>, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getServiceClient(), prop, receiver);
+  },
+});
+
+export const supabaseAnon = new Proxy({} as ReturnType<typeof getAnonClient>, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getAnonClient(), prop, receiver);
+  },
+});
+
 export function isSupabaseConfigured(): boolean {
   const url = process.env.SUPABASE_URL ?? "";
   const anon = process.env.SUPABASE_ANON_KEY ?? "";

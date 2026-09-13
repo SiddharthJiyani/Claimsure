@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+import 'dotenv/config';
+import express, { type Express } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+=======
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -17,6 +25,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
@@ -25,8 +34,7 @@ import apiRoutes from "./routes/index.js";
 
 // ─── App Init ─────────────────────────────────────────────────────────────────
 
-const app = express();
-const origin = process.env.CLIENT_ORIGIN ?? "http://localhost:3000";
+const app: Express = express();
 
 // ─── Security Middleware ──────────────────────────────────────────────────────
 
