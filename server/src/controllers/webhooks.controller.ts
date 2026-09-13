@@ -150,3 +150,31 @@ export async function webhookHealth(
 ): Promise<void> {
   sendSuccess(res, { webhook: "ok" });
 }
+
+export async function sendSlackTest(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { sendChannelUpdate, isSlackConfigured } = await import(
+      "../services/slack.js"
+    );
+    if (!isSlackConfigured()) {
+      res.status(400).json({
+        error:
+          "Slack incoming webhook is not configured. Adding the app to a channel is not enough.",
+      });
+      return;
+    }
+    await sendChannelUpdate({
+      title: "ClaimSure is connected",
+      message:
+        "This is a test post from ClaimSure. Claim updates will appear in this channel.",
+      event: "slack_test",
+    });
+    sendSuccess(res, { posted: true });
+  } catch (err) {
+    next(err);
+  }
+}

@@ -291,8 +291,10 @@ export function PrescriptionUploadModal({
               <div className="rounded-2xl border border-border bg-surface-2/70 p-3 text-sm">
                 <p className="font-medium">Related policy clauses</p>
                 <ul className="mt-2 space-y-2 text-muted">
-                  {parsed.rag.matched_clauses.slice(0, 3).map((clause) => (
-                    <li key={clause.citation ?? clause.clause_title}>
+                  {parsed.rag.matched_clauses.slice(0, 3).map((clause, index) => (
+                    <li
+                      key={`${clause.citation ?? clause.clause_title ?? "clause"}-${index}`}
+                    >
                       <span className="text-accent">
                         {clause.citation ?? clause.clause_title}
                       </span>

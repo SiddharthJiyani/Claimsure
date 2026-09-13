@@ -9,6 +9,15 @@ import { useAuth } from "@/lib/auth-context";
 import { notificationCaseHref } from "@/lib/notification-href";
 import type { NotificationItem } from "@/lib/types";
 
+function asNotificationList(payload: {
+  notifications?: NotificationItem[] | null;
+  data?: NotificationItem[] | null;
+} | null) {
+  if (Array.isArray(payload?.notifications)) return payload.notifications;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+}
+
 export function NotificationBell() {
   const pathname = usePathname();
   const { profile } = useAuth();
@@ -23,13 +32,14 @@ export function NotificationBell() {
       const data = await appFetch<{ notifications: NotificationItem[] }>(
         "/api/workspace/notifications",
       );
-      setItems(data.notifications);
+      setItems(asNotificationList(data));
     } catch {
       try {
-        const data = await apiFetch<{ notifications: NotificationItem[] }>(
-          "/notifications",
-        );
-        setItems(data.notifications);
+        const data = await apiFetch<{
+          notifications?: NotificationItem[];
+          data?: NotificationItem[];
+        }>("/notifications");
+        setItems(asNotificationList(data));
       } catch {
         setItems([]);
       }
@@ -44,7 +54,8 @@ export function NotificationBell() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const unread = items.filter((item) => !item.is_read).length;
+  const list = Array.isArray(items) ? items : [];
+  const unread = list.filter((item) => !item.is_read).length;
 
   async function markRead(id: string) {
     try {
@@ -94,12 +105,12 @@ export function NotificationBell() {
             </Link>
           </div>
           <ul className="max-h-80 overflow-auto">
-            {items.length === 0 ? (
+            {list.length === 0 ? (
               <li className="px-3 py-8 text-center text-sm text-muted">
                 No notifications yet.
               </li>
             ) : (
-              items.map((item) => {
+              list.map((item) => {
                 const href = notificationCaseHref(profile?.role, item.case_id);
                 const inner = (
                   <>
