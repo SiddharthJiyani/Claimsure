@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { AuthShell } from "@/components/AuthShell";
 import { createClient } from "@/lib/supabase/client";
 import { siteUrl } from "@/lib/env";
 
@@ -29,26 +30,22 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="auth-grid grid min-h-full place-items-center px-4">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-8"
-      >
-        <h1 className="text-2xl font-semibold">Reset password</h1>
+    <AuthShell
+      title="Reset password"
+      subtitle="We’ll email a recovery link if the account exists."
+    >
+      <form onSubmit={onSubmit} className="space-y-3">
         <input
           type="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
-          className="w-full rounded-xl border border-border bg-background px-3 py-2"
+          className="cs-input"
         />
         {error ? <p className="text-sm text-danger">{error}</p> : null}
         {message ? <p className="text-sm text-success">{message}</p> : null}
-        <button
-          type="submit"
-          className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-background"
-        >
+        <button type="submit" className="cs-btn cs-btn-primary w-full">
           Send reset link
         </button>
         <Link
@@ -58,6 +55,6 @@ export default function ForgotPasswordPage() {
           Back to sign in
         </Link>
       </form>
-    </div>
+    </AuthShell>
   );
 }

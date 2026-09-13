@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -9,32 +9,17 @@ import {
   Inbox,
 } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
+import { EmptyState } from "@/components/EmptyState";
+import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { ClaimCase } from "@/lib/types";
+import { useCases } from "@/lib/use-workspace-data";
 
 export default function InsuranceDashboardPage() {
   const { profile } = useAuth();
-  const [cases, setCases] = useState<ClaimCase[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { cases, error, reload, setError } = useCases();
   const [busyId, setBusyId] = useState<string | null>(null);
-
-  async function load() {
-    try {
-      const data = await apiFetch<{ cases: ClaimCase[] }>("/cases");
-      setCases(data.cases);
-      setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load operations queue",
-      );
-    }
-  }
-
-  useEffect(() => {
-    void load();
-  }, []);
 
   const stats = useMemo(
     () => ({
@@ -53,7 +38,7 @@ export default function InsuranceDashboardPage() {
   async function seedDemo() {
     try {
       await apiFetch("/demo/seed", { method: "POST" });
-      await load();
+      await reload();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not load demo cases",
@@ -65,7 +50,7 @@ export default function InsuranceDashboardPage() {
     setBusyId(id);
     try {
       await apiFetch(`/cases/${id}/analyze`, { method: "POST" });
-      await load();
+      await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not trigger agent");
     } finally {
@@ -79,26 +64,20 @@ export default function InsuranceDashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-accent-2">Healthcare operations</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-            Claims queue
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            {profile?.full_name}, you see every case assigned to your
-            organization — trigger the agent, review gaps, and approve appeal
-            drafts.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void seedDemo()}
-          className="rounded-xl border border-border px-3 py-2 text-sm text-muted hover:text-foreground"
-        >
-          Load demo cases
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Healthcare operations"
+        title="Claims command center"
+        description={`${profile?.full_name ?? "Reviewer"}, you see every case assigned to your organization — trigger the agent, review gaps, and approve appeal drafts.`}
+        action={
+          <button
+            type="button"
+            onClick={() => void seedDemo()}
+            className="cs-btn cs-btn-ghost"
+          >
+            Load demo cases
+          </button>
+        }
+      />
 
       <div className="grid gap-3 md:grid-cols-4">
         <StatCard label="Org cases" value={stats.incoming} icon={Inbox} />
@@ -122,18 +101,18 @@ export default function InsuranceDashboardPage() {
       ) : null}
 
       <section>
-        <h2 className="text-lg font-semibold">Action queue</h2>
+        <h2 className="mb-3 text-lg font-semibold">Action queue</h2>
         {queue.length === 0 ? (
-          <div className="mt-3 rounded-3xl border border-dashed border-border px-6 py-16 text-center text-sm text-muted">
-            No open organization cases. Load the demo set after a patient
-            account exists, or wait for incoming claims.
-          </div>
+          <EmptyState
+            title="Queue is clear"
+            description="Load the demo set after a patient account exists, or wait for incoming claims."
+          />
         ) : (
-          <div className="mt-3 grid gap-3">
+          <div className="grid gap-3">
             {queue.map((claim) => (
               <div
                 key={claim.id}
-                className="grid gap-3 rounded-3xl border border-border bg-surface p-3 lg:grid-cols-[1fr_auto]"
+                className="grid gap-3 rounded-3xl border border-border bg-surface/80 p-3 lg:grid-cols-[1fr_auto]"
               >
                 <CaseCard
                   claim={claim}
@@ -144,7 +123,7 @@ export default function InsuranceDashboardPage() {
                   type="button"
                   disabled={busyId === claim.id}
                   onClick={() => void trigger(claim.id)}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-3 text-sm font-semibold text-background disabled:opacity-60"
+                  className="cs-btn cs-btn-primary"
                 >
                   <Bot size={16} />
                   {busyId === claim.id ? "Queuing…" : "Trigger AI agent"}

@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070b12;
-  --foreground: #e8eef7;
-  --surface: #0f1623;
-  --surface-2: #161e2e;
-  --border: #243044;
-  --muted: #8b9bb4;
+  --background: #05080f;
+  --foreground: #eef4ff;
+  --surface: #0c1320;
+  --surface-2: #121b2c;
+  --border: #22314a;
+  --muted: #8ea0ba;
   --accent: #2dd4bf;
-  --accent-2: #38bdf8;
+  --accent-2: #60a5fa;
   --danger: #fb7185;
   --warn: #fbbf24;
   --success: #34d399;
@@ -28,6 +28,7 @@
   --color-success: var(--success);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --shadow-panel: 0 20px 50px -24px rgb(2 8 20 / 0.85);
 }
 
 * {
@@ -36,6 +37,7 @@
 
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -56,17 +58,86 @@ button {
   font: inherit;
 }
 
-.auth-grid {
+.auth-grid,
+.app-canvas {
+  background-color: var(--background);
   background-image:
     radial-gradient(
-      circle at 20% 20%,
-      color-mix(in oklab, var(--accent) 12%, transparent),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 80% 0%,
-      color-mix(in oklab, var(--accent-2) 14%, transparent),
+      circle at 12% 8%,
+      color-mix(in oklab, var(--accent) 16%, transparent),
       transparent 28%
     ),
-    linear-gradient(180deg, #070b12 0%, #0b1220 100%);
+    radial-gradient(
+      circle at 88% 0%,
+      color-mix(in oklab, var(--accent-2) 18%, transparent),
+      transparent 30%
+    ),
+    linear-gradient(180deg, #05080f 0%, #071018 100%);
+}
+
+.app-canvas {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.025) 1px, transparent 1px),
+    radial-gradient(
+      circle at 12% 8%,
+      color-mix(in oklab, var(--accent) 14%, transparent),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 88% 0%,
+      color-mix(in oklab, var(--accent-2) 16%, transparent),
+      transparent 30%
+    );
+  background-size:
+    56px 56px,
+    56px 56px,
+    auto,
+    auto;
+}
+
+.cs-panel {
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(18px);
+}
+
+.cs-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--background);
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  outline: none;
+}
+
+.cs-input:focus {
+  border-color: color-mix(in oklab, var(--accent) 70%, var(--border));
+}
+
+.cs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 0.9rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.cs-btn-primary {
+  background: var(--accent);
+  color: #04201c;
+}
+
+.cs-btn-primary:disabled {
+  opacity: 0.55;
+}
+
+.cs-btn-ghost {
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--surface-2) 70%, transparent);
 }

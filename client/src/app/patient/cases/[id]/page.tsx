@@ -76,7 +76,7 @@ export default function PatientCasePage() {
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
-      <section className="rounded-3xl border border-border bg-surface p-5">
+      <section className="cs-panel rounded-3xl p-5">
         <h2 className="text-lg font-semibold">What happened</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
           {denial?.denial_reason ??
@@ -90,13 +90,13 @@ export default function PatientCasePage() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-3xl border border-border bg-surface p-5">
+        <section className="cs-panel rounded-3xl p-5">
           <h2 className="text-lg font-semibold">Evidence checklist</h2>
           <div className="mt-4">
             <EvidencePanel documents={claim.documents ?? []} />
           </div>
         </section>
-        <section className="rounded-3xl border border-border bg-surface p-5">
+        <section className="cs-panel rounded-3xl p-5">
           <h2 className="text-lg font-semibold">Upload a missing record</h2>
           <p className="mt-1 text-sm text-muted">
             Files are stored as metadata for now (Drive comes next). Uploading a
@@ -108,12 +108,12 @@ export default function PatientCasePage() {
               value={fileName}
               onChange={(event) => setFileName(event.target.value)}
               placeholder="Clinical note — Dr. Patel 2026-08-02"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2"
+              className="cs-input"
             />
             <button
               type="submit"
               disabled={busy}
-              className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-background disabled:opacity-60"
+              className="cs-btn cs-btn-primary"
             >
               {busy ? "Uploading…" : "Mark document uploaded"}
             </button>
@@ -124,7 +124,7 @@ export default function PatientCasePage() {
         </section>
       </div>
 
-      <section className="rounded-3xl border border-border bg-surface p-5">
+      <section className="cs-panel rounded-3xl p-5">
         <h2 className="text-lg font-semibold">Status timeline</h2>
         <div className="mt-4">
           <CaseTimeline logs={logs} />

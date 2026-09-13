@@ -16,7 +16,7 @@ export function CaseCard({
   return (
     <Link
       href={href}
-      className="block rounded-2xl border border-border bg-surface p-4 transition hover:border-accent/40 hover:bg-surface-2"
+      className="cs-panel block rounded-2xl p-4 transition hover:border-accent/40"
     >
       <div className="flex items-start justify-between gap-3">
         <div>

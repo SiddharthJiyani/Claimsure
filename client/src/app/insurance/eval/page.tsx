@@ -60,16 +60,22 @@ export default function EvalPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <p className="text-sm text-accent-2">Healthcare only</p>
-        <h1 className="mt-1 text-3xl font-semibold">Evaluation harness</h1>
-        <p className="mt-2 text-sm text-muted">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent-2">
+          Healthcare only
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+          Evaluation harness
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
           Patients never see this page. It is the reliability surface for the
           20-case denial suite: accuracy, gap F1, routing, safety recall, and
           citation validity.
         </p>
       </div>
       <p className="text-sm text-muted">{note}</p>
-      <MetricsTable metrics={metrics} />
+      <div className="cs-panel overflow-hidden rounded-3xl">
+        <MetricsTable metrics={metrics} />
+      </div>
     </div>
   );
 }

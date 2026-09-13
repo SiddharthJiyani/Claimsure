@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
 
 export function NotificationBell() {
+  const pathname = usePathname();
+  const inboxHref = pathname.startsWith("/insurance")
+    ? "/insurance/notifications"
+    : "/patient/notifications";
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
 
@@ -59,8 +65,15 @@ export function NotificationBell() {
       </button>
       {open ? (
         <div className="absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
-          <div className="border-b border-border px-3 py-2 text-sm font-medium">
-            Notifications
+          <div className="flex items-center justify-between border-b border-border px-3 py-2 text-sm font-medium">
+            Alerts
+            <Link
+              href={inboxHref}
+              className="text-xs text-accent"
+              onClick={() => setOpen(false)}
+            >
+              View all
+            </Link>
           </div>
           <ul className="max-h-80 overflow-auto">
             {items.length === 0 ? (
