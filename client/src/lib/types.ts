@@ -1,6 +1,49 @@
 export const USER_ROLES = ["patient", "insurance_provider"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+export type Organization = {
+  id: string;
+  name: string;
+  type: string;
+  created_at?: string;
+};
+
+export type PrescriptionParse = {
+  patient_name?: string | null;
+  disease: string;
+  service_type: string;
+  service_code?: string | null;
+  claim_purpose: string;
+  medications: string[];
+  summary: string;
+  confidence?: number;
+};
+
+export type PrescriptionRag = {
+  citations: string[];
+  matched_clauses: Array<{
+    citation?: string;
+    clause_title?: string;
+    text?: string;
+  }>;
+  confidence: number;
+  policy_missing: boolean;
+  reason?: string;
+};
+
+export type PrescriptionUploadResult = {
+  parse: PrescriptionParse;
+  rag: PrescriptionRag;
+  extracted_text: string;
+  filename: string;
+  drive: {
+    drive_file_id: string;
+    drive_url: string | null;
+    folder: string;
+  } | null;
+  drive_error?: string | null;
+};
+
 export type Profile = {
   id: string;
   email: string;

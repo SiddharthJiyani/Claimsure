@@ -24,6 +24,16 @@ class VerificationCheck(BaseModel):
     unresolved_items: List[str] = Field(default_factory=list)
     explanation: str
 
+class PrescriptionParse(BaseModel):
+    patient_name: Optional[str] = Field(default=None, description="Patient name on the prescription")
+    disease: str = Field(default="", description="Primary diagnosis or condition")
+    service_type: str = Field(default="", description="Procedure or service to claim")
+    service_code: Optional[str] = Field(default=None, description="CPT or ICD code if present")
+    claim_purpose: str = Field(default="", description="Why insurance coverage is being requested")
+    medications: List[str] = Field(default_factory=list)
+    summary: str = Field(default="", description="Short plain-language summary for the patient")
+    confidence: float = Field(default=0.7)
+
 DENIAL_PARSER_SYSTEM_PROMPT = """You are an expert clinical claim adjudication analyst.
 Extract structured information from the provided denial letter or clinical prior-authorization document.
 Identify:
@@ -44,3 +54,16 @@ Return valid JSON adhering to the AppealDraft schema."""
 
 VERIFICATION_SYSTEM_PROMPT = """You are a clinical compliance auditor verifying whether newly uploaded clinical documentation resolves prior evidence gaps.
 Return valid JSON adhering to the VerificationCheck schema."""
+
+PRESCRIPTION_PARSER_SYSTEM_PROMPT = """You are a clinical intake analyst reading a doctor's prescription or clinical order.
+Extract only what is written or clearly implied. Do not invent diagnoses or procedures.
+Identify:
+1. Patient name if present.
+2. The disease, diagnosis, or condition being treated.
+3. The service, procedure, imaging, therapy, or medication the patient would claim with insurance.
+4. Any CPT or ICD codes.
+5. A one-sentence claim purpose a patient can confirm.
+6. Medications listed.
+7. A short summary in plain language.
+
+Return valid JSON adhering to the PrescriptionParse schema."""

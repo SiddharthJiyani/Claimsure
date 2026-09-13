@@ -43,3 +43,19 @@ export async function apiFetch<T>(
   }
   return body as T;
 }
+
+export async function appUpload<T>(path: string, form: FormData): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    body: form,
+    credentials: "include",
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(
+      (body as { error?: string }).error ??
+        `Request failed (${response.status})`,
+    );
+  }
+  return body as T;
+}
