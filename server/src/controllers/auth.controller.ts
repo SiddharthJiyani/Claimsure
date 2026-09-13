@@ -4,6 +4,7 @@
  * Production: switch signUp back to getAnonClient() and enable email confirmation in Supabase dashboard.
  */
 
+<<<<<<< HEAD
 import type { Request, Response, NextFunction } from 'express';
 import { getAnonClient, getServiceClient } from '../database/supabase.js';
 import { createProfile, getProfileById } from '../database/queries/profiles.js';
@@ -11,8 +12,24 @@ import { sendSuccess, sendCreated } from '../lib/response.js';
 import { AuthenticationError, ConflictError } from '../lib/errors.js';
 import type { AuthUser } from '../types/index.js';
 import type { SignUpInput, LoginInput, ResetPasswordInput } from '../validators/auth.validator.js';
+=======
+import type { Request, Response, NextFunction } from "express";
+import { supabaseAnon } from "../database/supabase.js";
+import { createProfile, upsertProfile } from "../database/queries/profiles.js";
+import { sendSuccess, sendCreated } from "../lib/response.js";
+import { AuthenticationError, ConflictError } from "../lib/errors.js";
+import type {
+  SignUpInput,
+  LoginInput,
+  ResetPasswordInput,
+} from "../validators/auth.validator.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
-export async function signUp(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function signUp(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const body = req.body as SignUpInput;
 
@@ -30,14 +47,19 @@ export async function signUp(req: Request, res: Response, next: NextFunction): P
     });
 
     if (error) {
+<<<<<<< HEAD
       const msg = error.message.toLowerCase();
       if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique')) {
         throw new ConflictError('An account with this email already exists');
+=======
+      if (error.message.toLowerCase().includes("already registered")) {
+        throw new ConflictError("An account with this email already exists");
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
       }
       throw new AuthenticationError(error.message);
     }
 
-    if (!data.user) throw new AuthenticationError('Failed to create user');
+    if (!data.user) throw new AuthenticationError("Failed to create user");
 
     // Create the profile row with role + org scoping
     const profile = await createProfile({
@@ -48,21 +70,34 @@ export async function signUp(req: Request, res: Response, next: NextFunction): P
       ...(body.organization_id !== undefined ? { organization_id: body.organization_id } : {}),
     });
 
-    sendCreated(res, {
-      user: {
-        id: data.user.id,
-        email: profile.email,
-        full_name: profile.full_name,
-        role: profile.role,
-        organization_id: profile.organization_id,
+    sendCreated(
+      res,
+      {
+        user: {
+          id: data.user.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          role: profile.role,
+          organization_id: profile.organization_id,
+        },
+        session: data.session,
       },
+<<<<<<< HEAD
     }, 'Account created. You can log in immediately.');
+=======
+      "Account created. Please check your email for verification.",
+    );
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
 }
 
-export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function login(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const body = req.body as LoginInput;
 
@@ -72,9 +107,10 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     });
 
     if (error || !data.session) {
-      throw new AuthenticationError('Invalid email or password');
+      throw new AuthenticationError("Invalid email or password");
     }
 
+<<<<<<< HEAD
     let profile;
     try {
       profile = await getProfileById(data.user.id);
@@ -87,14 +123,34 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         role: data.user.user_metadata?.['role'] as 'patient' | 'insurance_provider' ?? 'patient',
       });
     }
+=======
+    // Upsert profile (handles edge cases where profile may not exist yet)
+    await upsertProfile({
+      id: data.user.id,
+      email: data.user.email ?? body.email,
+      full_name:
+        (data.user.user_metadata?.["full_name"] as string) ?? "Unknown",
+      role:
+        (data.user.user_metadata?.["role"] as
+          "patient" | "insurance_provider") ?? "patient",
+    });
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
-    sendSuccess(res, {
-      session: {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_at: data.session.expires_at,
-        token_type: data.session.token_type,
+    sendSuccess(
+      res,
+      {
+        session: {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_at: data.session.expires_at,
+          token_type: data.session.token_type,
+        },
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+        },
       },
+<<<<<<< HEAD
       user: {
         id: profile.id,
         email: profile.email,
@@ -103,26 +159,43 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         organization_id: profile.organization_id,
       },
     }, 'Login successful');
+=======
+      "Login successful",
+    );
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
 }
 
-export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function logout(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new AuthenticationError('Bearer token required');
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new AuthenticationError("Bearer token required");
     }
 
+<<<<<<< HEAD
     await getAnonClient().auth.signOut();
     sendSuccess(res, null, 'Logged out successfully');
+=======
+    await supabaseAnon.auth.signOut();
+    sendSuccess(res, null, "Logged out successfully");
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
 }
 
-export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getMe(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     // req.user is already populated by the auth middleware
     sendSuccess(res, req.user as AuthUser);
@@ -131,18 +204,31 @@ export async function getMe(req: Request, res: Response, next: NextFunction): Pr
   }
 }
 
-export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function resetPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const body = req.body as ResetPasswordInput;
 
+<<<<<<< HEAD
     const { error } = await getAnonClient().auth.resetPasswordForEmail(body.email, {
       redirectTo: `${process.env['CORS_ALLOWED_ORIGINS']?.split(',')[0]}/reset-password`,
     });
+=======
+    const { error } = await supabaseAnon.auth.resetPasswordForEmail(
+      body.email,
+      {
+        redirectTo: `${process.env["CORS_ALLOWED_ORIGINS"]?.split(",")[0]}/reset-password`,
+      },
+    );
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
     if (error) throw new AuthenticationError(error.message);
 
     // Always return 200 (don't reveal if email exists)
-    sendSuccess(res, null, 'If this email exists, a reset link has been sent.');
+    sendSuccess(res, null, "If this email exists, a reset link has been sent.");
   } catch (err) {
     next(err);
   }

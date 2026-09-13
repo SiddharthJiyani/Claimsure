@@ -237,22 +237,32 @@
       "expected_route": "abstain",
       "actual_route": "abstain",
       "status": "ESCALATED",
+<<<<<<< HEAD
       "citations": [
         "POL-A-2026-DIAG:Clause 4.1",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
       "latency_ms": 0.13
+=======
+      "citations": ["POL-A-2026-DIAG:Clause 4.1", "POL-A-2026-DIAG:Clause 4.2"],
+      "latency_ms": 0.52
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     },
     {
       "case_number": "R1020",
       "expected_route": "abstain",
       "actual_route": "abstain",
       "status": "ESCALATED",
+<<<<<<< HEAD
       "citations": [
         "POL-A-2026-DIAG:Clause 4.1",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
       "latency_ms": 0.14
+=======
+      "citations": ["POL-A-2026-DIAG:Clause 4.1", "POL-A-2026-DIAG:Clause 4.2"],
+      "latency_ms": 0.0
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     }
   ]
 }

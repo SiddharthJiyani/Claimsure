@@ -1,17 +1,27 @@
+<<<<<<< HEAD
 import multer from 'multer';
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+=======
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 import {
   listDocuments,
   uploadDocument,
   updateDocumentMissing,
+<<<<<<< HEAD
 } from '../controllers/documents.controller.js';
 import { uploadDocumentAndAnalyze } from '../controllers/upload.controller.js';
+=======
+} from "../controllers/documents.controller.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 import {
   createDocumentSchema,
   markMissingSchema,
-} from '../validators/documents.validator.js';
+} from "../validators/documents.validator.js";
 
 // Multer in-memory storage — only used for the /upload route.
 // 50 MB max file size; mimetype filtering is intentionally permissive (PDF, images, text).
@@ -45,7 +55,7 @@ router.use(requireAuth);
  * List all documents for a case with missing/found split.
  * Access: patient (own cases), insurance_provider (org cases)
  */
-router.get('/', listDocuments);
+router.get("/", listDocuments);
 
 /**
  * POST /api/cases/:id/documents/upload
@@ -70,13 +80,17 @@ router.post('/upload', upload.single('file'), uploadDocumentAndAnalyze);
  * Body: { name, document_type, drive_file_id, drive_url?, is_missing? }
  * Note: Use /upload if you want the server to handle file bytes directly.
  */
-router.post('/', validate(createDocumentSchema), uploadDocument);
+router.post("/", validate(createDocumentSchema), uploadDocument);
 
 /**
  * PATCH /api/cases/:id/documents/:docId/missing
  * Flag a document as missing or found. Insurance providers only.
  * Body: { is_missing: boolean }
  */
-router.patch('/:docId/missing', validate(markMissingSchema), updateDocumentMissing);
+router.patch(
+  "/:docId/missing",
+  validate(markMissingSchema),
+  updateDocumentMissing,
+);
 
 export default router;

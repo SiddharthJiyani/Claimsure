@@ -5,7 +5,7 @@
 
 // ─── Role & Auth ──────────────────────────────────────────────────────────────
 
-export type UserRole = 'patient' | 'insurance_provider';
+export type UserRole = "patient" | "insurance_provider";
 
 export interface AuthUser {
   id: string;
@@ -17,7 +17,7 @@ export interface AuthUser {
 
 // ─── Organizations ────────────────────────────────────────────────────────────
 
-export type OrgType = 'insurance_provider';
+export type OrgType = "insurance_provider";
 
 export interface Organization {
   id: string;
@@ -29,16 +29,16 @@ export interface Organization {
 // ─── Case Status Lifecycle ────────────────────────────────────────────────────
 
 export type CaseStatus =
-  | 'PENDING'
-  | 'ANALYZING'
-  | 'ACTION_REQUIRED'
-  | 'AWAITING_REVIEW'
-  | 'APPEAL_READY'
-  | 'SUBMITTED'
-  | 'VERIFYING'
-  | 'RESOLVED'
-  | 'ESCALATED'
-  | 'CLOSED';
+  | "PENDING"
+  | "ANALYZING"
+  | "ACTION_REQUIRED"
+  | "AWAITING_REVIEW"
+  | "APPEAL_READY"
+  | "SUBMITTED"
+  | "VERIFYING"
+  | "RESOLVED"
+  | "ESCALATED"
+  | "CLOSED";
 
 export interface Case {
   id: string;
@@ -70,14 +70,14 @@ export interface Denial {
 // ─── Documents ────────────────────────────────────────────────────────────────
 
 export type DocumentType =
-  | 'denial_letter'
-  | 'clinical_note'
-  | 'mri_report'
-  | 'lab_result'
-  | 'prior_auth_form'
-  | 'appeal_letter'
-  | 'policy_document'
-  | 'other';
+  | "denial_letter"
+  | "clinical_note"
+  | "mri_report"
+  | "lab_result"
+  | "prior_auth_form"
+  | "appeal_letter"
+  | "policy_document"
+  | "other";
 
 export interface CaseDocument {
   id: string;
@@ -94,12 +94,12 @@ export interface CaseDocument {
 // ─── Appeals ──────────────────────────────────────────────────────────────────
 
 export type AppealStatus =
-  | 'DRAFT'
-  | 'PENDING_REVIEW'
-  | 'APPROVED'
-  | 'SUBMITTED'
-  | 'ACCEPTED'
-  | 'REJECTED';
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "SUBMITTED"
+  | "ACCEPTED"
+  | "REJECTED";
 
 export interface PolicyCitation {
   policy_id: string;
@@ -121,17 +121,17 @@ export interface Appeal {
 // ─── Agent State ──────────────────────────────────────────────────────────────
 
 export type AgentNode =
-  | 'parse_denial'
-  | 'retrieve_requirements'
-  | 'scan_evidence'
-  | 'compute_gap'
-  | 'route'
-  | 'act'
-  | 'await_human'
-  | 'assemble_appeal'
-  | 'verify'
-  | 'escalated'
-  | 'resolved';
+  | "parse_denial"
+  | "retrieve_requirements"
+  | "scan_evidence"
+  | "compute_gap"
+  | "route"
+  | "act"
+  | "await_human"
+  | "assemble_appeal"
+  | "verify"
+  | "escalated"
+  | "resolved";
 
 export interface AgentState {
   id: string;
@@ -146,7 +146,7 @@ export interface AgentState {
 
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 
-export type ActorType = 'agent' | 'human' | 'system';
+export type ActorType = "agent" | "human" | "system";
 
 export interface AuditLog {
   id: string;
@@ -170,14 +170,14 @@ export interface AuditLog {
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 export type NotificationType =
-  | 'case_update'
-  | 'action_required'
-  | 'approval_request'
-  | 'appeal_submitted'
-  | 'case_resolved'
-  | 'escalation';
+  | "case_update"
+  | "action_required"
+  | "approval_request"
+  | "appeal_submitted"
+  | "case_resolved"
+  | "escalation";
 
-export type NotificationChannel = 'in_app' | 'email' | 'slack';
+export type NotificationChannel = "in_app" | "email" | "slack";
 
 export interface Notification {
   id: string;

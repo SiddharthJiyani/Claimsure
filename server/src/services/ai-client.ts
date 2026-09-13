@@ -3,10 +3,16 @@
  * All agent processing requests flow through here.
  */
 
+<<<<<<< HEAD
 
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { ServiceUnavailableError } from '../lib/errors.js';
+=======
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
+import { ServiceUnavailableError } from "../lib/errors.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 const BASE_URL = env.AI_SERVER_URL;
 const TIMEOUT_MS = env.AI_SERVER_TIMEOUT_MS;
@@ -22,7 +28,7 @@ export interface ProcessCaseResult {
   citations?: Array<{ policy_id: string; clause: string; text: string }>;
   evidence_found: string[];
   evidence_missing: string[];
-  route_decision: 'automatable' | 'human_review' | 'abstain';
+  route_decision: "automatable" | "human_review" | "abstain";
   actions_taken: string[];
   audit_trail: Array<{
     node: string;
@@ -86,7 +92,7 @@ interface WorkflowProcessResponse {
 // ─── HTTP Helper ───────────────────────────────────────────────────────────────
 
 async function request<T>(
-  method: 'GET' | 'POST',
+  method: "GET" | "POST",
   path: string,
   body?: unknown,
 ): Promise<T> {
@@ -96,23 +102,28 @@ async function request<T>(
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
       method,
+<<<<<<< HEAD
       headers: { 'Content-Type': 'application/json' },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+=======
+      headers: { "Content-Type": "application/json" },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
       signal: controller.signal,
     });
 
     if (!res.ok) {
-      const text = await res.text().catch(() => 'Unknown error');
+      const text = await res.text().catch(() => "Unknown error");
       throw new Error(`AI server returned ${res.status}: ${text}`);
     }
 
     return res.json() as Promise<T>;
   } catch (err) {
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new ServiceUnavailableError('AI Server (timeout)');
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new ServiceUnavailableError("AI Server (timeout)");
     }
-    logger.error('AI server request failed', err, { path });
-    throw new ServiceUnavailableError('AI Server');
+    logger.error("AI server request failed", err, { path });
+    throw new ServiceUnavailableError("AI Server");
   } finally {
     clearTimeout(timeout);
   }
@@ -123,8 +134,16 @@ async function request<T>(
 /**
  * processCase — triggers the full 9-node agent on a case.
  */
+<<<<<<< HEAD
 export async function processCase(caseId: string, dryRun = false): Promise<ProcessCaseResult> {
   const response = await request<WorkflowProcessResponse>('POST', '/api/workflow/process-case', {
+=======
+export async function processCase(
+  caseId: string,
+  dryRun = false,
+): Promise<ProcessCaseResult> {
+  return request<ProcessCaseResult>("POST", "/api/process-case", {
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     case_id: caseId,
     dry_run: dryRun || env.DRY_RUN,
   });
@@ -164,15 +183,20 @@ export async function processCase(caseId: string, dryRun = false): Promise<Proce
 /**
  * getCaseTrace — retrieves the agent's audit trail for a case.
  */
-export async function getCaseTrace(caseId: string): Promise<{ audit_trail: ProcessCaseResult['audit_trail'] }> {
-  return request<{ audit_trail: ProcessCaseResult['audit_trail'] }>('GET', `/api/case/${caseId}/trace`);
+export async function getCaseTrace(
+  caseId: string,
+): Promise<{ audit_trail: ProcessCaseResult["audit_trail"] }> {
+  return request<{ audit_trail: ProcessCaseResult["audit_trail"] }>(
+    "GET",
+    `/api/case/${caseId}/trace`,
+  );
 }
 
 /**
  * getEvalResults — retrieves the latest evaluation harness results.
  */
 export async function getEvalResults(): Promise<EvalResults> {
-  return request<EvalResults>('GET', '/api/eval/results');
+  return request<EvalResults>("GET", "/api/eval/results");
 }
 
 /**
@@ -183,7 +207,10 @@ export async function ragSearch(
   payerId?: string,
   serviceCode?: string,
 ): Promise<RAGSearchResult[]> {
-  return request<RAGSearchResult[]>('GET', `/api/rag/search?q=${encodeURIComponent(query)}${payerId ? `&payer_id=${payerId}` : ''}${serviceCode ? `&service_code=${serviceCode}` : ''}`);
+  return request<RAGSearchResult[]>(
+    "GET",
+    `/api/rag/search?q=${encodeURIComponent(query)}${payerId ? `&payer_id=${payerId}` : ""}${serviceCode ? `&service_code=${serviceCode}` : ""}`,
+  );
 }
 
 // ─── Upload + Analyze ─────────────────────────────────────────────────────────
@@ -281,10 +308,10 @@ export async function uploadAndAnalyze(
 /**
  * healthCheck — verifies the AI server is up.
  */
-export async function healthCheck(): Promise<{ status: 'ok' | 'error' }> {
+export async function healthCheck(): Promise<{ status: "ok" | "error" }> {
   try {
-    return await request<{ status: 'ok' | 'error' }>('GET', '/health');
+    return await request<{ status: "ok" | "error" }>("GET", "/health");
   } catch {
-    return { status: 'error' };
+    return { status: "error" };
   }
 }

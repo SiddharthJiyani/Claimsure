@@ -1,32 +1,55 @@
 /**
  * Google Drive service — upload, list, search, and download files.
  * All files are stored in a shared Drive folder (GOOGLE_DRIVE_FOLDER_ID).
- * File metadata (drive_file_id + drive_url) is stored in Supabase; 
+ * File metadata (drive_file_id + drive_url) is stored in Supabase;
  * the actual binary content lives only in Drive.
  */
 
+<<<<<<< HEAD
 import { google, type drive_v3 } from 'googleapis';
 import { Readable } from 'stream';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { ServiceUnavailableError } from '../lib/errors.js';
 import { getGoogleAuth } from './google-auth.js';
+=======
+import { google, type drive_v3 } from "googleapis";
+import { Readable } from "stream";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
+import { ServiceUnavailableError } from "../lib/errors.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 
 function getDriveClient(): drive_v3.Drive {
+<<<<<<< HEAD
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
   return google.drive({ version: 'v3', auth });
+=======
+  if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
+    throw new ServiceUnavailableError(
+      "Google Drive (service account not configured)",
+    );
+  }
+
+  const auth = new google.auth.GoogleAuth({
+    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
+    scopes: ["https://www.googleapis.com/auth/drive"],
+  });
+
+  return google.drive({ version: "v3", auth });
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 }
 
 // ─── DRY_RUN Fixtures ─────────────────────────────────────────────────────────
 
 const DRY_RUN_FILE: DriveFile = {
-  id: 'DRY_RUN_FILE_ID',
-  name: 'dry-run-document.pdf',
-  mimeType: 'application/pdf',
-  webViewLink: 'https://drive.google.com/dry-run',
-  size: '0',
+  id: "DRY_RUN_FILE_ID",
+  name: "dry-run-document.pdf",
+  mimeType: "application/pdf",
+  webViewLink: "https://drive.google.com/dry-run",
+  size: "0",
   createdTime: new Date().toISOString(),
 };
 
@@ -52,7 +75,7 @@ export interface UploadFileInput {
 
 export async function uploadFile(input: UploadFileInput): Promise<DriveFile> {
   if (env.DRY_RUN) {
-    logger.debug('DRY_RUN: uploadFile', { name: input.name });
+    logger.debug("DRY_RUN: uploadFile", { name: input.name });
     return { ...DRY_RUN_FILE, name: input.name };
   }
 
@@ -60,9 +83,10 @@ export async function uploadFile(input: UploadFileInput): Promise<DriveFile> {
     const drive = getDriveClient();
     const folderId = input.folderId ?? env.GOOGLE_DRIVE_FOLDER_ID;
 
-    const body = typeof input.content === 'string'
-      ? Readable.from([input.content])
-      : Readable.from(input.content);
+    const body =
+      typeof input.content === "string"
+        ? Readable.from([input.content])
+        : Readable.from(input.content);
 
     const res = await drive.files.create({
       supportsAllDrives: true,
@@ -74,14 +98,17 @@ export async function uploadFile(input: UploadFileInput): Promise<DriveFile> {
         mimeType: input.mimeType,
         body,
       },
-      fields: 'id, name, mimeType, webViewLink, size, createdTime',
+      fields: "id, name, mimeType, webViewLink, size, createdTime",
     });
 
-    logger.info('Drive file uploaded', { fileId: res.data.id, name: input.name });
+    logger.info("Drive file uploaded", {
+      fileId: res.data.id,
+      name: input.name,
+    });
     return res.data as DriveFile;
   } catch (err) {
-    logger.error('Drive upload failed', err);
-    throw new ServiceUnavailableError('Google Drive');
+    logger.error("Drive upload failed", err);
+    throw new ServiceUnavailableError("Google Drive");
   }
 }
 
@@ -92,90 +119,121 @@ export async function getFileMetadata(fileId: string): Promise<DriveFile> {
     const drive = getDriveClient();
     const res = await drive.files.get({
       fileId,
+<<<<<<< HEAD
       supportsAllDrives: true,
       fields: 'id, name, mimeType, webViewLink, size, createdTime',
+=======
+      fields: "id, name, mimeType, webViewLink, size, createdTime",
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
     return res.data as DriveFile;
   } catch (err) {
-    logger.error('Drive getMetadata failed', err);
-    throw new ServiceUnavailableError('Google Drive');
+    logger.error("Drive getMetadata failed", err);
+    throw new ServiceUnavailableError("Google Drive");
   }
 }
 
-export async function listFilesInFolder(folderId?: string): Promise<DriveFile[]> {
+export async function listFilesInFolder(
+  folderId?: string,
+): Promise<DriveFile[]> {
   if (env.DRY_RUN) return [DRY_RUN_FILE];
 
   try {
     const drive = getDriveClient();
     const targetFolder = folderId ?? env.GOOGLE_DRIVE_FOLDER_ID;
 
-    if (!targetFolder) throw new ServiceUnavailableError('Google Drive (no folder configured)');
+    if (!targetFolder)
+      throw new ServiceUnavailableError("Google Drive (no folder configured)");
 
     const res = await drive.files.list({
       q: `'${targetFolder}' in parents and trashed = false`,
+<<<<<<< HEAD
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
       fields: 'files(id, name, mimeType, webViewLink, size, createdTime)',
       orderBy: 'createdTime desc',
+=======
+      fields: "files(id, name, mimeType, webViewLink, size, createdTime)",
+      orderBy: "createdTime desc",
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
 
     return (res.data.files ?? []) as DriveFile[];
   } catch (err) {
-    logger.error('Drive list failed', err);
-    throw new ServiceUnavailableError('Google Drive');
+    logger.error("Drive list failed", err);
+    throw new ServiceUnavailableError("Google Drive");
   }
 }
 
-export async function searchFiles(query: string, folderId?: string): Promise<DriveFile[]> {
+export async function searchFiles(
+  query: string,
+  folderId?: string,
+): Promise<DriveFile[]> {
   if (env.DRY_RUN) return [DRY_RUN_FILE];
 
   try {
     const drive = getDriveClient();
     const targetFolder = folderId ?? env.GOOGLE_DRIVE_FOLDER_ID;
-    const folderClause = targetFolder ? ` and '${targetFolder}' in parents` : '';
+    const folderClause = targetFolder
+      ? ` and '${targetFolder}' in parents`
+      : "";
 
     const res = await drive.files.list({
       q: `name contains '${query}'${folderClause} and trashed = false`,
+<<<<<<< HEAD
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
       fields: 'files(id, name, mimeType, webViewLink, size, createdTime)',
+=======
+      fields: "files(id, name, mimeType, webViewLink, size, createdTime)",
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
 
     return (res.data.files ?? []) as DriveFile[];
   } catch (err) {
-    logger.error('Drive search failed', err);
-    throw new ServiceUnavailableError('Google Drive');
+    logger.error("Drive search failed", err);
+    throw new ServiceUnavailableError("Google Drive");
   }
 }
 
 export async function downloadFileContent(fileId: string): Promise<Buffer> {
-  if (env.DRY_RUN) return Buffer.from('DRY_RUN_CONTENT');
+  if (env.DRY_RUN) return Buffer.from("DRY_RUN_CONTENT");
 
   try {
     const drive = getDriveClient();
     const res = await drive.files.get(
+<<<<<<< HEAD
       { fileId, alt: 'media', supportsAllDrives: true },
       { responseType: 'arraybuffer' },
+=======
+      { fileId, alt: "media" },
+      { responseType: "arraybuffer" },
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     );
     return Buffer.from(res.data as ArrayBuffer);
   } catch (err) {
-    logger.error('Drive download failed', err);
-    throw new ServiceUnavailableError('Google Drive');
+    logger.error("Drive download failed", err);
+    throw new ServiceUnavailableError("Google Drive");
   }
 }
 
 export async function deleteFile(fileId: string): Promise<void> {
   if (env.DRY_RUN) {
-    logger.debug('DRY_RUN: deleteFile', { fileId });
+    logger.debug("DRY_RUN: deleteFile", { fileId });
     return;
   }
 
   try {
     const drive = getDriveClient();
+<<<<<<< HEAD
     await drive.files.delete({ fileId, supportsAllDrives: true });
     logger.info('Drive file deleted', { fileId });
+=======
+    await drive.files.delete({ fileId });
+    logger.info("Drive file deleted", { fileId });
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
-    logger.error('Drive delete failed', err);
-    throw new ServiceUnavailableError('Google Drive');
+    logger.error("Drive delete failed", err);
+    throw new ServiceUnavailableError("Google Drive");
   }
 }

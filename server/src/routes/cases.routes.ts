@@ -1,7 +1,10 @@
-import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
-import { validate, validateQuery } from '../middleware/validate.js';
-import { requireIdempotency, checkIdempotency } from '../middleware/idempotency.js';
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth.js";
+import { validate, validateQuery } from "../middleware/validate.js";
+import {
+  requireIdempotency,
+  checkIdempotency,
+} from "../middleware/idempotency.js";
 import {
   getCases,
   getCaseDetail,
@@ -9,13 +12,13 @@ import {
   patchCaseStatus,
   processCase,
   getCaseAudit,
-} from '../controllers/cases.controller.js';
+} from "../controllers/cases.controller.js";
 import {
   createCaseSchema,
   updateCaseStatusSchema,
   listCasesQuerySchema,
   processCaseSchema,
-} from '../validators/cases.validator.js';
+} from "../validators/cases.validator.js";
 
 const router: Router = Router();
 
@@ -29,13 +32,13 @@ router.use(requireAuth);
  * - Insurance Provider: sees all cases for their org
  * Query: ?status=PENDING&page=1&limit=20
  */
-router.get('/', validateQuery(listCasesQuerySchema), getCases);
+router.get("/", validateQuery(listCasesQuerySchema), getCases);
 
 /**
  * GET /api/cases/:id
  * Get full case detail including denials, documents, appeals, and audit trail.
  */
-router.get('/:id', getCaseDetail);
+router.get("/:id", getCaseDetail);
 
 /**
  * POST /api/cases
@@ -43,14 +46,14 @@ router.get('/:id', getCaseDetail);
  * Body: { patient_id, insurer_org_id, service_type, service_code?, payer_id?, denial_reason?, denial_code?, denial_date?, appeal_deadline? }
  * Headers: Authorization: Bearer <token>
  */
-router.post('/', validate(createCaseSchema), createNewCase);
+router.post("/", validate(createCaseSchema), createNewCase);
 
 /**
  * PATCH /api/cases/:id
  * Update case status. Insurance providers only.
  * Body: { status }
  */
-router.patch('/:id', validate(updateCaseStatusSchema), patchCaseStatus);
+router.patch("/:id", validate(updateCaseStatusSchema), patchCaseStatus);
 
 /**
  * POST /api/cases/:id/process
@@ -59,7 +62,7 @@ router.patch('/:id', validate(updateCaseStatusSchema), patchCaseStatus);
  * Body: { dry_run?: boolean }
  */
 router.post(
-  '/:id/process',
+  "/:id/process",
   requireIdempotency,
   checkIdempotency,
   validate(processCaseSchema),
@@ -71,6 +74,6 @@ router.post(
  * Get append-only audit trail for a case.
  * Both patients (own cases) and insurers (org cases) can view.
  */
-router.get('/:id/audit', getCaseAudit);
+router.get("/:id/audit", getCaseAudit);
 
 export default router;

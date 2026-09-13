@@ -4,24 +4,37 @@
  * Import `env` instead of using `process.env` directly anywhere.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 const envSchema = z.object({
   // Server
+<<<<<<< HEAD
   PORT: z.coerce.number().int().positive().default(5001),
   NODE_ENV: z.enum(['development', 'production', 'test'] as const).default('development'),
   DRY_RUN: z
     .string()
     .default('false')
     .transform((v) => v.toLowerCase() === 'true'),
+=======
+  PORT: z.coerce.number().int().positive().default(5000),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
+  DRY_RUN: z
+    .string()
+    .transform((v) => v.toLowerCase() === "true")
+    .default("false"),
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
   // Supabase
-  SUPABASE_URL: z.string().url({ message: 'SUPABASE_URL must be a valid URL' }),
-  SUPABASE_ANON_KEY: z.string().min(1, 'SUPABASE_ANON_KEY is required'),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+  SUPABASE_URL: z.string().url({ message: "SUPABASE_URL must be a valid URL" }),
+  SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
+  SUPABASE_SERVICE_ROLE_KEY: z
+    .string()
+    .min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
 
   // AI Server
-  AI_SERVER_URL: z.string().url().default('http://localhost:8000'),
+  AI_SERVER_URL: z.string().url().default("http://localhost:8000"),
   AI_SERVER_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
 
   // Google
@@ -57,17 +70,23 @@ const envSchema = z.object({
   // CORS
   CORS_ALLOWED_ORIGINS: z
     .string()
-    .default('http://localhost:3000')
-    .transform((v) => v.split(',').map((s) => s.trim())),
+    .default("http://localhost:3000")
+    .transform((v) => v.split(",").map((s) => s.trim())),
 });
 
 function loadEnv() {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
+<<<<<<< HEAD
     console.error('❌ Invalid environment configuration:');
     result.error.issues.forEach((err) => {
       console.error(`  ${err.path.join('.')}: ${err.message}`);
+=======
+    console.error("❌ Invalid environment configuration:");
+    result.error.errors.forEach((err) => {
+      console.error(`  ${err.path.join(".")}: ${err.message}`);
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
     process.exit(1);
   }

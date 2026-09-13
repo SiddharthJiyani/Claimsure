@@ -3,16 +3,30 @@
  * Events are added to the shared calendar (GOOGLE_CALENDAR_ID).
  */
 
+<<<<<<< HEAD
 import { google, type calendar_v3 } from 'googleapis';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { getGoogleAuth } from './google-auth.js';
+=======
+import { google, type calendar_v3 } from "googleapis";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
-const DRY_RUN_EVENT_ID = 'DRY_RUN_EVENT_ID';
+const DRY_RUN_EVENT_ID = "DRY_RUN_EVENT_ID";
 
 function getCalendarClient(): calendar_v3.Calendar {
+<<<<<<< HEAD
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/calendar']);
   return google.calendar({ version: 'v3', auth });
+=======
+  const auth = new google.auth.GoogleAuth({
+    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
+    scopes: ["https://www.googleapis.com/auth/calendar"],
+  });
+  return google.calendar({ version: "v3", auth });
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 }
 
 export interface CalendarEvent {
@@ -27,13 +41,15 @@ export interface CreateEventInput {
   summary: string;
   description?: string;
   startDate: string; // YYYY-MM-DD
-  endDate?: string;  // YYYY-MM-DD (defaults to startDate)
+  endDate?: string; // YYYY-MM-DD (defaults to startDate)
   attendeeEmails?: string[];
 }
 
-export async function createAppealDeadlineEvent(input: CreateEventInput): Promise<CalendarEvent> {
+export async function createAppealDeadlineEvent(
+  input: CreateEventInput,
+): Promise<CalendarEvent> {
   if (env.DRY_RUN) {
-    logger.debug('DRY_RUN: createCalendarEvent', { summary: input.summary });
+    logger.debug("DRY_RUN: createCalendarEvent", { summary: input.summary });
     return {
       id: DRY_RUN_EVENT_ID,
       summary: input.summary,
@@ -43,10 +59,15 @@ export async function createAppealDeadlineEvent(input: CreateEventInput): Promis
     };
   }
 
+<<<<<<< HEAD
   if (!env.GOOGLE_CALENDAR_ID) {
     logger.warn('Calendar not configured, skipping event creation');
+=======
+  if (!env.GOOGLE_CALENDAR_ID || !env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
+    logger.warn("Calendar not configured, skipping event creation");
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     return {
-      id: 'NOT_CONFIGURED',
+      id: "NOT_CONFIGURED",
       summary: input.summary,
       start: input.startDate,
       end: input.endDate ?? input.startDate,
@@ -68,27 +89,30 @@ export async function createAppealDeadlineEvent(input: CreateEventInput): Promis
         reminders: {
           useDefault: false,
           overrides: [
-            { method: 'email', minutes: 60 * 24 * 3 },  // 3 days before
-            { method: 'popup', minutes: 60 * 24 },        // 1 day before
+            { method: "email", minutes: 60 * 24 * 3 }, // 3 days before
+            { method: "popup", minutes: 60 * 24 }, // 1 day before
           ],
         },
       },
     });
 
-    logger.info('Calendar event created', { eventId: res.data.id, summary: input.summary });
+    logger.info("Calendar event created", {
+      eventId: res.data.id,
+      summary: input.summary,
+    });
 
     return {
-      id: res.data.id ?? 'unknown',
+      id: res.data.id ?? "unknown",
       summary: res.data.summary ?? input.summary,
       start: input.startDate,
       end: input.endDate ?? input.startDate,
       htmlLink: res.data.htmlLink ?? null,
     };
   } catch (err) {
-    logger.error('Calendar event creation failed', err);
+    logger.error("Calendar event creation failed", err);
     // Non-fatal
     return {
-      id: 'ERROR',
+      id: "ERROR",
       summary: input.summary,
       start: input.startDate,
       end: input.endDate ?? input.startDate,

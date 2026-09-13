@@ -1,6 +1,7 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const caseStatusEnum = z.enum([
+<<<<<<< HEAD
   'PENDING',
   'ANALYZING',
   'ACTION_REQUIRED',
@@ -12,17 +13,47 @@ const caseStatusEnum = z.enum([
   'ESCALATED',
   'CLOSED',
 ] as const);
+=======
+  "PENDING",
+  "ANALYZING",
+  "ACTION_REQUIRED",
+  "AWAITING_REVIEW",
+  "APPEAL_READY",
+  "SUBMITTED",
+  "VERIFYING",
+  "RESOLVED",
+  "ESCALATED",
+  "CLOSED",
+]);
+>>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 export const createCaseSchema = z.object({
-  patient_id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Invalid patient ID'),
-  insurer_org_id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Invalid insurer organization ID'),
-  service_type: z.string().min(1, 'Service type is required').max(200),
+  patient_id: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+      "Invalid patient ID",
+    ),
+  insurer_org_id: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+      "Invalid insurer organization ID",
+    ),
+  service_type: z.string().min(1, "Service type is required").max(200),
   service_code: z.string().max(50).optional(),
   payer_id: z.string().max(100).optional(),
   denial_code: z.string().max(50).optional(),
-  denial_reason: z.string().min(1, 'Denial reason is required').max(2000).optional(),
-  denial_date: z.string().date('Invalid date format (YYYY-MM-DD)').optional(),
-  appeal_deadline: z.string().date('Invalid date format (YYYY-MM-DD)').optional(),
+  denial_reason: z
+    .string()
+    .min(1, "Denial reason is required")
+    .max(2000)
+    .optional(),
+  denial_date: z.string().date("Invalid date format (YYYY-MM-DD)").optional(),
+  appeal_deadline: z
+    .string()
+    .date("Invalid date format (YYYY-MM-DD)")
+    .optional(),
 });
 
 export const updateCaseStatusSchema = z.object({
