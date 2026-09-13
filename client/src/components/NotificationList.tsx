@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Bell } from "lucide-react";
 import { apiFetch, appFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { notificationCaseHref } from "@/lib/notification-href";
 import { useNotifications } from "@/lib/use-workspace-data";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
@@ -9,6 +12,7 @@ import { QueueSkeleton } from "@/components/StatCard";
 import { relativeTime } from "@/lib/format";
 
 export function NotificationList() {
+  const { profile } = useAuth();
   const { items, error, loading, reload, setItems } = useNotifications();
 
   async function markRead(id: string) {
@@ -59,6 +63,20 @@ export function NotificationList() {
               </p>
               <p className="mt-2 text-xs text-muted">
                 {relativeTime(item.created_at)}
+                {item.case_id && notificationCaseHref(profile?.role, item.case_id) ? (
+                  <>
+                    {" · "}
+                    <Link
+                      href={notificationCaseHref(profile?.role, item.case_id)!}
+                      className="text-accent"
+                      onClick={() => {
+                        if (!item.is_read) void markRead(item.id);
+                      }}
+                    >
+                      Open claim
+                    </Link>
+                  </>
+                ) : null}
               </p>
             </div>
             {!item.is_read ? (

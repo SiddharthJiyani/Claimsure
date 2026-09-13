@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { getProfile, getSessionUser } from "@/lib/auth";
+import {
+  agentMissingLabels,
+  hasMatchingDocument,
+  normalizeEvidenceLabel,
+  uniqueDocumentsByName,
+} from "@/lib/missing-evidence";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { inferDocumentType, notifyOrgProviders, notifyUser } from "@/lib/workspace-notify";
+import type { AgentState, DocumentRecord } from "@/lib/types";
 
 const CASE_SELECT = `
   *,
@@ -44,7 +52,107 @@ export async function GET(
     return NextResponse.json({ error: "Case not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ case: data });
+  const claim = await persistAgentMissingDocuments(admin, data);
+  return NextResponse.json({
+    case: {
+      ...claim,
+      documents: uniqueDocumentsByName(claim.documents ?? []),
+    },
+  });
+}
+
+async function persistAgentMissingDocuments(
+  admin: ReturnType<typeof createAdminClient>,
+  claim: {
+    id: string;
+    patient_id: string;
+    case_number: string;
+    status: string;
+    documents?: DocumentRecord[] | null;
+    agent_state?: AgentState[] | null;
+  },
+) {
+  const labels = agentMissingLabels(claim.agent_state ?? undefined);
+  const existing = [...(claim.documents ?? [])];
+
+  const duplicateIds: string[] = [];
+  const seenMissing = new Set<string>();
+  for (const doc of existing) {
+    if (!doc.is_missing) continue;
+    const key = normalizeEvidenceLabel(doc.name);
+    if (seenMissing.has(key)) {
+      duplicateIds.push(doc.id);
+    } else {
+      seenMissing.add(key);
+    }
+  }
+  if (duplicateIds.length) {
+    await admin.from("documents").delete().in("id", duplicateIds);
+    claim = {
+      ...claim,
+      documents: existing.filter((doc) => !duplicateIds.includes(doc.id)),
+    };
+  }
+
+  const currentDocs = (claim.documents ?? []).filter(
+    (doc) => !duplicateIds.includes(doc.id),
+  );
+  if (!labels.length) {
+    return { ...claim, documents: currentDocs };
+  }
+
+  const created: string[] = [];
+  for (const name of labels) {
+    if (hasMatchingDocument(currentDocs, name)) continue;
+    const { data, error } = await admin
+      .from("documents")
+      .insert({
+        case_id: claim.id,
+        name,
+        document_type: inferDocumentType(name),
+        drive_file_id: "pending",
+        is_missing: true,
+      })
+      .select("*")
+      .single();
+    if (!error && data) {
+      currentDocs.push(data as DocumentRecord);
+      created.push(name);
+    }
+  }
+
+  if (!created.length) {
+    return { ...claim, documents: currentDocs };
+  }
+
+  const openStatuses = new Set([
+    "PENDING",
+    "ANALYZING",
+    "AWAITING_REVIEW",
+    "APPEAL_READY",
+  ]);
+  if (openStatuses.has(claim.status)) {
+    await admin
+      .from("cases")
+      .update({ status: "ACTION_REQUIRED" })
+      .eq("id", claim.id);
+    claim = { ...claim, status: "ACTION_REQUIRED", documents: currentDocs };
+  }
+
+  await notifyUser(admin, {
+    userId: claim.patient_id,
+    caseId: claim.id,
+    type: "action_required",
+    title: "Action required: upload missing records",
+    message: `${claim.case_number} needs: ${created.join("; ")}.`,
+  }).catch(() => {});
+
+  const { data: refreshed } = await admin
+    .from("cases")
+    .select(CASE_SELECT)
+    .eq("id", claim.id)
+    .maybeSingle();
+  return refreshed ?? { ...claim, documents: currentDocs };
 }
 
 const LOCKED_STATUSES = new Set(["RESOLVED", "CLOSED"]);
@@ -69,7 +177,7 @@ export async function DELETE(
   const admin = createAdminClient();
   const { data: claim, error } = await admin
     .from("cases")
-    .select("id, patient_id, status, case_number")
+    .select("id, patient_id, status, case_number, insurer_org_id")
     .eq("id", id)
     .maybeSingle();
 
@@ -110,6 +218,12 @@ export async function DELETE(
     message: `${claim.case_number} was withdrawn and is no longer in review.`,
     channel: "in_app",
     sent_at: new Date().toISOString(),
+  });
+  await notifyOrgProviders(admin, claim.insurer_org_id, {
+    caseId: id,
+    type: "case_update",
+    title: "Patient withdrew claim",
+    message: `${claim.case_number} was withdrawn by the patient.`,
   });
 
   return NextResponse.json({ ok: true, status: "CLOSED" });

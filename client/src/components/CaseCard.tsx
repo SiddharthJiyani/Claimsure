@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { relativeTime } from "@/lib/format";
+import { unresolvedMissingLabels } from "@/lib/missing-evidence";
 import type { ClaimCase } from "@/lib/types";
 
 export function CaseCard({
@@ -17,7 +18,8 @@ export function CaseCard({
   onRemove?: () => void;
   removing?: boolean;
 }) {
-  const missing = claim.documents?.filter((doc) => doc.is_missing).length ?? 0;
+  const missing = unresolvedMissingLabels(claim.documents, claim.agent_state)
+    .length;
   return (
     <Link
       href={href}
@@ -54,6 +56,11 @@ export function CaseCard({
           ) : null}
         </div>
       </div>
+      {claim.status === "ACTION_REQUIRED" || missing > 0 ? (
+        <p className="mt-3 text-xs font-medium text-warn">
+          Action required — upload the missing records
+        </p>
+      ) : null}
       <div className="mt-4 flex items-center justify-between text-sm text-muted">
         <span>
           {missing > 0

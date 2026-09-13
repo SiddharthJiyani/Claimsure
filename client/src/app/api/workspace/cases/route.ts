@@ -5,7 +5,7 @@ import { appendCaseRow } from "@/lib/google-sheets";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const CASE_LIST_SELECT =
-  "*, denials(id, denial_reason), documents(id, name, document_type, is_missing, created_at)";
+  "*, denials(id, denial_reason), documents(id, name, document_type, is_missing, created_at), agent_state(state_data, updated_at)";
 
 export async function GET() {
   const user = await getSessionUser();

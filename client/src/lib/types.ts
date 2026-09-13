@@ -149,6 +149,7 @@ export type AuditLog = {
   human_decision: string | null;
   confidence: number | null;
   citations: unknown;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
 };
 

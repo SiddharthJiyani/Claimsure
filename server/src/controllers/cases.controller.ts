@@ -12,6 +12,7 @@ import {
   updateCaseStatus,
 } from "../database/queries/cases.js";
 import { createAuditLog } from "../database/queries/audit.js";
+import { ensureMissingDocuments } from "../database/queries/documents.js";
 import { createDenialForCase } from "../database/queries/denials.js";
 import {
   createAppeal,
@@ -285,11 +286,18 @@ export async function processCase(
       })
       .then(async (result) => {
         // Update final status based on agent result
+        const missing = result.evidence_missing ?? [];
+        if (missing.length) {
+          await ensureMissingDocuments(id, missing).catch(() => {});
+        }
+
         const finalStatus =
           result.final_node === "resolved"
             ? "RESOLVED"
             : result.status === "ESCALATED" || result.final_node === "escalated"
               ? "ESCALATED"
+              : missing.length
+                ? "ACTION_REQUIRED"
               : result.status === "APPEAL_READY" || result.final_node === "assemble_appeal"
                 ? "APPEAL_READY"
                 : result.route_decision === "human_review" || result.status === "AWAITING_REVIEW"
@@ -362,8 +370,12 @@ export async function processCase(
             : result.final_node === "escalated"
               ? "escalation"
               : "case_update",
-          "AI Analysis Complete",
-          `Agent completed analysis for case ${existing.case_number}. Decision: ${result.route_decision}`,
+          missing.length
+            ? "Waiting on patient records"
+            : "AI Analysis Complete",
+          missing.length
+            ? `${existing.case_number} needs the patient to upload: ${missing.join("; ")}.`
+            : `Agent completed analysis for case ${existing.case_number}. Decision: ${result.route_decision}`,
           {
             caseNumber: existing.case_number,
             agentSummary: result.appeal_text ?? "",
@@ -372,15 +384,29 @@ export async function processCase(
           },
         ).catch(() => {});
 
-        // Notify patient
-        notifyPatient(
-          existing.patient_id,
-          id,
-          "case_update",
-          "Your Case Is Being Processed",
-          `We're reviewing case ${existing.case_number}. You'll be notified when action is required.`,
-          { caseNumber: existing.case_number },
-        ).catch(() => {});
+        if (missing.length) {
+          notifyPatient(
+            existing.patient_id,
+            id,
+            "action_required",
+            "Action required: upload missing records",
+            `${existing.case_number} needs more documents: ${missing.join("; ")}.`,
+            {
+              caseNumber: existing.case_number,
+              missingDocs: missing,
+              serviceType: existing.service_type,
+            },
+          ).catch(() => {});
+        } else {
+          notifyPatient(
+            existing.patient_id,
+            id,
+            "case_update",
+            "Your claim was updated",
+            `${existing.case_number} is now ${finalStatus.replaceAll("_", " ").toLowerCase()}.`,
+            { caseNumber: existing.case_number, serviceType: existing.service_type },
+          ).catch(() => {});
+        }
       })
       .catch((err) => {
         // If AI server fails, revert status

@@ -4,13 +4,14 @@
  */
 
 import type { Request, Response, NextFunction } from "express";
-import { getCaseById } from "../database/queries/cases.js";
+import { getCaseById, updateCaseStatus } from "../database/queries/cases.js";
 import {
   getDocumentsByCase,
   getDocumentById,
   createDocument,
   markDocumentMissing,
   getMissingDocumentsByCase,
+  fulfillMissingDocument,
 } from "../database/queries/documents.js";
 import { createAuditLog } from "../database/queries/audit.js";
 import {
@@ -91,21 +92,47 @@ export async function uploadDocument(
       throw new ForbiddenError();
     }
 
-    const document = await createDocument({
-      case_id: caseId,
-      name: body.name,
-      document_type: body.document_type,
-      drive_file_id: body.drive_file_id,
-      ...(body.drive_url !== undefined ? { drive_url: body.drive_url } : {}),
-      uploaded_by: user.id,
-      is_missing: body.is_missing,
-    });
+    const replaceId =
+      typeof (body as { replace_document_id?: unknown }).replace_document_id ===
+      "string"
+        ? (body as { replace_document_id: string }).replace_document_id
+        : "";
+
+    const document = replaceId
+      ? await fulfillMissingDocument(replaceId, {
+          drive_file_id: body.drive_file_id,
+          drive_url: body.drive_url ?? null,
+          uploaded_by: user.id,
+          name: body.name,
+        })
+      : await createDocument({
+          case_id: caseId,
+          name: body.name,
+          document_type: body.document_type,
+          drive_file_id: body.drive_file_id,
+          ...(body.drive_url !== undefined ? { drive_url: body.drive_url } : {}),
+          uploaded_by: user.id,
+          is_missing: body.is_missing,
+        });
+
+    const remaining = await getMissingDocumentsByCase(caseId);
+    const nextStatus =
+      remaining.length > 0
+        ? "ACTION_REQUIRED"
+        : caseData.status === "ACTION_REQUIRED"
+          ? "ANALYZING"
+          : caseData.status;
+    if (nextStatus !== caseData.status) {
+      await updateCaseStatus(caseId, nextStatus).catch(() => {});
+    }
 
     await createAuditLog({
       case_id: caseId,
       actor_id: user.id,
       actor_type: "human",
-      action: "document_uploaded",
+      action: replaceId ? "missing_document_uploaded" : "document_uploaded",
+      previous_state: caseData.status,
+      new_state: nextStatus,
       metadata: {
         document_name: body.name,
         document_type: body.document_type,
@@ -113,14 +140,21 @@ export async function uploadDocument(
       },
     });
 
-    // If patient uploaded a previously-missing doc, notify insurer
     if (user.role === "patient" && !body.is_missing) {
       notifyInsurersByOrg(
         caseData.insurer_org_id,
         caseId,
         "case_update",
-        "Document Uploaded",
-        `Patient uploaded: ${body.name} for case ${caseData.case_number}`,
+        "Patient responded",
+        `The patient uploaded “${body.name}” for ${caseData.case_number}. Review the updated packet.`,
+        { caseNumber: caseData.case_number },
+      ).catch(() => {});
+      notifyPatient(
+        caseData.patient_id,
+        caseId,
+        "case_update",
+        "Document received",
+        `${body.name} was added to ${caseData.case_number}. Healthcare has been notified.`,
         { caseNumber: caseData.case_number },
       ).catch(() => {});
     }
@@ -154,8 +188,10 @@ export async function updateDocumentMissing(
     }
 
     const updated = await markDocumentMissing(docId, body.is_missing);
+    if (body.is_missing) {
+      await updateCaseStatus(caseId, "ACTION_REQUIRED").catch(() => {});
+    }
 
-    // If flagging as missing, notify patient
     if (body.is_missing) {
       const missingDocs = await getMissingDocumentsByCase(caseId);
       notifyPatient(

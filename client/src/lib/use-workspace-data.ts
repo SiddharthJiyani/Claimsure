@@ -67,6 +67,10 @@ export function useNotifications() {
 
   useEffect(() => {
     void reload();
+    const timer = window.setInterval(() => {
+      void reload();
+    }, 12000);
+    return () => window.clearInterval(timer);
   }, [reload]);
 
   return { items, error, loading, reload, setItems };

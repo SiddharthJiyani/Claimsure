@@ -21,6 +21,8 @@ export default function InsuranceCasePage() {
   const [claim, setClaim] = useState<ClaimCase | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [requestText, setRequestText] = useState("");
+  const [requesting, setRequesting] = useState(false);
 
   async function load() {
     try {
@@ -55,12 +57,16 @@ export default function InsuranceCasePage() {
     void load();
   }, [params.id]);
 
-  // Auto-poll while agent is running
   useEffect(() => {
-    if (claim?.status !== "ANALYZING") return;
+    if (
+      claim?.status !== "ANALYZING" &&
+      claim?.status !== "ACTION_REQUIRED"
+    ) {
+      return;
+    }
     const interval = setInterval(() => {
       void load();
-    }, 1500);
+    }, claim.status === "ANALYZING" ? 1500 : 8000);
     return () => clearInterval(interval);
   }, [claim?.status]);
 
@@ -83,6 +89,30 @@ export default function InsuranceCasePage() {
       setError(err instanceof Error ? err.message : "Could not trigger agent");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function requestRecords(event: React.FormEvent) {
+    event.preventDefault();
+    if (!claim) return;
+    const labels = requestText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (!labels.length) return;
+    setRequesting(true);
+    setError(null);
+    try {
+      await appFetch(`/api/workspace/cases/${claim.id}/request-documents`, {
+        method: "POST",
+        body: JSON.stringify({ labels }),
+      });
+      setRequestText("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not request records");
+    } finally {
+      setRequesting(false);
     }
   }
 
@@ -129,6 +159,10 @@ export default function InsuranceCasePage() {
   const foundEvidence = Array.isArray(agentData.evidence_found)
     ? agentData.evidence_found.filter((item): item is string => typeof item === "string")
     : [];
+  const patientResponses = logs.filter((log) =>
+    ["missing_document_uploaded", "document_uploaded"].includes(log.action),
+  );
+  const missingDocs = (claim.documents ?? []).filter((doc) => doc.is_missing);
 
   return (
     <WorkspaceFrame>
@@ -169,6 +203,34 @@ export default function InsuranceCasePage() {
         <ErrorCallout message={error} onRetry={() => void load()} />
       ) : null}
 
+      {patientResponses.length ? (
+        <section className="cs-panel rounded-2xl border border-accent/35 p-5">
+          <p className="cs-kicker">Patient responded</p>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            The patient uploaded records after you asked for action. Review the
+            updated packet, then trigger the agent again if you want a new
+            coverage check.
+          </p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {patientResponses.slice(0, 5).map((log) => (
+              <li key={log.id} className="text-muted">
+                {log.action.replaceAll("_", " ")}
+                {(() => {
+                  const meta = log.metadata;
+                  const label =
+                    meta && typeof meta.name === "string"
+                      ? meta.name
+                      : meta && typeof meta.document_name === "string"
+                        ? meta.document_name
+                        : "";
+                  return label ? ` — ${label}` : "";
+                })()}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="cs-panel rounded-2xl p-5">
           <p className="cs-kicker">Denial</p>
@@ -186,6 +248,33 @@ export default function InsuranceCasePage() {
           <div className="mt-3">
             <EvidencePanel documents={claim.documents ?? []} />
           </div>
+          <form onSubmit={requestRecords} className="mt-5 space-y-3 border-t border-border pt-4">
+            <p className="text-sm font-medium">Ask the patient for records</p>
+            <p className="text-xs text-muted">
+              One document name per line. The patient gets an alert and a
+              checklist on their claim.
+            </p>
+            <textarea
+              value={requestText}
+              onChange={(event) => setRequestText(event.target.value)}
+              rows={3}
+              placeholder={"MRI report\nClinical note from last visit"}
+              className="cs-input min-h-20"
+            />
+            <button
+              type="submit"
+              disabled={requesting || !requestText.trim()}
+              className="cs-btn cs-btn-primary"
+            >
+              {requesting ? "Sending…" : "Request from patient"}
+            </button>
+            {missingDocs.length ? (
+              <p className="text-xs text-warn">
+                Waiting on {missingDocs.length} requested{" "}
+                {missingDocs.length === 1 ? "record" : "records"}.
+              </p>
+            ) : null}
+          </form>
         </section>
       </div>
 
