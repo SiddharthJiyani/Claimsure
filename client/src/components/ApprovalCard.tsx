@@ -24,10 +24,10 @@ export function ApprovalCard({
     setBusy(action);
     setError(null);
     try {
-      await apiFetch(`/cases/${caseId}/appeal/${appeal.id}`, {
-        method: "PATCH",
+      await apiFetch(`/cases/${caseId}/appeal-decision`, {
+        method: "POST",
         body: JSON.stringify({
-          status: action === "approve" ? "APPROVED" : "REJECTED",
+          decision: action === "approve" ? "ACCEPTED" : "REJECTED",
         }),
       });
       onChanged();

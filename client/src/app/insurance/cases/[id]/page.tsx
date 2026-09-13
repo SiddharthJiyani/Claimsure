@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Bot } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Bot, CheckCircle2, ShieldCheck } from "lucide-react";
 import { AgentTrace } from "@/components/AgentTrace";
 import { InsurerDecisionPanel } from "@/components/InsurerDecisionPanel";
 import { CaseTimeline } from "@/components/CaseTimeline";
@@ -278,6 +278,84 @@ export default function InsuranceCasePage() {
         </section>
       </div>
 
+      <section className="cs-panel rounded-2xl border border-accent/30 p-5 shadow-[0_0_30px_rgba(45,212,191,0.06)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="cs-kicker text-accent">Coverage check</p>
+            <h2 className="mt-1 text-lg font-semibold">Policy vs. submitted evidence</h2>
+            <p className="mt-1 text-sm text-muted">
+              Requirements extracted from the matched payer policy and checked against patient documents.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent">
+            <ShieldCheck size={14} />
+            {policyRequirements.length} policy {policyRequirements.length === 1 ? "clause" : "clauses"} checked
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+            <p className="text-xs uppercase tracking-wider text-muted">Policy requirements</p>
+            <p className="mt-1 text-2xl font-semibold">{policyRequirements.length}</p>
+          </div>
+          <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3">
+            <p className="text-xs uppercase tracking-wider text-success">Evidence found</p>
+            <p className="mt-1 text-2xl font-semibold text-success">{foundEvidence.length}</p>
+          </div>
+          <div className="rounded-xl border border-warn/40 bg-warn/10 px-4 py-3">
+            <p className="text-xs uppercase tracking-wider text-warn">Shortcomings</p>
+            <p className="mt-1 text-2xl font-semibold text-warn">{missingEvidence.length}</p>
+          </div>
+        </div>
+
+        {missingEvidence.length ? (
+          <div className="mt-4 rounded-xl border-2 border-warn/40 bg-warn/10 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-warn">
+              <AlertTriangle size={17} /> What is wrong or missing
+            </p>
+            <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-6 text-foreground">
+              {missingEvidence.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">
+            <p className="flex items-center gap-2 font-semibold">
+              <CheckCircle2 size={17} /> All detected requirements have supporting evidence.
+            </p>
+          </div>
+        )}
+
+        {foundEvidence.length ? (
+          <div className="mt-4 rounded-xl border border-success/30 bg-success/10 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-success">
+              <CheckCircle2 size={17} /> Evidence that supports the request
+            </p>
+            <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-6 text-foreground">
+              {foundEvidence.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+        ) : null}
+
+        <details className="mt-4 rounded-xl border border-border bg-surface-2/70">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
+            View matched policy clauses ({policyRequirements.length})
+          </summary>
+          <div className="space-y-2 border-t border-border p-4">
+            {policyRequirements.length ? policyRequirements.map((requirement, index) => (
+              <div
+                key={`${requirement.citation ?? requirement.clause_title ?? "clause"}-${index}`}
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+              >
+                <p className="font-medium text-accent">
+                  {requirement.citation ?? requirement.clause_title ?? "Policy clause"}
+                </p>
+                {requirement.text ? <p className="mt-1 leading-6 text-muted">{requirement.text}</p> : null}
+              </div>
+            )) : <p className="text-sm text-warn">No policy clauses were matched.</p>}
+          </div>
+        </details>
+      </section>
+
       <section className="cs-panel rounded-2xl p-5">
         <p className="cs-kicker">Agent reasoning</p>
         <div className="mt-3">
@@ -286,55 +364,6 @@ export default function InsuranceCasePage() {
       </section>
 
       <ConnectedServicesPanel claim={claim} />
-
-      <section className="cs-panel rounded-2xl p-5">
-        <p className="cs-kicker">Policy comparison</p>
-        <p className="mt-2 text-sm text-muted">
-          The agent compares the denial and uploaded evidence against the policy
-          clauses returned by the configured payer policy corpus.
-        </p>
-        {policyRequirements.length ? (
-          <ul className="mt-4 space-y-2">
-            {policyRequirements.map((requirement, index) => (
-              <li
-                key={`${requirement.citation ?? requirement.clause_title ?? "clause"}-${index}`}
-                className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm"
-              >
-                <p className="font-medium text-accent">
-                  {requirement.citation ?? requirement.clause_title ?? "Policy clause"}
-                </p>
-                {requirement.text ? (
-                  <p className="mt-1 text-muted">{requirement.text}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-4 text-sm text-warn">
-            No policy clauses were matched. The agent should not auto-submit this case.
-          </p>
-        )}
-        {foundEvidence.length || missingEvidence.length ? (
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-success">
-                Evidence found
-              </p>
-              <ul className="mt-2 space-y-1 text-sm text-muted">
-                {foundEvidence.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-warn">
-                Evidence missing
-              </p>
-              <ul className="mt-2 space-y-1 text-sm text-muted">
-                {missingEvidence.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </div>
-          </div>
-        ) : null}
-      </section>
 
       <InsurerDecisionPanel
         claim={claim}

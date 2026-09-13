@@ -11,6 +11,7 @@
 
 import type { Request, Response, NextFunction } from "express";
 import { getCaseById, getCaseWithDetails, updateCaseStatus } from "../database/queries/cases.js";
+import { getAppealByCase, updateAppealStatus } from "../database/queries/appeals.js";
 import { createAuditLog } from "../database/queries/audit.js";
 import { supabase } from "../database/supabase.js";
 import { sendSuccess } from "../lib/response.js";
@@ -21,10 +22,34 @@ import { z } from "zod";
 
 export const claimDecisionSchema = z.object({
   decision: z.enum(["ACCEPTED", "REJECTED"]),
-  reason: z.string().min(10, "Please provide a clear reason (at least 10 characters)"),
+  reason: z.string().min(10).optional(),
 });
 
 export type ClaimDecisionInput = z.infer<typeof claimDecisionSchema>;
+
+async function automaticDecisionReason(caseId: string, fallback: string) {
+  const { data } = await supabase
+    .from("agent_state")
+    .select("state_data")
+    .eq("case_id", caseId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const state = (data?.state_data ?? {}) as Record<string, unknown>;
+  const safetyReason = typeof state.safety_reason === "string" ? state.safety_reason : "";
+  const missing = Array.isArray(state.evidence_missing)
+    ? state.evidence_missing.filter((item): item is string => typeof item === "string")
+    : [];
+  const policy = Array.isArray(state.citations)
+    ? state.citations.filter((item): item is string => typeof item === "string")
+    : [];
+  return [
+    safetyReason,
+    missing.length ? `Evidence shortcomings: ${missing.join("; ")}.` : "",
+    policy.length ? `Policy references reviewed: ${policy.join(", ")}.` : "",
+    fallback,
+  ].filter(Boolean).join(" ").slice(0, 2000);
+}
 
 /**
  * POST /api/cases/:id/decision
@@ -49,6 +74,13 @@ export async function makeClaimDecision(
       throw new ForbiddenError("You do not have access to this case");
     }
 
+    const reason = body.reason ?? await automaticDecisionReason(
+      id,
+      body.decision === "REJECTED"
+        ? "The claim was not approved because the submitted evidence did not establish coverage under the reviewed policy."
+        : "The claim satisfied the reviewed policy requirements and evidence criteria.",
+    );
+
     // Map decision to case status
     const newStatus = body.decision === "ACCEPTED" ? "RESOLVED" : "AWAITING_REVIEW";
 
@@ -58,7 +90,7 @@ export async function makeClaimDecision(
       current_node: "decision",
       state_data: {
         decision: body.decision,
-        decision_reason: body.reason,
+        decision_reason: reason,
         decided_by: user.email,
         decided_at: new Date().toISOString(),
       },
@@ -76,7 +108,7 @@ export async function makeClaimDecision(
       new_state: newStatus,
       human_decision: body.decision,
       metadata: {
-        decision_reason: body.reason,
+        decision_reason: reason,
         decided_by: user.email,
       },
     });
@@ -90,12 +122,12 @@ export async function makeClaimDecision(
       id,
       "claim_decision",
       body.decision === "ACCEPTED" ? "Your Claim Was Accepted" : "Your Claim Was Rejected",
-      body.reason,
+      reason,
       {
         caseNumber: existing.case_number,
         serviceType: existing.service_type,
         decision: body.decision,
-        decisionReason: body.reason,
+        decisionReason: reason,
       },
     ).catch(() => {});
 
@@ -105,7 +137,7 @@ export async function makeClaimDecision(
         case_id: id,
         decision: body.decision,
         new_status: newStatus,
-        reason: body.reason,
+        reason,
       },
       `Claim ${body.decision.toLowerCase()} successfully`,
     );
@@ -174,6 +206,13 @@ export async function makeAppealDecision(
       throw new ForbiddenError("You do not have access to this case");
     }
 
+    const reason = body.reason ?? await automaticDecisionReason(
+      id,
+      body.decision === "REJECTED"
+        ? "The appeal was rejected because the submitted evidence did not establish coverage under the reviewed policy."
+        : "The appeal satisfied the reviewed policy requirements and evidence criteria.",
+    );
+
     const newStatus = body.decision === "ACCEPTED" ? "RESOLVED" : "CLOSED";
 
     await supabase.from("agent_state").insert({
@@ -181,7 +220,7 @@ export async function makeAppealDecision(
       current_node: "appeal_decision",
       state_data: {
         decision: body.decision,
-        decision_reason: body.reason,
+        decision_reason: reason,
         decided_by: user.email,
         decided_at: new Date().toISOString(),
       },
@@ -189,6 +228,13 @@ export async function makeAppealDecision(
     });
 
     const updated = await updateCaseStatus(id, newStatus);
+    const appeal = await getAppealByCase(id).catch(() => null);
+    if (appeal) {
+      await updateAppealStatus(
+        appeal.id,
+        body.decision === "ACCEPTED" ? "ACCEPTED" : "REJECTED",
+      ).catch(() => {});
+    }
 
     await createAuditLog({
       case_id: id,
@@ -198,7 +244,7 @@ export async function makeAppealDecision(
       previous_state: existing.status,
       new_state: newStatus,
       human_decision: body.decision,
-      metadata: { decision_reason: body.reason, decided_by: user.email },
+      metadata: { decision_reason: reason, decided_by: user.email },
     });
 
     sheetsService.updateCaseRow({ ...updated, status: newStatus }).catch(() => {});
@@ -209,18 +255,18 @@ export async function makeAppealDecision(
       id,
       "appeal_decision",
       body.decision === "ACCEPTED" ? "Your Appeal Was Accepted" : "Your Appeal Was Rejected",
-      body.reason,
+      reason,
       {
         caseNumber: existing.case_number,
         serviceType: existing.service_type,
         decision: body.decision,
-        decisionReason: body.reason,
+        decisionReason: reason,
       },
     ).catch(() => {});
 
     sendSuccess(
       res,
-      { case_id: id, decision: body.decision, new_status: newStatus, reason: body.reason },
+      { case_id: id, decision: body.decision, new_status: newStatus, reason },
       `Appeal ${body.decision.toLowerCase()} successfully`,
     );
   } catch (err) {

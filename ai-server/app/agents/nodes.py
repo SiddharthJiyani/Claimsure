@@ -257,12 +257,21 @@ class AgentNodes:
 
         # CODE-ENFORCED SAFETY BOUNDARY (100% safety recall target)
         # 1. Experimental / non-covered techniques
-        if any(kw in all_text for kw in [
-            "upright mri", "positional", "unlisted experimental", "biohacking",
-            "longevity", "whole body", "holistic", "rejuvenation", "elective",
-            "unproven", "wellness", "high-dose intravenous", "iv vitamin",
-            "vitamin c",
-        ]):
+        explicit_noncovered = bool(re.search(
+            r"(?:"
+            r"(?:not|non[- ]?)\s*covered|"
+            r"excluded\s+from\s+(?:coverage|benefits)|"
+            r"ineligible\s+for\s+coverage|"
+            r"experimental\s+and\s+investigational|"
+            r"investigational\s+(?:service|treatment|therapy|technology)|"
+            r"unproven\s+(?:service|treatment|therapy|technology)|"
+            r"elective\s+(?:preventive|wellness|rejuvenation)|"
+            r"holistic\s+(?:rejuvenation|wellness)"
+            r")",
+            all_text,
+            re.IGNORECASE,
+        ))
+        if explicit_noncovered:
             state.route = "abstain"
             state.safety_escalation = True
             state.safety_reason = "Code-enforced constraint: Elective, unproven, wellness, or experimental service requires physician review"
@@ -289,7 +298,10 @@ class AgentNodes:
             return state
 
         # 4. Missing policy coverage
-        if not re.match(r"^CPT-\d{4,5}[A-Z]?$", state.service_code.upper()):
+        service_code = state.service_code.strip().upper()
+        is_diagnosis_code = bool(re.match(r"^[A-Z]\d{2}(?:\.\d{1,4})?$", service_code))
+        is_unrecognized_code = service_code in {"", "PENDING_CLASSIFICATION", "UNSPECIFIED", "CPT-09999"}
+        if is_diagnosis_code or is_unrecognized_code:
             state.route = "abstain"
             state.safety_escalation = True
             state.safety_reason = (
