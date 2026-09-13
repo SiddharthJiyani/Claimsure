@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { AuthShell } from "@/components/AuthShell";
+import {
+  AuthSplit,
+  ShieldMark,
+  authFieldClass,
+  authPrimaryButtonClass,
+} from "@/components/AuthSplit";
 import { GoogleButton } from "@/components/GoogleButton";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured, siteUrl } from "@/lib/env";
@@ -64,71 +69,101 @@ function LoginForm() {
   }
 
   return (
-    <AuthShell
-      title="Sign in"
-      subtitle="One door for patients and healthcare teams. Your role opens the right workspace."
-    >
-      {!configured ? (
-        <p className="mb-4 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm text-warn">
-          Add your Supabase keys to{" "}
-          <span className="font-mono">client/.env.local</span>.
-        </p>
-      ) : null}
-      <form onSubmit={onSubmit} className="space-y-3">
-        <label className="block text-sm">
-          Email
-          <input
-            className="cs-input mt-1"
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </label>
-        <label className="block text-sm">
-          Password
-          <input
-            className="cs-input mt-1"
-            type="password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        <div className="flex justify-end">
-          <Link
-            href="/forgot-password"
-            className="text-xs text-muted hover:text-accent"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
-        <button
-          type="submit"
-          disabled={busy || !configured}
-          className="cs-btn cs-btn-primary w-full"
-        >
-          {busy ? "Signing in…" : "Sign in with email"}
-        </button>
-      </form>
-      <div className="my-5 flex items-center gap-3 text-xs text-muted">
-        <span className="h-px flex-1 bg-border" />
-        or
-        <span className="h-px flex-1 bg-border" />
+    <AuthSplit>
+      <div className="mb-5 flex items-center gap-3 lg:hidden">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-accent-ink">
+          <ShieldMark />
+        </span>
+        <span className="text-lg font-bold">Claimsure AI</span>
       </div>
-      <GoogleButton
-        label="Continue with Google"
-        onClick={() => void onGoogle()}
-        disabled={!configured}
-      />
-      <p className="mt-6 text-center text-sm text-muted">
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+          Welcome back
+        </p>
+        <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Sign in</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          One door for patients and healthcare teams. Your role opens the right
+          workspace.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        {!configured ? (
+          <p className="mb-4 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm text-warn">
+            Add your Supabase keys to{" "}
+            <span className="font-mono">client/.env.local</span>.
+          </p>
+        ) : null}
+
+        <form onSubmit={onSubmit} className="grid gap-3">
+          <label className="block text-sm font-medium">
+            Email
+            <input
+              className={authFieldClass}
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+            />
+          </label>
+          <label className="block text-sm font-medium">
+            Password
+            <input
+              className={authFieldClass}
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Your password"
+            />
+          </label>
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-xs text-muted hover:text-accent"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          {error ? (
+            <p className="rounded-xl border border-danger/20 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={busy || !configured}
+            className={authPrimaryButtonClass}
+          >
+            {busy ? "Signing in…" : "Sign in with email"}
+          </button>
+        </form>
+
+        <div className="my-4 flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-border" />
+          OR
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <GoogleButton
+          label="Continue with Google"
+          onClick={() => void onGoogle()}
+          disabled={!configured}
+        />
+      </div>
+
+      <p className="mt-8 text-center text-sm text-muted">
         New here?{" "}
-        <Link href="/signup" className="text-accent hover:underline">
+        <Link
+          href="/signup"
+          className="font-medium text-accent hover:underline"
+        >
           Create an account
         </Link>
       </p>
-    </AuthShell>
+    </AuthSplit>
   );
 }
 
