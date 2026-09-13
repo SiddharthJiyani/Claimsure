@@ -214,19 +214,43 @@ http://localhost:3000
 
 ## 3. Start the Backend Server
 
-Open another terminal:
+The backend requires a PostgreSQL database, Google Cloud service account, and a configured `.env` file.
+
+Open a terminal and set up the backend:
 
 ```bash
 cd server
 pnpm install
+```
+
+### 3.1 Environment Variables
+Copy `.env.example` to `.env` and fill in the required values:
+```bash
+cp .env.example .env
+```
+Key configurations include your Supabase keys, Google Service Account credentials, and Slack app tokens.
+
+### 3.2 Database Setup
+Claimsure uses Supabase (PostgreSQL). Run the SQL files provided in `server/src/database/` in your Supabase SQL Editor in the following order:
+1. Run `schema.sql` (Creates tables, triggers, and RLS policies)
+2. Run `seed.sql` (Inserts demo users, organizations, and cases)
+
+*Note: Ensure you have created users via Supabase Auth before running the seed data.*
+
+### 3.3 Start the Server
+Start the development server:
+
+```bash
 pnpm dev
 ```
 
 The backend server will run on:
 
 ```text
-http://localhost:5000
+http://localhost:5001
 ```
+
+*See `server/docs/api.md` for full API documentation.*
 
 ---
 
