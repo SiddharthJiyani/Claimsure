@@ -20,67 +20,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
-html[data-theme="light"] {
-  --cs-bg: #f3f6fb;
-  --cs-fg: #102033;
-  --cs-surface: #ffffff;
-  --cs-surface-2: #e8eef6;
-  --cs-sidebar: #ffffff;
-  --cs-header: #ffffffcc;
-  --cs-border: #d0dae8;
-  --cs-muted: #4b5d73;
-  --cs-accent: #0c8a7e;
-  --cs-accent-2: #2563eb;
-  --cs-accent-ink: #04201c;
-  --cs-danger: #dc2656;
-  --cs-warn: #c2410c;
-  --cs-success: #047857;
-  --cs-overlay: rgb(16 32 51 / 0.35);
-  --cs-placeholder: #7b8ea3;
-  --cs-code: #eef3f8;
-  --cs-ring: rgb(12 138 126 / 0.28);
-  --cs-shadow-panel:
-    0 1px 2px rgb(16 32 51 / 0.05), 0 14px 32px -20px rgb(16 32 51 / 0.18);
-  --cs-shadow-popover: 0 18px 44px -18px rgb(16 32 51 / 0.28);
-  --cs-grid: rgb(16 32 51 / 0.07);
-  --cs-glow-a: rgb(12 138 126 / 0.1);
-  --cs-glow-b: rgb(37 99 235 / 0.08);
-  --cs-on-danger: #ffffff;
-  --status-pending-bg: #e8edf4;
-  --status-pending-fg: #334155;
-  --status-pending-bd: #c5d0de;
-  --status-analyzing-bg: #e0f2fe;
-  --status-analyzing-fg: #075985;
-  --status-analyzing-bd: #bae6fd;
-  --status-action-bg: #ffedd5;
-  --status-action-fg: #9a3412;
-  --status-action-bd: #fdba74;
-  --status-review-bg: #ede9fe;
-  --status-review-fg: #5b21b6;
-  --status-review-bd: #ddd6fe;
-  --status-appeal-bg: #ccfbf1;
-  --status-appeal-fg: #115e59;
-  --status-appeal-bd: #99f6e4;
-  --status-submitted-bg: #dbeafe;
-  --status-submitted-fg: #1e40af;
-  --status-submitted-bd: #bfdbfe;
-  --status-verifying-bg: #cffafe;
-  --status-verifying-fg: #155e75;
-  --status-verifying-bd: #a5f3fc;
-  --status-resolved-bg: #d1fae5;
-  --status-resolved-fg: #065f46;
-  --status-resolved-bd: #a7f3d0;
-  --status-escalated-bg: #ffe4e6;
-  --status-escalated-fg: #9f1239;
-  --status-escalated-bd: #fecdd3;
-  --status-closed-bg: #e4e4e7;
-  --status-closed-fg: #3f3f46;
-  --status-closed-bd: #d4d4d8;
-  color-scheme: light;
-}
-
-html:not([data-theme]),
-html[data-theme="dark"] {
+:root,
+[data-theme="dark"] {
   --cs-bg: #070b12;
   --cs-fg: #f3f6fb;
   --cs-surface: #0e1522;
@@ -136,6 +77,66 @@ html[data-theme="dark"] {
   --status-closed-fg: #d4d4d8;
   --status-closed-bd: rgb(161 161 170 / 0.32);
   color-scheme: dark;
+}
+
+html[data-theme="light"],
+[data-theme="light"] {
+  --cs-bg: #f3f6fb;
+  --cs-fg: #102033;
+  --cs-surface: #ffffff;
+  --cs-surface-2: #e8eef6;
+  --cs-sidebar: #ffffff;
+  --cs-header: #fffffff0;
+  --cs-border: #d0dae8;
+  --cs-muted: #4b5d73;
+  --cs-accent: #0c8a7e;
+  --cs-accent-2: #2563eb;
+  --cs-accent-ink: #04201c;
+  --cs-danger: #dc2656;
+  --cs-warn: #c2410c;
+  --cs-success: #047857;
+  --cs-overlay: rgb(16 32 51 / 0.35);
+  --cs-placeholder: #7b8ea3;
+  --cs-code: #eef3f8;
+  --cs-ring: rgb(12 138 126 / 0.28);
+  --cs-shadow-panel:
+    0 1px 2px rgb(16 32 51 / 0.05), 0 14px 32px -20px rgb(16 32 51 / 0.18);
+  --cs-shadow-popover: 0 18px 44px -18px rgb(16 32 51 / 0.28);
+  --cs-grid: rgb(16 32 51 / 0.07);
+  --cs-glow-a: rgb(12 138 126 / 0.1);
+  --cs-glow-b: rgb(37 99 235 / 0.08);
+  --cs-on-danger: #ffffff;
+  --status-pending-bg: #e8edf4;
+  --status-pending-fg: #334155;
+  --status-pending-bd: #c5d0de;
+  --status-analyzing-bg: #e0f2fe;
+  --status-analyzing-fg: #075985;
+  --status-analyzing-bd: #bae6fd;
+  --status-action-bg: #ffedd5;
+  --status-action-fg: #9a3412;
+  --status-action-bd: #fdba74;
+  --status-review-bg: #ede9fe;
+  --status-review-fg: #5b21b6;
+  --status-review-bd: #ddd6fe;
+  --status-appeal-bg: #ccfbf1;
+  --status-appeal-fg: #115e59;
+  --status-appeal-bd: #99f6e4;
+  --status-submitted-bg: #dbeafe;
+  --status-submitted-fg: #1e40af;
+  --status-submitted-bd: #bfdbfe;
+  --status-verifying-bg: #cffafe;
+  --status-verifying-fg: #155e75;
+  --status-verifying-bd: #a5f3fc;
+  --status-resolved-bg: #d1fae5;
+  --status-resolved-fg: #065f46;
+  --status-resolved-bd: #a7f3d0;
+  --status-escalated-bg: #ffe4e6;
+  --status-escalated-fg: #9f1239;
+  --status-escalated-bd: #fecdd3;
+  --status-closed-bg: #e4e4e7;
+  --status-closed-fg: #3f3f46;
+  --status-closed-bd: #d4d4d8;
+  color-scheme: light;
 }
 
 * {
@@ -233,16 +234,14 @@ button {
     auto;
 }
 
-html[data-theme="light"] .app-canvas,
-html[data-theme="light"] .auth-grid {
-  background-color: #f3f6fb;
+[data-theme="light"] .app-canvas,
+[data-theme="light"] .auth-grid {
+  background-color: #f3f6fb !important;
 }
 
-html:not([data-theme]) .app-canvas,
-html:not([data-theme]) .auth-grid,
-html[data-theme="dark"] .app-canvas,
-html[data-theme="dark"] .auth-grid {
-  background-color: #070b12;
+[data-theme="dark"] .app-canvas,
+[data-theme="dark"] .auth-grid {
+  background-color: #070b12 !important;
 }
 
 .cs-panel {
