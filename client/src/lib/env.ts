@@ -31,15 +31,41 @@ export function aiServerUrl() {
 }
 
 export function googleDriveRootFolderId() {
-  return process.env.GOOGLE_DRIVE_FOLDER_ID ?? "";
+  return (
+    process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID ??
+    process.env.GOOGLE_DRIVE_FOLDER_ID ??
+    "1iOcj-7ti-LRogZ9HfYTgnpIrvoYkRrFb"
+  );
 }
 
 export function googleSheetsId() {
-  return process.env.GOOGLE_SHEETS_ID ?? "";
+  return (
+    process.env.NEXT_PUBLIC_GOOGLE_SHEETS_ID ??
+    process.env.GOOGLE_SHEETS_ID ??
+    "1NmNJclpofp05eya8xvVmg06CJg9dBObrS1MLwoR7zdM"
+  );
 }
 
 export function googleCalendarId() {
-  return process.env.GOOGLE_CALENDAR_ID ?? "";
+  return (
+    process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID ??
+    process.env.GOOGLE_CALENDAR_ID ??
+    "1c77080788dd6097dba6c8de5df279d3ef4341d2ab89a33952a70ebdb5070201@group.calendar.google.com"
+  );
+}
+
+export function googleSheetsUrl() {
+  const id = googleSheetsId();
+  return id ? `https://docs.google.com/spreadsheets/d/${id}/edit` : "https://docs.google.com/spreadsheets";
+}
+
+export function googleDriveFolderUrl() {
+  const id = googleDriveRootFolderId();
+  return id ? `https://drive.google.com/drive/folders/${id}` : "https://drive.google.com";
+}
+
+export function googleCalendarUrl() {
+  return "https://calendar.google.com/calendar/u/0/r";
 }
 
 export function googleOAuth() {

@@ -373,7 +373,7 @@ class AgentNodes:
 
     # Node 7: await_human
     def await_human(self, state: CaseState) -> CaseState:
-        state.status = "AWAITING_REVIEW" if len(state.missing_evidence) == 0 else "ACTION_REQUIRED"
+        state.status = "AWAITING_REVIEW"
         state.record_node(
             node_name="await_human",
             summary=f"Case paused awaiting human input: {', '.join(state.missing_evidence) if state.missing_evidence else 'Reviewer approval requested'}",

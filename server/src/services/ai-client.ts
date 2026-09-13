@@ -123,10 +123,15 @@ async function request<T>(
 /**
  * processCase — triggers the full 9-node agent on a case.
  */
-export async function processCase(caseId: string, dryRun = false): Promise<ProcessCaseResult> {
+export async function processCase(
+  caseId: string,
+  dryRun = false,
+  caseData?: Record<string, unknown>,
+): Promise<ProcessCaseResult> {
   const response = await request<WorkflowProcessResponse>('POST', '/api/workflow/process-case', {
     case_id: caseId,
     dry_run: dryRun || env.DRY_RUN,
+    ...(caseData ?? {}),
   });
 
   const state = response.case_state;

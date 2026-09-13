@@ -7,6 +7,7 @@ import { ArrowLeft, Bot } from "lucide-react";
 import { AgentTrace } from "@/components/AgentTrace";
 import { ApprovalCard } from "@/components/ApprovalCard";
 import { CaseTimeline } from "@/components/CaseTimeline";
+import { ConnectedServicesPanel } from "@/components/ConnectedServicesPanel";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { WorkspaceFrame } from "@/components/PageHeader";
@@ -23,19 +24,30 @@ export default function InsuranceCasePage() {
 
   async function load() {
     try {
-      const data = await appFetch<{ case: ClaimCase }>(
+      const data = await appFetch<{ case?: ClaimCase; data?: ClaimCase }>(
         `/api/workspace/cases/${params.id}`,
       );
-      setClaim(data.case);
-      setError(null);
-    } catch {
-      try {
-        const data = await apiFetch<{ case: ClaimCase }>(`/cases/${params.id}`);
-        setClaim(data.case);
+      const c = data.case ?? data.data ?? (data as unknown as ClaimCase);
+      if (c && c.id) {
+        setClaim(c);
         setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not load case");
+        return;
       }
+    } catch {
+      // fallback to backend express API
+    }
+
+    try {
+      const data = await apiFetch<{ case?: ClaimCase; data?: ClaimCase }>(`/cases/${params.id}`);
+      const c = data.case ?? data.data ?? (data as unknown as ClaimCase);
+      if (c && c.id) {
+        setClaim(c);
+        setError(null);
+      } else {
+        setError("Could not load case details");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load case");
     }
   }
 
@@ -43,18 +55,30 @@ export default function InsuranceCasePage() {
     void load();
   }, [params.id]);
 
+  // Auto-poll while agent is running
+  useEffect(() => {
+    if (claim?.status !== "ANALYZING") return;
+    const interval = setInterval(() => {
+      void load();
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [claim?.status]);
+
   async function trigger() {
     if (!claim) return;
     setBusy(true);
+    setError(null);
     try {
       await apiFetch(`/cases/${claim.id}/process`, {
         method: "POST",
         headers: {
-          "Idempotency-Key": `${claim.id}:process_agent`,
+          "Idempotency-Key": `${claim.id}:process_${Date.now()}`,
         },
         body: JSON.stringify({}),
       });
       await load();
+      setTimeout(() => { void load(); }, 1500);
+      setTimeout(() => { void load(); }, 3500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not trigger agent");
     } finally {
@@ -67,6 +91,14 @@ export default function InsuranceCasePage() {
       <WorkspaceFrame>
         {error ? (
           <ErrorCallout message={error} onRetry={() => void load()} />
+
+
+
+
+
+
+
+
         ) : (
           <QueueSkeleton rows={5} />
         )}
@@ -80,6 +112,23 @@ export default function InsuranceCasePage() {
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
+  const latestAgent = [...(claim.agent_state ?? [])].sort(
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+  )[0];
+  const agentData = latestAgent?.state_data ?? {};
+  const policyRequirements = Array.isArray(agentData.policy_requirements)
+    ? agentData.policy_requirements.filter(
+        (item): item is { citation?: string; clause_title?: string; text?: string } =>
+          Boolean(item && typeof item === "object"),
+      )
+    : [];
+  const missingEvidence = Array.isArray(agentData.evidence_missing)
+    ? agentData.evidence_missing.filter((item): item is string => typeof item === "string")
+    : [];
+  const foundEvidence = Array.isArray(agentData.evidence_found)
+    ? agentData.evidence_found.filter((item): item is string => typeof item === "string")
+    : [];
 
   return (
     <WorkspaceFrame>
@@ -147,8 +196,63 @@ export default function InsuranceCasePage() {
         </div>
       </section>
 
+      <ConnectedServicesPanel claim={claim} />
+
+      <section className="cs-panel rounded-2xl p-5">
+        <p className="cs-kicker">Policy comparison</p>
+        <p className="mt-2 text-sm text-muted">
+          The agent compares the denial and uploaded evidence against the policy
+          clauses returned by the configured payer policy corpus.
+        </p>
+        {policyRequirements.length ? (
+          <ul className="mt-4 space-y-2">
+            {policyRequirements.map((requirement, index) => (
+              <li
+                key={`${requirement.citation ?? requirement.clause_title ?? "clause"}-${index}`}
+                className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm"
+              >
+                <p className="font-medium text-accent">
+                  {requirement.citation ?? requirement.clause_title ?? "Policy clause"}
+                </p>
+                {requirement.text ? (
+                  <p className="mt-1 text-muted">{requirement.text}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 text-sm text-warn">
+            No policy clauses were matched. The agent should not auto-submit this case.
+          </p>
+        )}
+        {foundEvidence.length || missingEvidence.length ? (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-success">
+                Evidence found
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-muted">
+                {foundEvidence.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-warn">
+                Evidence missing
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-muted">
+                {missingEvidence.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       {appeal ? (
-        <ApprovalCard appeal={appeal} onChanged={() => void load()} />
+        <ApprovalCard
+          appeal={appeal}
+          caseId={claim.id}
+          onChanged={() => void load()}
+        />
       ) : (
         <div className="cs-panel rounded-2xl px-5 py-6 text-sm text-muted">
           No appeal draft yet. Trigger the agent after evidence is complete.

@@ -6,7 +6,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import { getAnonClient, getServiceClient } from '../database/supabase.js';
-import { upsertProfile, getProfileById } from '../database/queries/profiles.js';
+import { upsertProfile, createProfile, getProfileById } from '../database/queries/profiles.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
 import { AuthenticationError, ConflictError } from '../lib/errors.js';
 import type { AuthUser } from '../types/index.js';

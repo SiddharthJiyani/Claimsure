@@ -59,9 +59,16 @@ export default function InsuranceDashboardPage() {
 
   async function trigger(id: string) {
     setBusyId(id);
+    setError(null);
     try {
-      await apiFetch(`/cases/${id}/analyze`, { method: "POST" });
+      await apiFetch(`/cases/${id}/process`, {
+        method: "POST",
+        headers: { "Idempotency-Key": `${id}:process_${Date.now()}` },
+        body: JSON.stringify({}),
+      });
       await reload();
+      setTimeout(() => { void reload(); }, 2000);
+      setTimeout(() => { void reload(); }, 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not trigger agent");
     } finally {

@@ -59,13 +59,13 @@ function caseToRow(c: Case, extras: CaseSheetExtras = {}): string[] {
 }
 
 async function resolveSheetName(sheets: sheets_v4.Sheets): Promise<string> {
-  const spreadsheet = await sheets.spreadsheets.get({
-    spreadsheetId: env.GOOGLE_SHEETS_ID,
+  const resp = await (sheets.spreadsheets.get as (params: { spreadsheetId: string; fields: string }) => Promise<{ data: sheets_v4.Schema$Spreadsheet }>)({
+    spreadsheetId: env.GOOGLE_SHEETS_ID!,
     fields: "sheets(properties(title))",
   });
-  const titles = (spreadsheet.data.sheets ?? [])
-    .map((sheet) => sheet.properties?.title)
-    .filter((title): title is string => Boolean(title));
+  const titles = (resp.data.sheets ?? [])
+    .map((s: sheets_v4.Schema$Sheet) => s.properties?.title)
+    .filter((title: string | null | undefined): title is string => Boolean(title));
   return titles.includes(PREFERRED_TAB) ? PREFERRED_TAB : titles[0] ?? PREFERRED_TAB;
 }
 
