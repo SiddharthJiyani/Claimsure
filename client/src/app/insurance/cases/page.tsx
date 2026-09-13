@@ -39,16 +39,17 @@ export default function InsuranceCasesPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
 
   const visible = useMemo(() => {
+    const list = Array.isArray(cases) ? cases : [];
     if (filter === "review") {
-      return cases.filter((claim) => REVIEW.includes(claim.status));
+      return list.filter((claim) => REVIEW.includes(claim?.status));
     }
     if (filter === "running") {
-      return cases.filter((claim) => RUNNING.includes(claim.status));
+      return list.filter((claim) => RUNNING.includes(claim?.status));
     }
     if (filter === "done") {
-      return cases.filter((claim) => DONE.includes(claim.status));
+      return list.filter((claim) => DONE.includes(claim?.status));
     }
-    return cases;
+    return list;
   }, [cases, filter]);
 
   return (

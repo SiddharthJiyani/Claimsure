@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { Bell, Mail, Send, CheckCircle2 } from "lucide-react";
 import { apiFetch, appFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { notificationCaseHref } from "@/lib/notification-href";
 import { useNotifications } from "@/lib/use-workspace-data";
+import { useAuth } from "@/lib/auth-context";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { QueueSkeleton } from "@/components/StatCard";
@@ -41,42 +42,60 @@ export function NotificationList() {
       <EmptyState
         icon={Bell}
         title="Inbox is clear"
-        description="Approval requests, missing-document asks, and agent completions will appear here."
+        description="Claim determinations, appeal notices, and AI agent completion alerts will appear here."
       />
     );
   }
 
   return (
     <ul className="cs-panel divide-y divide-border overflow-hidden rounded-2xl">
-      {items.map((item) => (
-        <li key={item.id} className="px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                {!item.is_read ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                ) : null}
-                <p className="text-sm font-semibold">{item.title}</p>
+      {items.map((item) => {
+        const isEmail = item.channel === "email";
+        const isInsurer = profile?.role === "insurance_provider";
+        const recipientLabel = isInsurer ? "To: Insurance Provider" : "To: Patient";
+
+        return (
+          <li key={item.id} className="px-5 py-4 transition hover:bg-surface-2/30">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  {!item.is_read ? (
+                    <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
+                  ) : null}
+
+                  {/* Recipient Badge */}
+                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] font-semibold text-foreground border border-border">
+                    <Send size={10} className="text-accent" />
+                    {recipientLabel}
+                  </span>
+
+                  {/* Channel Badge */}
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold ${
+                      isEmail
+                        ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                        : "bg-accent/10 text-accent border border-accent/20"
+                    }`}
+                  >
+                    {isEmail ? <Mail size={10} /> : <Bell size={10} />}
+                    {isEmail ? "Email (Nodemailer SMTP)" : "In-App"}
+                  </span>
+
+                  {/* Event Type */}
+                  <span className="text-[10px] text-muted uppercase tracking-wider font-mono">
+                    {item.type.replace(/_/g, " ")}
+                  </span>
+                </div>
+
+                <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                <p className="mt-1 text-sm leading-6 text-muted">{item.message}</p>
+                <p className="mt-2 text-xs text-muted font-mono">{relativeTime(item.created_at)}</p>
               </div>
               <p className="mt-1 text-sm leading-6 text-muted">
                 {item.message}
               </p>
               <p className="mt-2 text-xs text-muted">
                 {relativeTime(item.created_at)}
-                {item.case_id && notificationCaseHref(profile?.role, item.case_id) ? (
-                  <>
-                    {" · "}
-                    <Link
-                      href={notificationCaseHref(profile?.role, item.case_id)!}
-                      className="text-accent"
-                      onClick={() => {
-                        if (!item.is_read) void markRead(item.id);
-                      }}
-                    >
-                      Open claim
-                    </Link>
-                  </>
-                ) : null}
               </p>
             </div>
             {!item.is_read ? (

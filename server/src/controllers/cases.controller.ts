@@ -361,7 +361,7 @@ export async function processCase(
           }
         }
 
-        // Notify insurer of result
+        // Notify insurer — analysis is ready, they need to Accept or Reject
         notifyInsurersByOrg(
           existing.insurer_org_id,
           id,
@@ -378,7 +378,7 @@ export async function processCase(
             : `Agent completed analysis for case ${existing.case_number}. Decision: ${result.route_decision}`,
           {
             caseNumber: existing.case_number,
-            agentSummary: result.appeal_text ?? "",
+            agentSummary: result.appeal_text ?? `Analysis complete for ${existing.service_type}. Route: ${result.route_decision ?? "human_review"}.`,
             confidence: result.confidence,
             serviceType: existing.service_type,
           },

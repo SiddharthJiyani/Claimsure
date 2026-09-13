@@ -38,15 +38,16 @@ export default function PatientDashboardPage() {
     }
   }
 
+  const casesList = Array.isArray(cases) ? cases : [];
   const stats = useMemo(
     () => ({
-      open: cases.filter(
-        (claim) => !["RESOLVED", "CLOSED"].includes(claim.status),
+      open: casesList.filter(
+        (claim) => !["RESOLVED", "CLOSED"].includes(claim?.status),
       ).length,
       action: cases.filter((claim) => claimNeedsPatientAction(claim)).length,
       resolved: cases.filter((claim) => claim.status === "RESOLVED").length,
     }),
-    [cases],
+    [casesList],
   );
 
   return (

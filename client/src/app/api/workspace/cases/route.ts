@@ -84,24 +84,34 @@ export async function POST(request: Request) {
 
   try {
     const admin = createAdminClient();
-    let insurerOrgId =
+    const insurerOrgId =
       typeof body.insurer_org_id === "string" ? body.insurer_org_id.trim() : "";
-    if (!UUID_RE.test(insurerOrgId)) {
-      const { data: org } = await admin
-        .from("organizations")
-        .select("id")
-        .eq("type", "insurance_provider")
-        .order("created_at")
-        .limit(1)
-        .maybeSingle();
-      insurerOrgId = org?.id ?? "";
-    }
-    if (!UUID_RE.test(insurerOrgId)) {
+    if (!insurerOrgId || !UUID_RE.test(insurerOrgId)) {
       return NextResponse.json(
-        { error: "No health provider is available yet" },
+        { error: "Insurance provider is compulsory. Please select your insurance provider." },
         { status: 400 },
       );
     }
+
+    const { data: org } = await admin
+      .from("organizations")
+      .select("id, name")
+      .eq("id", insurerOrgId)
+      .maybeSingle();
+
+    if (!org) {
+      return NextResponse.json(
+        { error: "Selected insurance provider not found" },
+        { status: 400 },
+      );
+    }
+
+    const orgNameLower = (org.name || "").toLowerCase();
+    const payerId = orgNameLower.includes("aetna")
+      ? "payer_a"
+      : orgNameLower.includes("united")
+      ? "payer_b"
+      : orgNameLower.replace(/[^a-z0-9]/g, "_");
 
     const { data, error } = await admin
       .from("cases")
@@ -111,10 +121,7 @@ export async function POST(request: Request) {
         service_type: serviceType,
         service_code:
           typeof body.service_code === "string" ? body.service_code : null,
-        payer_id:
-          typeof body.disease === "string" && body.disease
-            ? body.disease
-            : null,
+        payer_id: payerId,
         status: "PENDING",
       })
       .select(CASE_LIST_SELECT)

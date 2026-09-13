@@ -7,7 +7,7 @@
     "start:client": "npm run dev --prefix client",
     "start:server": "npm run dev --prefix server",
     "setup:ai": "python3 -m venv ai-server/.venv && ai-server/.venv/bin/pip install -r ai-server/requirements.txt",
-    "start:ai": "cd ai-server && (test -x .venv/bin/python || python3 -m venv .venv) && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    "start:ai": "cd ai-server && (test -x venv/bin/uvicorn && venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload || test -x .venv/bin/uvicorn && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload || python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload)"
   },
   "dependencies": {
     "googleapis": "^180.0.0"

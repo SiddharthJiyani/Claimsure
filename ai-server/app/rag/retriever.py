@@ -152,3 +152,46 @@ class PolicyRetriever:
             "policy_missing": False,
             "reason": "Requirements successfully retrieved"
         }
+
+    def add_chunks(self, new_chunks: List[Dict[str, Any]]):
+        """Append newly ingested policy chunks, embed them, and persist to cache."""
+        for c in new_chunks:
+            if not c.get("embedding"):
+                c["embedding"] = compute_deterministic_embedding(c.get("text", ""))
+            self.chunks.append(c)
+
+        try:
+            os.makedirs(os.path.dirname(self.embeddings_path), exist_ok=True)
+            with open(self.embeddings_path, "w", encoding="utf-8") as f:
+                json.dump(self.chunks, f, indent=2)
+        except Exception:
+            pass
+
+    def list_policies(self) -> List[Dict[str, Any]]:
+        """Return summary of all currently indexed policies."""
+        policies: Dict[str, Dict[str, Any]] = {}
+        for c in self.chunks:
+            pid = c.get("policy_id", "default")
+            if pid not in policies:
+                policies[pid] = {
+                    "policy_id": pid,
+                    "payer_id": c.get("payer_id", ""),
+                    "section_title": c.get("section_title", pid),
+                    "clause_count": 0,
+                    "service_codes": set(),
+                }
+            policies[pid]["clause_count"] += 1
+            for sc in c.get("service_codes", []):
+                policies[pid]["service_codes"].add(sc)
+
+        return [
+            {
+                "policy_id": p["policy_id"],
+                "payer_id": p["payer_id"],
+                "section_title": p["section_title"],
+                "clause_count": p["clause_count"],
+                "service_codes": sorted(list(p["service_codes"])),
+            }
+            for p in policies.values()
+        ]
+

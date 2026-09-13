@@ -11,17 +11,28 @@ export function useCases() {
 
   const reload = useCallback(async () => {
     try {
-      const data = await appFetch<{ cases: ClaimCase[] }>(
+      const data = await appFetch<{ cases?: ClaimCase[]; data?: ClaimCase[] }>(
         "/api/workspace/cases",
       );
-      setCases(data.cases);
+      const list = Array.isArray(data?.cases)
+        ? data.cases
+        : Array.isArray(data?.data)
+        ? data.data
+        : [];
+      setCases(list);
       setError(null);
     } catch {
       try {
-        const data = await apiFetch<{ cases: ClaimCase[] }>("/cases");
-        setCases(data.cases);
+        const data = await apiFetch<{ cases?: ClaimCase[]; data?: ClaimCase[] }>("/cases");
+        const list = Array.isArray(data?.cases)
+          ? data.cases
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
+        setCases(list);
         setError(null);
       } catch (err) {
+        setCases([]);
         setError(err instanceof Error ? err.message : "Could not load cases");
       }
     } finally {
@@ -33,7 +44,7 @@ export function useCases() {
     void reload();
   }, [reload]);
 
-  return { cases, error, loading, reload, setError };
+  return { cases: cases ?? [], error, loading, reload, setError };
 }
 
 export function useNotifications() {
@@ -43,19 +54,30 @@ export function useNotifications() {
 
   const reload = useCallback(async () => {
     try {
-      const data = await appFetch<{ notifications: NotificationItem[] }>(
+      const data = await appFetch<{ notifications?: NotificationItem[]; data?: NotificationItem[] }>(
         "/api/workspace/notifications",
       );
-      setItems(data.notifications);
+      const list = Array.isArray(data?.notifications)
+        ? data.notifications
+        : Array.isArray(data?.data)
+        ? data.data
+        : [];
+      setItems(list);
       setError(null);
     } catch {
       try {
-        const data = await apiFetch<{ notifications: NotificationItem[] }>(
+        const data = await apiFetch<{ notifications?: NotificationItem[]; data?: NotificationItem[] }>(
           "/notifications",
         );
-        setItems(data.notifications);
+        const list = Array.isArray(data?.notifications)
+          ? data.notifications
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
+        setItems(list);
         setError(null);
       } catch (err) {
+        setItems([]);
         setError(
           err instanceof Error ? err.message : "Could not load notifications",
         );
@@ -73,5 +95,5 @@ export function useNotifications() {
     return () => window.clearInterval(timer);
   }, [reload]);
 
-  return { items, error, loading, reload, setItems };
+  return { items: items ?? [], error, loading, reload, setItems };
 }

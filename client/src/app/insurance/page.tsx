@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
 import { QueueSkeleton, StatCard } from "@/components/StatCard";
+import { InsurerPolicyManager } from "@/components/InsurerPolicyManager";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { dayGreeting, displayName } from "@/lib/format";
@@ -43,18 +44,19 @@ export default function InsuranceDashboardPage() {
     email: profile?.email ?? user?.email,
   }).split(" ")[0];
 
+  const casesList = Array.isArray(cases) ? cases : [];
   const stats = useMemo(
     () => ({
-      incoming: cases.length,
-      action: cases.filter((claim) =>
+      incoming: casesList.length,
+      action: casesList.filter((claim) =>
         ["ACTION_REQUIRED", "AWAITING_REVIEW", "APPEAL_READY"].includes(
-          claim.status,
+          claim?.status,
         ),
       ).length,
-      analyzing: cases.filter((claim) => claim.status === "ANALYZING").length,
-      resolved: cases.filter((claim) => claim.status === "RESOLVED").length,
+      analyzing: casesList.filter((claim) => claim?.status === "ANALYZING").length,
+      resolved: casesList.filter((claim) => claim?.status === "RESOLVED").length,
     }),
-    [cases],
+    [casesList],
   );
 
   async function trigger(id: string) {
@@ -167,6 +169,10 @@ export default function InsuranceDashboardPage() {
             )}
           />
         )}
+      </section>
+
+      <section className="pt-4">
+        <InsurerPolicyManager />
       </section>
     </WorkspaceFrame>
   );

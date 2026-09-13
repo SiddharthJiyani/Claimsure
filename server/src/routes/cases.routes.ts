@@ -14,6 +14,12 @@ import {
   getCaseAudit,
 } from "../controllers/cases.controller.js";
 import {
+  makeClaimDecision,
+  getClaimDecision,
+  makeAppealDecision,
+  claimDecisionSchema,
+} from "../controllers/decisions.controller.js";
+import {
   createCaseSchema,
   updateCaseStatusSchema,
   listCasesQuerySchema,
@@ -84,5 +90,26 @@ router.post(
  * Both patients (own cases) and insurers (org cases) can view.
  */
 router.get("/:id/audit", getCaseAudit);
+
+/**
+ * POST /api/cases/:id/decision
+ * Insurance provider accepts or rejects a claim with a reason.
+ * Triggers email notification to patient.
+ * Body: { decision: "ACCEPTED" | "REJECTED", reason: string }
+ */
+router.post("/:id/decision", validate(claimDecisionSchema), makeClaimDecision);
+
+/**
+ * GET /api/cases/:id/decision
+ * Retrieve the latest insurer decision for a case (both roles can view).
+ */
+router.get("/:id/decision", getClaimDecision);
+
+/**
+ * POST /api/cases/:id/appeal-decision
+ * Insurance provider accepts or rejects a PATIENT APPEAL.
+ * Body: { decision: "ACCEPTED" | "REJECTED", reason: string }
+ */
+router.post("/:id/appeal-decision", validate(claimDecisionSchema), makeAppealDecision);
 
 export default router;
