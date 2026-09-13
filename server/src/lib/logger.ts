@@ -28,13 +28,13 @@ function format(level: LogLevel, message: string, meta?: Record<string, unknown>
 
 export const logger = {
   debug(message: string, meta?: Record<string, unknown>): void {
-    if (shouldLog('debug')) console.debug(format('debug', message, meta));
+    if (shouldLog('debug')) console.error(format('debug', message, meta));
   },
   info(message: string, meta?: Record<string, unknown>): void {
-    if (shouldLog('info')) console.info(format('info', message, meta));
+    if (shouldLog('info')) console.error(format('info', message, meta));
   },
   warn(message: string, meta?: Record<string, unknown>): void {
-    if (shouldLog('warn')) console.warn(format('warn', message, meta));
+    if (shouldLog('warn')) console.error(format('warn', message, meta));
   },
   error(message: string, error?: unknown, meta?: Record<string, unknown>): void {
     if (!shouldLog('error')) return;

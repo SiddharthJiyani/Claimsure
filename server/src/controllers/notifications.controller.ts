@@ -32,7 +32,7 @@ export async function listNotifications(req: Request, res: Response, next: NextF
 export async function markRead(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     await markNotificationRead(id, user.id);
     sendSuccess(res, null, 'Notification marked as read');

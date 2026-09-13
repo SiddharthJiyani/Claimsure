@@ -23,7 +23,7 @@ import type { CreateDocumentInput, MarkMissingInput } from '../validators/docume
 export async function listDocuments(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id: caseId } = req.params;
+    const caseId = req.params.id as string;
 
     const caseData = await getCaseById(caseId);
 
@@ -50,7 +50,7 @@ export async function listDocuments(req: Request, res: Response, next: NextFunct
 export async function uploadDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id: caseId } = req.params;
+    const caseId = req.params.id as string;
     const body = req.body as CreateDocumentInput;
 
     const caseData = await getCaseById(caseId);
@@ -68,7 +68,7 @@ export async function uploadDocument(req: Request, res: Response, next: NextFunc
       name: body.name,
       document_type: body.document_type,
       drive_file_id: body.drive_file_id,
-      drive_url: body.drive_url,
+      ...(body.drive_url !== undefined ? { drive_url: body.drive_url } : {}),
       uploaded_by: user.id,
       is_missing: body.is_missing,
     });
@@ -108,7 +108,8 @@ export async function uploadDocument(req: Request, res: Response, next: NextFunc
 export async function updateDocumentMissing(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id: caseId, docId } = req.params;
+    const caseId = req.params.id as string;
+    const docId = req.params.docId as string;
     const body = req.body as MarkMissingInput;
 
     if (user.role !== 'insurance_provider') {

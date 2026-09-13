@@ -8,7 +8,7 @@ import {
   resetPasswordSchema,
 } from '../validators/auth.validator.js';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * POST /api/auth/signup

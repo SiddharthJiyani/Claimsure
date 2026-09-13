@@ -67,7 +67,7 @@ export function caseUpdateTool(server: McpServer): void {
           action: 'status_updated_by_agent',
           previous_state: previousCase.status,
           new_state: status,
-          idempotency_key,
+          ...(idempotency_key !== undefined ? { idempotency_key } : {}),
           metadata: { reason },
         });
 
@@ -84,11 +84,9 @@ export function caseUpdateTool(server: McpServer): void {
 
         // Cache idempotency result
         if (idempotency_key) {
-          supabase
+          void supabase
             .from('idempotency_keys')
-            .upsert({ key: idempotency_key, response: result }, { onConflict: 'key' })
-            .then(() => {})
-            .catch(() => {});
+            .upsert({ key: idempotency_key, response: result }, { onConflict: 'key' });
         }
 
         logger.info('MCP case_update completed', { case_id, status });

@@ -5,16 +5,37 @@
  */
 
 import { google } from 'googleapis';
+import nodemailer, { type Transporter } from 'nodemailer';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
+import { getGoogleAuth } from './google-auth.js';
+
+export function smtpConfigured(): boolean {
+  return Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+}
+
+function getSmtpClient(): Transporter {
+  if (!smtpConfigured()) {
+    throw new Error('SMTP_HOST, SMTP_USER, and SMTP_PASS must all be configured');
+  }
+
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
+    auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+  });
+}
+
+export async function verifySmtpConnection(): Promise<void> {
+  await getSmtpClient().verify();
+}
 
 function getGmailClient() {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/gmail.send'],
-    // For service account with domain-wide delegation:
-    clientOptions: { subject: env.GMAIL_SENDER_EMAIL },
-  });
+  const auth = getGoogleAuth(
+    ['https://www.googleapis.com/auth/gmail.send'],
+    env.GMAIL_SENDER_EMAIL,
+  );
   return google.gmail({ version: 'v1', auth });
 }
 
@@ -46,8 +67,31 @@ export async function sendEmail(input: SendEmailInput): Promise<{ messageId: str
     return { messageId: 'DRY_RUN_MSG_ID' };
   }
 
-  if (!env.GMAIL_SENDER_EMAIL || !env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    logger.warn('Gmail not configured, skipping email send');
+  if (smtpConfigured()) {
+    try {
+      const res = await getSmtpClient().sendMail({
+        from: env.GMAIL_SENDER_EMAIL ?? env.SMTP_USER,
+        to: input.to,
+        subject: input.subject,
+        text: input.textBody,
+        html: input.htmlBody,
+        attachments: input.attachments?.map((attachment) => ({
+          filename: attachment.filename,
+          content: attachment.content,
+          contentType: attachment.mimeType,
+        })),
+      });
+
+      logger.info('SMTP email sent', { to: input.to, messageId: res.messageId });
+      return { messageId: res.messageId };
+    } catch (err) {
+      logger.error('SMTP send failed', err);
+      throw new Error('Failed to send email');
+    }
+  }
+
+  if (!env.GMAIL_SENDER_EMAIL) {
+    logger.warn('Gmail and SMTP are not configured, skipping email send');
     return { messageId: 'NOT_CONFIGURED' };
   }
 

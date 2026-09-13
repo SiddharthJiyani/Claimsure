@@ -9,7 +9,7 @@ const documentTypeEnum = z.enum([
   'appeal_letter',
   'policy_document',
   'other',
-]);
+] as const);
 
 export const createDocumentSchema = z.object({
   name: z.string().min(1, 'Document name is required').max(255),

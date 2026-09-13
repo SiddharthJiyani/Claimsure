@@ -6,14 +6,12 @@
 import { google, type calendar_v3 } from 'googleapis';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
+import { getGoogleAuth } from './google-auth.js';
 
 const DRY_RUN_EVENT_ID = 'DRY_RUN_EVENT_ID';
 
 function getCalendarClient(): calendar_v3.Calendar {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/calendar'],
-  });
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/calendar']);
   return google.calendar({ version: 'v3', auth });
 }
 
@@ -45,7 +43,7 @@ export async function createAppealDeadlineEvent(input: CreateEventInput): Promis
     };
   }
 
-  if (!env.GOOGLE_CALENDAR_ID || !env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
+  if (!env.GOOGLE_CALENDAR_ID) {
     logger.warn('Calendar not configured, skipping event creation');
     return {
       id: 'NOT_CONFIGURED',
@@ -63,10 +61,10 @@ export async function createAppealDeadlineEvent(input: CreateEventInput): Promis
       calendarId: env.GOOGLE_CALENDAR_ID,
       requestBody: {
         summary: input.summary,
-        description: input.description,
+        ...(input.description !== undefined ? { description: input.description } : {}),
         start: { date: input.startDate },
         end: { date: input.endDate ?? input.startDate },
-        attendees: input.attendeeEmails?.map((email) => ({ email })),
+        ...(input.attendeeEmails !== undefined ? { attendees: input.attendeeEmails.map((email) => ({ email })) } : {}),
         reminders: {
           useDefault: false,
           overrides: [

@@ -1,3 +1,4 @@
+import multer from 'multer';
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -6,12 +7,35 @@ import {
   uploadDocument,
   updateDocumentMissing,
 } from '../controllers/documents.controller.js';
+import { uploadDocumentAndAnalyze } from '../controllers/upload.controller.js';
 import {
   createDocumentSchema,
   markMissingSchema,
 } from '../validators/documents.validator.js';
 
-const router = Router({ mergeParams: true });
+// Multer in-memory storage — only used for the /upload route.
+// 50 MB max file size; mimetype filtering is intentionally permissive (PDF, images, text).
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'text/plain',
+      'image/png',
+      'image/jpeg',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/octet-stream',
+    ];
+    if (allowed.includes(file.mimetype) || file.mimetype.startsWith('text/')) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Unsupported file type: ${file.mimetype}. Allowed: PDF, TXT, PNG, JPEG, DOCX.`));
+    }
+  },
+});
+
+const router: Router = Router({ mergeParams: true });
 
 // All document routes require authentication
 router.use(requireAuth);
@@ -24,10 +48,27 @@ router.use(requireAuth);
 router.get('/', listDocuments);
 
 /**
+ * POST /api/cases/:id/documents/upload
+ * Full file-bytes upload endpoint. Accepts multipart/form-data.
+ *
+ * Form fields:
+ *   - file             (required) — binary file (PDF, TXT, PNG, JPEG, DOCX)
+ *   - document_type    (optional, default: "denial_letter")
+ *   - display_name     (optional) — override stored document name
+ *   - payer_id         (optional) — RAG context for AI agent
+ *   - service_code     (optional) — RAG context for AI agent
+ *   - patient_name     (optional) — passed to AI denial parser
+ *   - skip_ai          (optional, "true"/"false") — upload to Drive only, skip AI
+ *
+ * Flow: upload → Drive → Supabase → AI agent → Sheets + Calendar + notifications
+ */
+router.post('/upload', upload.single('file'), uploadDocumentAndAnalyze);
+
+/**
  * POST /api/cases/:id/documents
- * Register a document's metadata (file already uploaded to Drive).
+ * Register a document's metadata (file already uploaded to Drive separately).
  * Body: { name, document_type, drive_file_id, drive_url?, is_missing? }
- * Note: Upload the file to Drive first, then call this endpoint with the drive_file_id.
+ * Note: Use /upload if you want the server to handle file bytes directly.
  */
 router.post('/', validate(createDocumentSchema), uploadDocument);
 

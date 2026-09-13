@@ -1,7 +1,7 @@
 import os
 import json
 from typing import Optional, Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
@@ -11,6 +11,7 @@ except ImportError:
     pass
 
 from app.workflows.denial_workflow import DenialWorkflow
+from app.rag.retriever import PolicyRetriever
 from eval.harness import run_evaluation_harness
 
 app = FastAPI(
@@ -29,6 +30,7 @@ app.add_middleware(
 )
 
 workflow = DenialWorkflow()
+policy_retriever = PolicyRetriever()
 
 @app.get("/health")
 def health_check():
@@ -98,6 +100,29 @@ async def process_case_endpoint(case_data: Dict[str, Any]):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent workflow error: {str(e)}")
+
+@app.get("/api/rag/search")
+def rag_search(
+    q: str = Query(..., min_length=1),
+    payer_id: Optional[str] = None,
+    service_code: Optional[str] = None,
+):
+    """Return policy search results for the backend MCP policy_search tool."""
+    result = policy_retriever.retrieve(
+        query=q,
+        payer_id=payer_id,
+        service_code=service_code,
+    )
+
+    return [
+        {
+            "policy_id": clause.get("policy_id", ""),
+            "clause": clause.get("clause_id") or clause.get("clause_title", ""),
+            "text": clause.get("text", ""),
+            "score": clause.get("similarity_score", 0.0),
+        }
+        for clause in result.get("matched_clauses", [])
+    ]
 
 @app.post("/api/workflow/verify")
 async def verify_endpoint(payload: Dict[str, Any]):

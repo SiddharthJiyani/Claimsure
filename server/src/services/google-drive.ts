@@ -10,19 +10,12 @@ import { Readable } from 'stream';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { ServiceUnavailableError } from '../lib/errors.js';
+import { getGoogleAuth } from './google-auth.js';
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 
 function getDriveClient(): drive_v3.Drive {
-  if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    throw new ServiceUnavailableError('Google Drive (service account not configured)');
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  });
-
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
   return google.drive({ version: 'v3', auth });
 }
 
@@ -72,9 +65,10 @@ export async function uploadFile(input: UploadFileInput): Promise<DriveFile> {
       : Readable.from(input.content);
 
     const res = await drive.files.create({
+      supportsAllDrives: true,
       requestBody: {
         name: input.name,
-        parents: folderId ? [folderId] : undefined,
+        ...(folderId ? { parents: [folderId] } : {}),
       },
       media: {
         mimeType: input.mimeType,
@@ -98,6 +92,7 @@ export async function getFileMetadata(fileId: string): Promise<DriveFile> {
     const drive = getDriveClient();
     const res = await drive.files.get({
       fileId,
+      supportsAllDrives: true,
       fields: 'id, name, mimeType, webViewLink, size, createdTime',
     });
     return res.data as DriveFile;
@@ -118,6 +113,8 @@ export async function listFilesInFolder(folderId?: string): Promise<DriveFile[]>
 
     const res = await drive.files.list({
       q: `'${targetFolder}' in parents and trashed = false`,
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
       fields: 'files(id, name, mimeType, webViewLink, size, createdTime)',
       orderBy: 'createdTime desc',
     });
@@ -139,6 +136,8 @@ export async function searchFiles(query: string, folderId?: string): Promise<Dri
 
     const res = await drive.files.list({
       q: `name contains '${query}'${folderClause} and trashed = false`,
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
       fields: 'files(id, name, mimeType, webViewLink, size, createdTime)',
     });
 
@@ -155,7 +154,7 @@ export async function downloadFileContent(fileId: string): Promise<Buffer> {
   try {
     const drive = getDriveClient();
     const res = await drive.files.get(
-      { fileId, alt: 'media' },
+      { fileId, alt: 'media', supportsAllDrives: true },
       { responseType: 'arraybuffer' },
     );
     return Buffer.from(res.data as ArrayBuffer);
@@ -173,7 +172,7 @@ export async function deleteFile(fileId: string): Promise<void> {
 
   try {
     const drive = getDriveClient();
-    await drive.files.delete({ fileId });
+    await drive.files.delete({ fileId, supportsAllDrives: true });
     logger.info('Drive file deleted', { fileId });
   } catch (err) {
     logger.error('Drive delete failed', err);

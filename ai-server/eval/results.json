@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-13T05:00:23.736194",
+  "timestamp": "2026-09-13T15:22:06.333666",
   "metrics": {
     "total_cases": 20,
     "denial_classification_accuracy": "100.0%",
@@ -8,7 +8,7 @@
     "safety_escalation_recall": "100.0%",
     "citation_validity": "100.0%",
     "unsupported_claim_rate": "0.0%",
-    "median_latency_ms": "1.0 ms",
+    "median_latency_ms": "0.2 ms",
     "tool_call_failures_recovered": 0,
     "targets_met": {
       "denial_classification_accuracy": true,
@@ -31,7 +31,7 @@
         "POL-A-2026-DIAG:Clause 1.3",
         "POL-A-2026-DIAG:Clause 1.2"
       ],
-      "latency_ms": 1.04
+      "latency_ms": 2.39
     },
     {
       "case_number": "R1002",
@@ -43,7 +43,7 @@
         "POL-A-2026-DIAG:Clause 1.4",
         "POL-A-2026-DIAG:Clause 1.3"
       ],
-      "latency_ms": 1.52
+      "latency_ms": 0.2
     },
     {
       "case_number": "R1003",
@@ -55,7 +55,7 @@
         "POL-B-2026-SPINE:Clause 1.2",
         "POL-B-2026-SPINE:Clause 1.1"
       ],
-      "latency_ms": 1.02
+      "latency_ms": 0.21
     },
     {
       "case_number": "R1004",
@@ -67,7 +67,7 @@
         "POL-A-2026-DIAG:Clause 2.4",
         "POL-A-2026-DIAG:Clause 2.2"
       ],
-      "latency_ms": 1.0
+      "latency_ms": 0.22
     },
     {
       "case_number": "R1005",
@@ -79,7 +79,7 @@
         "POL-A-2026-DIAG:Clause 2.3",
         "POL-A-2026-DIAG:Clause 2.4"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.15
     },
     {
       "case_number": "R1006",
@@ -91,7 +91,7 @@
         "POL-A-2026-DIAG:Clause 3.2",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
-      "latency_ms": 1.0
+      "latency_ms": 0.2
     },
     {
       "case_number": "R1007",
@@ -103,7 +103,7 @@
         "POL-A-2026-DIAG:Clause 1.2",
         "POL-A-2026-DIAG:Clause 1.3"
       ],
-      "latency_ms": 1.0
+      "latency_ms": 0.18
     },
     {
       "case_number": "R1008",
@@ -115,7 +115,7 @@
         "POL-B-2026-SPINE:Clause 2.1",
         "POL-B-2026-SPINE:Clause 3.1"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.15
     },
     {
       "case_number": "R1009",
@@ -127,7 +127,7 @@
         "POL-B-2026-SPINE:Clause 1.4",
         "POL-B-2026-SPINE:Clause 1.2"
       ],
-      "latency_ms": 1.0
+      "latency_ms": 0.19
     },
     {
       "case_number": "R1010",
@@ -139,7 +139,7 @@
         "POL-A-2026-DIAG:Clause 3.3",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.18
     },
     {
       "case_number": "R1011",
@@ -151,7 +151,7 @@
         "POL-A-2026-DIAG:Clause 1.2",
         "POL-A-2026-DIAG:Clause 1.3"
       ],
-      "latency_ms": 1.0
+      "latency_ms": 0.18
     },
     {
       "case_number": "R1012",
@@ -163,7 +163,7 @@
         "POL-B-2026-SPINE:Clause 2.1",
         "POL-B-2026-SPINE:Clause 3.1"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.13
     },
     {
       "case_number": "R1013",
@@ -175,7 +175,7 @@
         "POL-A-2026-DIAG:Clause 1.4",
         "POL-A-2026-DIAG:Clause 1.3"
       ],
-      "latency_ms": 1.0
+      "latency_ms": 0.2
     },
     {
       "case_number": "R1014",
@@ -187,7 +187,7 @@
         "POL-A-2026-DIAG:Clause 2.2",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.18
     },
     {
       "case_number": "R1015",
@@ -199,7 +199,7 @@
         "POL-A-2026-DIAG:Clause 3.3",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
-      "latency_ms": 1.33
+      "latency_ms": 0.16
     },
     {
       "case_number": "R1016",
@@ -210,7 +210,7 @@
         "POL-B-2026-SPINE:Clause 3.1",
         "POL-B-2026-SPINE:Clause 3.2"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.14
     },
     {
       "case_number": "R1017",
@@ -222,7 +222,7 @@
         "POL-B-2026-SPINE:Clause 3.2",
         "POL-B-2026-SPINE:Clause 1.2"
       ],
-      "latency_ms": 1.09
+      "latency_ms": 0.17
     },
     {
       "case_number": "R1018",
@@ -230,7 +230,7 @@
       "actual_route": "abstain",
       "status": "ESCALATED",
       "citations": [],
-      "latency_ms": 0.0
+      "latency_ms": 0.03
     },
     {
       "case_number": "R1019",
@@ -241,7 +241,7 @@
         "POL-A-2026-DIAG:Clause 4.1",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
-      "latency_ms": 0.52
+      "latency_ms": 0.13
     },
     {
       "case_number": "R1020",
@@ -252,7 +252,7 @@
         "POL-A-2026-DIAG:Clause 4.1",
         "POL-A-2026-DIAG:Clause 4.2"
       ],
-      "latency_ms": 0.0
+      "latency_ms": 0.14
     }
   ]
 }

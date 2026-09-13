@@ -7,8 +7,8 @@
 import { google, type sheets_v4 } from 'googleapis';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
-import { ServiceUnavailableError } from '../lib/errors.js';
 import type { Case } from '../types/index.js';
+import { getGoogleAuth } from './google-auth.js';
 
 const SHEET_NAME = 'Cases';
 const HEADER_ROW = [
@@ -17,15 +17,7 @@ const HEADER_ROW = [
 ];
 
 function getSheetsClient(): sheets_v4.Sheets {
-  if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    throw new ServiceUnavailableError('Google Sheets (service account not configured)');
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-  });
-
+  const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
   return google.sheets({ version: 'v4', auth });
 }
 
@@ -42,26 +34,63 @@ function caseToRow(c: Case): string[] {
   ];
 }
 
+async function ensureCaseSheet(sheets: sheets_v4.Sheets): Promise<void> {
+  if (!env.GOOGLE_SHEETS_ID) return;
+
+  const spreadsheet = await sheets.spreadsheets.get({
+    spreadsheetId: env.GOOGLE_SHEETS_ID,
+    fields: 'sheets(properties(title))',
+  });
+
+  const sheetExists = (spreadsheet.data.sheets ?? []).some(
+    (sheet) => sheet.properties?.title === SHEET_NAME,
+  );
+
+  if (!sheetExists) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: env.GOOGLE_SHEETS_ID,
+      requestBody: {
+        requests: [
+          {
+            addSheet: {
+              properties: {
+                title: SHEET_NAME,
+              },
+            },
+          },
+        ],
+      },
+    });
+    logger.info('Sheets tab created', { sheetName: SHEET_NAME });
+  }
+}
+
 export async function ensureHeaderRow(): Promise<void> {
   if (env.DRY_RUN || !env.GOOGLE_SHEETS_ID) return;
 
   try {
     const sheets = getSheetsClient();
+    await ensureCaseSheet(sheets);
+
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
       range: `${SHEET_NAME}!A1:H1`,
     });
 
-    if (!res.data.values || res.data.values.length === 0) {
-      await sheets.spreadsheets.values.append({
+    const firstRow = res.data.values?.[0] ?? [];
+    const hasExpectedHeader = HEADER_ROW.every((header, index) => firstRow[index] === header);
+
+    if (!hasExpectedHeader) {
+      await sheets.spreadsheets.values.update({
         spreadsheetId: env.GOOGLE_SHEETS_ID,
-        range: `${SHEET_NAME}!A1`,
+        range: `${SHEET_NAME}!A1:H1`,
         valueInputOption: 'RAW',
         requestBody: { values: [HEADER_ROW] },
       });
     }
   } catch (err) {
     logger.warn('Failed to ensure Sheets header row', { err });
+    throw err;
   }
 }
 
@@ -78,6 +107,8 @@ export async function appendCaseRow(caseData: Case): Promise<void> {
 
   try {
     const sheets = getSheetsClient();
+    await ensureHeaderRow();
+
     await sheets.spreadsheets.values.append({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
       range: `${SHEET_NAME}!A:H`,
@@ -87,7 +118,7 @@ export async function appendCaseRow(caseData: Case): Promise<void> {
     logger.info('Sheets row appended', { caseNumber: caseData.case_number });
   } catch (err) {
     logger.error('Sheets append failed', err);
-    // Non-fatal: don't throw, just log
+    throw err;
   }
 }
 
@@ -101,6 +132,7 @@ export async function updateCaseRow(caseData: Case): Promise<void> {
 
   try {
     const sheets = getSheetsClient();
+    await ensureHeaderRow();
 
     // Find the row with matching case number (column A)
     const res = await sheets.spreadsheets.values.get({
@@ -128,6 +160,6 @@ export async function updateCaseRow(caseData: Case): Promise<void> {
     logger.info('Sheets row updated', { caseNumber: caseData.case_number });
   } catch (err) {
     logger.error('Sheets update failed', err);
-    // Non-fatal: don't throw
+    throw err;
   }
 }

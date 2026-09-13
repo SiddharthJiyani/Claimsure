@@ -40,7 +40,7 @@ export async function notify(params: NotifyParams): Promise<void> {
   try {
     await createNotification({
       user_id: userId,
-      case_id: caseId,
+      ...(caseId !== undefined ? { case_id: caseId } : {}),
       type,
       title,
       message,
@@ -79,7 +79,7 @@ export async function notify(params: NotifyParams): Promise<void> {
           patientName: fullName,
           caseNumber: metadata.caseNumber ?? '',
           missingDocs: metadata.missingDocs,
-          deadline: metadata.deadline,
+          ...(metadata.deadline !== undefined ? { deadline: metadata.deadline } : {}),
         });
         await gmailService.sendEmail({ to: email, ...template });
       } else {
@@ -94,7 +94,7 @@ export async function notify(params: NotifyParams): Promise<void> {
 
       await createNotification({
         user_id: userId,
-        case_id: caseId,
+        ...(caseId !== undefined ? { case_id: caseId } : {}),
         type,
         title,
         message,
@@ -131,7 +131,7 @@ export async function notify(params: NotifyParams): Promise<void> {
 
       await createNotification({
         user_id: userId,
-        case_id: caseId,
+        ...(caseId !== undefined ? { case_id: caseId } : {}),
         type,
         title,
         message,
@@ -156,7 +156,7 @@ export async function notifyPatient(
   message: string,
   metadata?: NotifyParams['metadata'],
 ): Promise<void> {
-  return notify({ userId: patientId, caseId, type, title, message, metadata });
+  return notify({ userId: patientId, caseId, type, title, message, ...(metadata !== undefined ? { metadata } : {}) });
 }
 
 /**
@@ -180,7 +180,7 @@ export async function notifyInsurersByOrg(
 
     await Promise.allSettled(
       insurers.map((p) =>
-        notify({ userId: p.id, caseId, type, title, message, metadata }),
+        notify({ userId: p.id, caseId, type, title, message, ...(metadata !== undefined ? { metadata } : {}) }),
       ),
     );
   } catch (err) {

@@ -21,7 +21,7 @@ function getSlackApp(): SlackApp {
     token: env.SLACK_BOT_TOKEN,
     signingSecret: env.SLACK_SIGNING_SECRET,
     socketMode: !!env.SLACK_APP_TOKEN,
-    appToken: env.SLACK_APP_TOKEN,
+    ...(env.SLACK_APP_TOKEN ? { appToken: env.SLACK_APP_TOKEN } : {}),
   });
 
   return _slackApp;

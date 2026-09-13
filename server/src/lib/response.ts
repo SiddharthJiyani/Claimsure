@@ -33,8 +33,9 @@ export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
 export function sendSuccess<T>(
   res: Response,
   data: T,
-  options?: { message?: string; statusCode?: number; meta?: Record<string, unknown> },
+  optionsOrMessage?: string | { message?: string; statusCode?: number; meta?: Record<string, unknown> },
 ): void {
+  const options = typeof optionsOrMessage === 'string' ? { message: optionsOrMessage } : optionsOrMessage;
   const { message, statusCode = 200, meta } = options ?? {};
   const body: ApiSuccess<T> = {
     success: true,
@@ -49,7 +50,7 @@ export function sendSuccess<T>(
  * Send a created (201) response.
  */
 export function sendCreated<T>(res: Response, data: T, message?: string): void {
-  sendSuccess(res, data, { statusCode: 201, message });
+  sendSuccess(res, data, { statusCode: 201, ...(message !== undefined ? { message } : {}) });
 }
 
 /**

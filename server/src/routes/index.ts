@@ -11,7 +11,7 @@ import notificationsRoutes from './notifications.routes.js';
 import evalRoutes from './eval.routes.js';
 import webhooksRoutes from './webhooks.routes.js';
 
-const router = Router();
+const router: Router = Router();
 
 // ─── Route Mounts ──────────────────────────────────────────────────────────────
 

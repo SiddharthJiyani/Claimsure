@@ -1,27 +1,37 @@
 /**
  * Auth controller — handles signup, login, logout, and session.
- * Proxies to Supabase Auth; enriches profile table on signup.
+ * Uses Supabase Admin client for signup to bypass email rate limits in dev.
+ * Production: switch signUp back to getAnonClient() and enable email confirmation in Supabase dashboard.
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { supabaseAnon } from '../database/supabase.js';
-import { createProfile, upsertProfile } from '../database/queries/profiles.js';
+import { getAnonClient, getServiceClient } from '../database/supabase.js';
+import { createProfile, getProfileById } from '../database/queries/profiles.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
 import { AuthenticationError, ConflictError } from '../lib/errors.js';
+import type { AuthUser } from '../types/index.js';
 import type { SignUpInput, LoginInput, ResetPasswordInput } from '../validators/auth.validator.js';
 
 export async function signUp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = req.body as SignUpInput;
 
-    // 1. Create auth user in Supabase
-    const { data, error } = await supabaseAnon.auth.signUp({
+    // Use admin.createUser so we can:
+    // 1. Skip email confirmation (email_confirm: true) — avoids Supabase rate limits in dev
+    // 2. Store full_name and role in user_metadata for the login flow to reference
+    const { data, error } = await getServiceClient().auth.admin.createUser({
       email: body.email,
       password: body.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: body.full_name,
+        role: body.role,
+      },
     });
 
     if (error) {
-      if (error.message.toLowerCase().includes('already registered')) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique')) {
         throw new ConflictError('An account with this email already exists');
       }
       throw new AuthenticationError(error.message);
@@ -29,13 +39,13 @@ export async function signUp(req: Request, res: Response, next: NextFunction): P
 
     if (!data.user) throw new AuthenticationError('Failed to create user');
 
-    // 2. Create profile row (role + org)
+    // Create the profile row with role + org scoping
     const profile = await createProfile({
       id: data.user.id,
       email: body.email,
       full_name: body.full_name,
       role: body.role,
-      organization_id: body.organization_id,
+      ...(body.organization_id !== undefined ? { organization_id: body.organization_id } : {}),
     });
 
     sendCreated(res, {
@@ -46,8 +56,7 @@ export async function signUp(req: Request, res: Response, next: NextFunction): P
         role: profile.role,
         organization_id: profile.organization_id,
       },
-      session: data.session,
-    }, 'Account created. Please check your email for verification.');
+    }, 'Account created. You can log in immediately.');
   } catch (err) {
     next(err);
   }
@@ -57,7 +66,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
   try {
     const body = req.body as LoginInput;
 
-    const { data, error } = await supabaseAnon.auth.signInWithPassword({
+    const { data, error } = await getAnonClient().auth.signInWithPassword({
       email: body.email,
       password: body.password,
     });
@@ -66,13 +75,18 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       throw new AuthenticationError('Invalid email or password');
     }
 
-    // Upsert profile (handles edge cases where profile may not exist yet)
-    await upsertProfile({
-      id: data.user.id,
-      email: data.user.email ?? body.email,
-      full_name: data.user.user_metadata?.['full_name'] as string ?? 'Unknown',
-      role: data.user.user_metadata?.['role'] as 'patient' | 'insurance_provider' ?? 'patient',
-    });
+    let profile;
+    try {
+      profile = await getProfileById(data.user.id);
+    } catch (err) {
+      // Fallback: create if missing
+      profile = await createProfile({
+        id: data.user.id,
+        email: data.user.email ?? body.email,
+        full_name: data.user.user_metadata?.['full_name'] as string ?? 'Unknown',
+        role: data.user.user_metadata?.['role'] as 'patient' | 'insurance_provider' ?? 'patient',
+      });
+    }
 
     sendSuccess(res, {
       session: {
@@ -82,8 +96,11 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         token_type: data.session.token_type,
       },
       user: {
-        id: data.user.id,
-        email: data.user.email,
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        role: profile.role,
+        organization_id: profile.organization_id,
       },
     }, 'Login successful');
   } catch (err) {
@@ -98,7 +115,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
       throw new AuthenticationError('Bearer token required');
     }
 
-    await supabaseAnon.auth.signOut();
+    await getAnonClient().auth.signOut();
     sendSuccess(res, null, 'Logged out successfully');
   } catch (err) {
     next(err);
@@ -108,7 +125,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
 export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // req.user is already populated by the auth middleware
-    sendSuccess(res, req.user);
+    sendSuccess(res, req.user as AuthUser);
   } catch (err) {
     next(err);
   }
@@ -118,7 +135,7 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
   try {
     const body = req.body as ResetPasswordInput;
 
-    const { error } = await supabaseAnon.auth.resetPasswordForEmail(body.email, {
+    const { error } = await getAnonClient().auth.resetPasswordForEmail(body.email, {
       redirectTo: `${process.env['CORS_ALLOWED_ORIGINS']?.split(',')[0]}/reset-password`,
     });
 

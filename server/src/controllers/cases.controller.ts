@@ -31,8 +31,8 @@ export async function getCases(req: Request, res: Response, next: NextFunction):
     // Build org-scoped filter based on role
     const filter =
       user.role === 'patient'
-        ? { patient_id: user.id, status: query.status }
-        : { insurer_org_id: user.organization_id ?? undefined, status: query.status };
+        ? { patient_id: user.id, ...(query.status !== undefined ? { status: query.status } : {}) }
+        : { ...(user.organization_id !== undefined ? { insurer_org_id: user.organization_id } : {}), ...(query.status !== undefined ? { status: query.status } : {}) } as any;
 
     const result = await listCases(filter, { page: query.page, limit: query.limit });
 
@@ -47,7 +47,7 @@ export async function getCases(req: Request, res: Response, next: NextFunction):
 export async function getCaseDetail(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const caseWithDetails = await getCaseWithDetails(id);
     const caseData = caseWithDetails as { patient_id: string; insurer_org_id: string };
@@ -86,18 +86,18 @@ export async function createNewCase(req: Request, res: Response, next: NextFunct
       patient_id: body.patient_id,
       insurer_org_id: body.insurer_org_id,
       service_type: body.service_type,
-      service_code: body.service_code,
-      payer_id: body.payer_id,
+      ...(body.service_code !== undefined ? { service_code: body.service_code } : {}),
+      ...(body.payer_id !== undefined ? { payer_id: body.payer_id } : {}),
     });
 
     // Optionally create denial record if denial info provided
     if (body.denial_reason) {
       await createDenialForCase({
         case_id: newCase.id,
-        denial_code: body.denial_code,
         denial_reason: body.denial_reason,
-        denial_date: body.denial_date,
-        appeal_deadline: body.appeal_deadline,
+        ...(body.denial_code !== undefined ? { denial_code: body.denial_code } : {}),
+        ...(body.denial_date !== undefined ? { denial_date: body.denial_date } : {}),
+        ...(body.appeal_deadline !== undefined ? { appeal_deadline: body.appeal_deadline } : {}),
       });
     }
 
@@ -130,7 +130,7 @@ export async function createNewCase(req: Request, res: Response, next: NextFunct
 export async function patchCaseStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const body = req.body as UpdateCaseStatusInput;
 
     if (user.role !== 'insurance_provider') {
@@ -169,7 +169,7 @@ export async function patchCaseStatus(req: Request, res: Response, next: NextFun
 export async function processCase(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const body = req.body as ProcessCaseInput;
 
     if (user.role !== 'insurance_provider') {
@@ -253,7 +253,7 @@ export async function processCase(req: Request, res: Response, next: NextFunctio
 export async function getCaseAudit(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = req.user!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const existing = await getCaseById(id);
 

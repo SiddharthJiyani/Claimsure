@@ -11,7 +11,7 @@ import {
   updateAppealSchema,
 } from '../validators/appeals.validator.js';
 
-const router = Router({ mergeParams: true });
+const router: Router = Router({ mergeParams: true });
 
 router.use(requireAuth);
 

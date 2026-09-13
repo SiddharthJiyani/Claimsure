@@ -43,13 +43,17 @@ export function sendNotificationTool(server: McpServer): void {
     },
     async ({ user_id, case_id, type, title, message, metadata }) => {
       try {
+        const safeMetadata = metadata
+          ? Object.fromEntries(Object.entries(metadata).filter(([_, v]) => v !== undefined))
+          : undefined;
+
         await notify({
           userId: user_id,
-          caseId: case_id,
+          ...(case_id !== undefined ? { caseId: case_id } : {}),
           type,
           title,
           message,
-          metadata,
+          ...(safeMetadata !== undefined ? { metadata: safeMetadata } : {}),
         });
 
         logger.debug('MCP send_notification completed', { user_id, type });

@@ -11,7 +11,7 @@ const caseStatusEnum = z.enum([
   'RESOLVED',
   'ESCALATED',
   'CLOSED',
-]);
+] as const);
 
 export const createCaseSchema = z.object({
   patient_id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Invalid patient ID'),

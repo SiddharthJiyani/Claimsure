@@ -12,7 +12,7 @@ export const createAppealSchema = z.object({
 });
 
 export const updateAppealSchema = z.object({
-  status: z.enum(['PENDING_REVIEW', 'APPROVED', 'SUBMITTED', 'REJECTED']),
+  status: z.enum(['PENDING_REVIEW', 'APPROVED', 'SUBMITTED', 'REJECTED'] as const),
   appeal_text: z.string().optional(),
   citations: z.array(citationSchema).optional(),
 });
