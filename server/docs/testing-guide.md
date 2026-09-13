@@ -24,6 +24,7 @@ With your server running (`pnpm dev` in the terminal), visit this URL in your br
 [http://localhost:5001/health](http://localhost:5001/health)
 
 **Expected Output:**
+
 ```json
 {
   "success": true,
@@ -37,6 +38,7 @@ With your server running (`pnpm dev` in the terminal), visit this URL in your br
   }
 }
 ```
+
 If you see this, your Express server is successfully running and handling requests.
 
 ---
@@ -64,20 +66,23 @@ The easiest way to test the APIs without building a frontend first is to use Pos
 ### Core Flows to Test in Order:
 
 #### A. Auth & Token Generation
+
 1. Run the **Sign Up** request. (Or **Login** if you already created an account).
 2. The response will contain a `session.access_token`.
 3. Copy this token. In Postman, click on the **Claimsure API** collection folder at the top level -> go to **Variables** tab -> paste the token into the `jwt_token` variable value and save.
 
 #### B. Read Data (Role-Based Access)
+
 1. Run the **List Cases** request.
 2. Because you are using the token of an `insurance_provider`, you will receive a paginated list of all cases belonging to your organization (created by the seed script).
 3. Copy one of the `id` values from the cases returned, and paste it into the `case_id` collection variable.
 4. Run the **Get Case Detail** request to see the full case data, including denials and audit logs.
 
 #### C. Trigger the AI Agent
+
 1. Run the **Process Case (AI Agent)** request.
 2. The backend will immediately return a `200 OK` with status `ANALYZING`.
-3. Behind the scenes, it will attempt to contact the AI Server (port 8000) to start the state graph. *(Note: If the AI server is not running yet, the backend will gracefully catch the failure and log it in the audit trail).*
+3. Behind the scenes, it will attempt to contact the AI Server (port 8000) to start the state graph. _(Note: If the AI server is not running yet, the backend will gracefully catch the failure and log it in the audit trail)._
 
 ---
 
@@ -93,16 +98,19 @@ pnpm tsx src/mcp/mcp-server.ts
 ```
 
 **Expected Output:**
+
 ```text
 [INFO] MCP server initialized with 5 tools
 [INFO] Claimsure MCP server running on stdio
 ```
-*(Press `Ctrl+C` to exit after confirming)*.
+
+_(Press `Ctrl+C` to exit after confirming)_.
 
 ---
 
 ## 6. What's Next?
 
 With the backend fully complete and tested, the logical next steps are:
+
 1. **The Python AI Server**: Building the LangGraph/StateGraph AI agent that will connect to the MCP server.
 2. **The Frontend**: Building the Next.js/React dashboards for the Patient and Insurance Provider using these new APIs.

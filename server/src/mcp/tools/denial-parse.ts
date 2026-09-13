@@ -4,19 +4,22 @@
  * Actual PDF text extraction is delegated to the ai-server.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { getDenialsByCase } from '../../database/queries/denials.js';
-import { downloadFileContent } from '../../services/google-drive.js';
-import { logger } from '../../lib/logger.js';
-import { env } from '../../config/env.js';
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { getDenialsByCase } from "../../database/queries/denials.js";
+import { downloadFileContent } from "../../services/google-drive.js";
+import { logger } from "../../lib/logger.js";
+import { env } from "../../config/env.js";
 
 export function denyParseTool(server: McpServer): void {
   server.tool(
-    'denial_parse',
-    'Retrieve structured denial information for a case. Returns denial code, reason, deadline, and raw text.',
+    "denial_parse",
+    "Retrieve structured denial information for a case. Returns denial code, reason, deadline, and raw text.",
     {
-      case_id: z.string().uuid().describe('The UUID of the case to parse denial for'),
+      case_id: z
+        .string()
+        .uuid()
+        .describe("The UUID of the case to parse denial for"),
     },
     async ({ case_id }) => {
       try {
@@ -26,7 +29,7 @@ export function denyParseTool(server: McpServer): void {
           return {
             content: [
               {
-                type: 'text' as const,
+                type: "text" as const,
                 text: JSON.stringify({ found: false, denial: null }),
               },
             ],
@@ -47,12 +50,15 @@ export function denyParseTool(server: McpServer): void {
           }
         }
 
-        logger.debug('MCP denial_parse completed', { case_id, denialId: denial.id });
+        logger.debug("MCP denial_parse completed", {
+          case_id,
+          denialId: denial.id,
+        });
 
         return {
           content: [
             {
-              type: 'text' as const,
+              type: "text" as const,
               text: JSON.stringify({
                 found: true,
                 denial: {
@@ -70,12 +76,15 @@ export function denyParseTool(server: McpServer): void {
           ],
         };
       } catch (err) {
-        logger.error('MCP denial_parse failed', err);
+        logger.error("MCP denial_parse failed", err);
         return {
           content: [
             {
-              type: 'text' as const,
-              text: JSON.stringify({ error: 'Failed to retrieve denial', found: false }),
+              type: "text" as const,
+              text: JSON.stringify({
+                error: "Failed to retrieve denial",
+                found: false,
+              }),
             },
           ],
           isError: true,

@@ -24,13 +24,8 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/signup",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "signup"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "signup"]
             }
           }
         },
@@ -50,13 +45,8 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
             }
           }
         }
@@ -77,12 +67,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/cases?status=PENDING&page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "cases"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["cases"],
               "query": [
                 {
                   "key": "status",
@@ -112,13 +98,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/cases/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "cases",
-                ":id"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["cases", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -148,12 +129,8 @@
             },
             "url": {
               "raw": "{{base_url}}/cases",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "cases"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["cases"]
             }
           }
         },
@@ -181,14 +158,8 @@
             },
             "url": {
               "raw": "{{base_url}}/cases/:id/process",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "cases",
-                ":id",
-                "process"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["cases", ":id", "process"],
               "variable": [
                 {
                   "key": "id",
@@ -211,13 +182,9 @@
             "url": {
               "raw": "http://localhost:5000/health",
               "protocol": "http",
-              "host": [
-                "localhost"
-              ],
+              "host": ["localhost"],
               "port": "5000",
-              "path": [
-                "health"
-              ]
+              "path": ["health"]
             }
           }
         }
@@ -229,18 +196,14 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     },
     {
       "listen": "test",
       "script": {
         "type": "text/javascript",
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     }
   ],

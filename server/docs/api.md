@@ -1,16 +1,21 @@
 # Claimsure API Reference
 
 ## Base URL
+
 Local Development: `http://localhost:5000/api`
 
 ## Authentication
+
 Most endpoints require a Bearer token in the `Authorization` header.
+
 ```http
 Authorization: Bearer <your_jwt_token>
 ```
 
 ## Idempotency
+
 Endpoints that trigger side effects (e.g., triggering AI agents, external integrations) require an `Idempotency-Key` header.
+
 ```http
 Idempotency-Key: <unique-string>
 ```
@@ -20,11 +25,13 @@ Idempotency-Key: <unique-string>
 ## 1. Authentication Endpoints
 
 ### 1.1 Sign Up
+
 Create a new user account (patient or insurance_provider).
 
 **POST** `/auth/signup`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -36,6 +43,7 @@ Create a new user account (patient or insurance_provider).
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -48,11 +56,13 @@ Create a new user account (patient or insurance_provider).
 ```
 
 ### 1.2 Login
+
 Authenticate and get a session token.
 
 **POST** `/auth/login`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -61,6 +71,7 @@ Authenticate and get a session token.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -73,19 +84,23 @@ Authenticate and get a session token.
 ```
 
 ### 1.3 Get Me
+
 Get current authenticated user profile.
 
 **GET** `/auth/me`
-*Requires Auth*
+_Requires Auth_
 
 ### 1.4 Logout
+
 **POST** `/auth/logout`
-*Requires Auth*
+_Requires Auth_
 
 ### 1.5 Reset Password
+
 **POST** `/auth/reset-password`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com"
@@ -97,22 +112,26 @@ Get current authenticated user profile.
 ## 2. Cases Endpoints
 
 ### 2.1 List Cases
+
 Get a paginated list of cases. Scoped by user role (patient sees their own, insurer sees org cases).
 
 **GET** `/cases?status=PENDING&page=1&limit=20`
-*Requires Auth*
+_Requires Auth_
 
 ### 2.2 Get Case Detail
+
 Get full case details including documents, denials, appeals, and audit trail.
 
 **GET** `/cases/:id`
-*Requires Auth*
+_Requires Auth_
 
 ### 2.3 Create Case
+
 **POST** `/cases`
-*Requires Auth (insurance_provider only)*
+_Requires Auth (insurance_provider only)_
 
 **Request Body:**
+
 ```json
 {
   "patient_id": "uuid",
@@ -128,10 +147,12 @@ Get full case details including documents, denials, appeals, and audit trail.
 ```
 
 ### 2.4 Update Case Status
+
 **PATCH** `/cases/:id`
-*Requires Auth (insurance_provider only)*
+_Requires Auth (insurance_provider only)_
 
 **Request Body:**
+
 ```json
 {
   "status": "ANALYZING"
@@ -139,13 +160,15 @@ Get full case details including documents, denials, appeals, and audit trail.
 ```
 
 ### 2.5 Trigger AI Agent
+
 Triggers the AI processing for a case.
 
 **POST** `/cases/:id/process`
-*Requires Auth (insurance_provider only)*
-*Requires Header: `Idempotency-Key`*
+_Requires Auth (insurance_provider only)_
+_Requires Header: `Idempotency-Key`_
 
 **Request Body:**
+
 ```json
 {
   "dry_run": false
@@ -153,22 +176,26 @@ Triggers the AI processing for a case.
 ```
 
 ### 2.6 Get Case Audit Trail
+
 **GET** `/cases/:id/audit`
-*Requires Auth*
+_Requires Auth_
 
 ---
 
 ## 3. Documents Endpoints
 
 ### 3.1 List Documents for Case
+
 **GET** `/cases/:id/documents`
-*Requires Auth*
+_Requires Auth_
 
 ### 3.2 Register Document Metadata
+
 **POST** `/cases/:id/documents`
-*Requires Auth*
+_Requires Auth_
 
 **Request Body:**
+
 ```json
 {
   "name": "Denial Letter.pdf",
@@ -179,10 +206,12 @@ Triggers the AI processing for a case.
 ```
 
 ### 3.3 Mark Document as Missing/Found
+
 **PATCH** `/cases/:id/documents/:docId/missing`
-*Requires Auth (insurance_provider only)*
+_Requires Auth (insurance_provider only)_
 
 **Request Body:**
+
 ```json
 {
   "is_missing": true
@@ -194,14 +223,17 @@ Triggers the AI processing for a case.
 ## 4. Appeals Endpoints
 
 ### 4.1 Get Appeal
+
 **GET** `/cases/:id/appeal`
-*Requires Auth*
+_Requires Auth_
 
 ### 4.2 Create Appeal
+
 **POST** `/cases/:id/appeal`
-*Requires Auth (insurance_provider only)*
+_Requires Auth (insurance_provider only)_
 
 **Request Body:**
+
 ```json
 {
   "appeal_text": "We are appealing this denial because...",
@@ -216,10 +248,12 @@ Triggers the AI processing for a case.
 ```
 
 ### 4.3 Update Appeal Status
+
 **PATCH** `/cases/:id/appeal/:appealId`
-*Requires Auth (insurance_provider only)*
+_Requires Auth (insurance_provider only)_
 
 **Request Body:**
+
 ```json
 {
   "status": "APPROVED",
@@ -232,26 +266,31 @@ Triggers the AI processing for a case.
 ## 5. Notifications Endpoints
 
 ### 5.1 List Notifications
+
 **GET** `/notifications?unread=true`
-*Requires Auth*
+_Requires Auth_
 
 ### 5.2 Mark Notification Read
+
 **PATCH** `/notifications/:id/read`
-*Requires Auth*
+_Requires Auth_
 
 ### 5.3 Mark All Read
+
 **PATCH** `/notifications/read-all`
-*Requires Auth*
+_Requires Auth_
 
 ---
 
 ## 6. Eval Endpoints
 
 ### 6.1 Get Eval Results
+
 **GET** `/eval/results`
-*Requires Auth (insurance_provider only)*
+_Requires Auth (insurance_provider only)_
 
 ### 6.2 Health Check
+
 **GET** `/eval/health`
 
 ---
@@ -259,5 +298,6 @@ Triggers the AI processing for a case.
 ## 7. Webhooks Endpoints
 
 ### 7.1 Slack Webhook
+
 **POST** `/webhooks/slack`
-*Content-Type: application/x-www-form-urlencoded*
+_Content-Type: application/x-www-form-urlencoded_

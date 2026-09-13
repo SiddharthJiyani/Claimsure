@@ -7,21 +7,21 @@
 
 ## Hackathon Requirements (Confirmed from website)
 
-| Requirement | Detail |
-|---|---|
-| **Brief** | Build one useful, multi-step AI agent. Connect to ≥3 external apps. Show how you know it works. |
-| **Submit** | Working repo + 2-minute demo + System & reliability brief |
-| **Team** | 1–4 people (your team: 3 people) |
-| **Build window** | 6.5 hours (9:30 AM – 4:00 PM PT) |
-| **Prizes** | $10,000 / $4,000 / $1,000 + guaranteed interviews |
+| Requirement      | Detail                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| **Brief**        | Build one useful, multi-step AI agent. Connect to ≥3 external apps. Show how you know it works. |
+| **Submit**       | Working repo + 2-minute demo + System & reliability brief                                       |
+| **Team**         | 1–4 people (your team: 3 people)                                                                |
+| **Build window** | 6.5 hours (9:30 AM – 4:00 PM PT)                                                                |
+| **Prizes**       | $10,000 / $4,000 / $1,000 + guaranteed interviews                                               |
 
-| Weight | Criterion | What We Target |
-|---|---|---|
-| **30%** | Technical execution | Real multi-step agent with MCP server, state machine, typed tools, proper auth + RBAC |
-| **25%** | Reliability & evaluation | 20-case eval harness with metrics table, DRY_RUN, audit log |
-| **20%** | Usefulness | End-to-end denial→appeal workflow with role-based dashboards for patients & insurance providers |
-| **15%** | Originality | Verify loop (agent checks its own work), code-enforced safety constraints, org-tenancy |
-| **10%** | Demo clarity | Pre-recorded 2-min demo, scripted, one rehearsal |
+| Weight  | Criterion                | What We Target                                                                                  |
+| ------- | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| **30%** | Technical execution      | Real multi-step agent with MCP server, state machine, typed tools, proper auth + RBAC           |
+| **25%** | Reliability & evaluation | 20-case eval harness with metrics table, DRY_RUN, audit log                                     |
+| **20%** | Usefulness               | End-to-end denial→appeal workflow with role-based dashboards for patients & insurance providers |
+| **15%** | Originality              | Verify loop (agent checks its own work), code-enforced safety constraints, org-tenancy          |
+| **10%** | Demo clarity             | Pre-recorded 2-min demo, scripted, one rehearsal                                                |
 
 ---
 
@@ -64,6 +64,7 @@
 
 > [!IMPORTANT]
 > **Role Scoping**: Exactly **2 roles** throughout the entire system:
+>
 > 1. `patient` (individual submitting claims/evidence, tracking status, receiving notifications)
 > 2. `insurance_provider` (payer/claims operations managing cases, triggering AI agent analysis, reviewing & approving appeals/determinations)
 
@@ -96,13 +97,13 @@ Claimsure/
 
 Supabase Auth handles OAuth, email/password, session tokens, password reset, and email verification out of the box — zero custom auth code needed.
 
-| Feature | Implementation |
-|---|---|
-| **Google OAuth** | Supabase Auth → Google provider (single config toggle) |
-| **Email/Password** | Supabase Auth built-in → `supabase.auth.signUp()` / `signInWithPassword()` |
+| Feature                | Implementation                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Google OAuth**       | Supabase Auth → Google provider (single config toggle)                                                 |
+| **Email/Password**     | Supabase Auth built-in → `supabase.auth.signUp()` / `signInWithPassword()`                             |
 | **Session management** | Supabase JWT tokens → passed in `Authorization` header → Express validates via `@supabase/supabase-js` |
-| **Password reset** | `supabase.auth.resetPasswordForEmail()` → built-in email flow |
-| **Email verification** | Supabase Auth setting → auto-sends verification email |
+| **Password reset**     | `supabase.auth.resetPasswordForEmail()` → built-in email flow                                          |
+| **Email verification** | Supabase Auth setting → auto-sends verification email                                                  |
 
 ### Auth Flow
 
@@ -143,17 +144,17 @@ Roles (Strictly 2)
 
 ### Permission Matrix
 
-| Resource / Action | Patient | Insurance Provider |
-|---|---|---|
-| View own cases / claims | ✅ (personal only) | ✅ (all org-assigned cases) |
-| View other users' cases | ❌ | ❌ (cross-org blocked) |
-| Trigger AI Agent analysis | ❌ | ✅ |
-| Approve / reject AI recommendation | ❌ | ✅ |
-| Upload documents / evidence | ✅ (own case) | ✅ (assigned claims) |
-| View documents | ✅ (own case) | ✅ (assigned claims) |
-| Update claim / appeal status | ❌ | ✅ |
-| View case audit trail | ✅ (own case) | ✅ (org cases) |
-| View AI evaluation metrics & harness | ❌ | ✅ |
+| Resource / Action                    | Patient            | Insurance Provider          |
+| ------------------------------------ | ------------------ | --------------------------- |
+| View own cases / claims              | ✅ (personal only) | ✅ (all org-assigned cases) |
+| View other users' cases              | ❌                 | ❌ (cross-org blocked)      |
+| Trigger AI Agent analysis            | ❌                 | ✅                          |
+| Approve / reject AI recommendation   | ❌                 | ✅                          |
+| Upload documents / evidence          | ✅ (own case)      | ✅ (assigned claims)        |
+| View documents                       | ✅ (own case)      | ✅ (assigned claims)        |
+| Update claim / appeal status         | ❌                 | ✅                          |
+| View case audit trail                | ✅ (own case)      | ✅ (org cases)              |
+| View AI evaluation metrics & harness | ❌                 | ✅                          |
 
 > [!WARNING]
 > **Backend must enforce permissions — not just hide UI.** Every Express route checks `req.user.role` (`patient` vs `insurance_provider`) and `req.user.organization_id` before returning data. Supabase Row Level Security (RLS) provides a second enforcement layer at the database level.
@@ -352,6 +353,7 @@ RESOLVED   Retry/Escalate
 ```
 
 Each state transition:
+
 - Updates `cases.status` in Supabase
 - Appends to `audit_logs`
 - Creates a `notification` (in-app, email, or Slack)
@@ -369,27 +371,27 @@ Notification Engine (server/src/services/notifications.ts)
          └──► slack     → Slack Bot via @slack/bolt (insurer approval buttons)
 ```
 
-| Event | Patient Channel | Insurance Provider Channel |
-|---|---|---|
-| Case created / submitted | ✅ in-app | ✅ in-app |
-| AI analysis complete | ✅ in-app + email | ✅ in-app + Slack |
-| Action required (missing docs) | ✅ in-app + email | ✅ Slack alert |
-| Approval request (appeal ready) | — | ✅ Slack (Block Kit buttons) + UI |
-| Appeal submitted | ✅ in-app + email | ✅ in-app |
-| Case resolved | ✅ in-app + email | ✅ in-app |
-| Escalation (unsafe/abstain) | ✅ in-app (status update) | ✅ Slack (urgent alert) + UI |
+| Event                           | Patient Channel           | Insurance Provider Channel        |
+| ------------------------------- | ------------------------- | --------------------------------- |
+| Case created / submitted        | ✅ in-app                 | ✅ in-app                         |
+| AI analysis complete            | ✅ in-app + email         | ✅ in-app + Slack                 |
+| Action required (missing docs)  | ✅ in-app + email         | ✅ Slack alert                    |
+| Approval request (appeal ready) | —                         | ✅ Slack (Block Kit buttons) + UI |
+| Appeal submitted                | ✅ in-app + email         | ✅ in-app                         |
+| Case resolved                   | ✅ in-app + email         | ✅ in-app                         |
+| Escalation (unsafe/abstain)     | ✅ in-app (status update) | ✅ Slack (urgent alert) + UI      |
 
 ---
 
 ## 6. External Apps (5 MCP Integrations)
 
-| # | App | Role | Auth Method |
-|---|---|---|---|
-| 1 | **Google Drive** | Evidence repository (denial letters, clinical docs, payer policies). Metadata + file ID stored in Supabase. | Service Account |
-| 2 | **Google Sheets** | Live case dashboard mirroring DB state for judge visibility | Service Account |
-| 3 | **Gmail** | Email notifications to patients + appeal packet submissions | OAuth refresh token (fallback: Resend API) |
-| 4 | **Slack** | Insurer approval buttons (Block Kit) + urgent escalation alerts | Bot Token + Socket Mode |
-| 5 | **Google Calendar** | Appeal deadline tracking & peer-review scheduling | Service Account |
+| #   | App                 | Role                                                                                                        | Auth Method                                |
+| --- | ------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1   | **Google Drive**    | Evidence repository (denial letters, clinical docs, payer policies). Metadata + file ID stored in Supabase. | Service Account                            |
+| 2   | **Google Sheets**   | Live case dashboard mirroring DB state for judge visibility                                                 | Service Account                            |
+| 3   | **Gmail**           | Email notifications to patients + appeal packet submissions                                                 | OAuth refresh token (fallback: Resend API) |
+| 4   | **Slack**           | Insurer approval buttons (Block Kit) + urgent escalation alerts                                             | Bot Token + Socket Mode                    |
+| 5   | **Google Calendar** | Appeal deadline tracking & peer-review scheduling                                                           | Service Account                            |
 
 ---
 
@@ -412,6 +414,7 @@ graph TD
 ```
 
 ### Key Design Decisions
+
 - `compute_gap` = pure set difference in Python, **NOT** an LLM call
 - Rule-based routing: confidence ≥ 0.75; medical necessity → always `human_review`; policy missing → `abstain`
 - Pydantic validation on every LLM output with 1 retry before abstaining
@@ -453,10 +456,10 @@ Payer Policy Documents (Google Drive)
 
 ### Overview
 
-| Person | Role Focus | Primary Ownership |
-|---|---|---|
-| **P1** | 🧠 **AI Core + RAG + Eval** | `ai-server/` — 9-node agent state machine, RAG policy retriever, 20-case eval harness |
-| **P2** | ⚙️ **Backend + Auth + Integrations + MCP** | `server/` — Supabase Auth, 2-role RBAC, Express API, 5 external app integrations, MCP server |
+| Person | Role Focus                                    | Primary Ownership                                                                                      |
+| ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **P1** | 🧠 **AI Core + RAG + Eval**                   | `ai-server/` — 9-node agent state machine, RAG policy retriever, 20-case eval harness                  |
+| **P2** | ⚙️ **Backend + Auth + Integrations + MCP**    | `server/` — Supabase Auth, 2-role RBAC, Express API, 5 external app integrations, MCP server           |
 | **P3** | 🎨 **Frontend + 2 Dashboards + Demo + Brief** | `client/` — Patient portal, Insurance Provider dashboard, eval UI, 2-min demo video, reliability brief |
 
 ---
@@ -468,27 +471,32 @@ Payer Policy Documents (Google Drive)
 ### Files to Create
 
 #### `ai-server/app/agents/`
+
 - `state.py` — `CaseState` Pydantic model
 - `graph.py` — 9-node state machine
 - `nodes.py` — Node execution functions
 - `prompts.py` — Structured prompts + schemas
 
 #### `ai-server/app/rag/`
+
 - `embeddings.py` — Offline embedding generator
 - `retriever.py` — Cosine similarity search with metadata filtering
 - `chunker.py` — Policy clause splitter
 
 #### `ai-server/app/workflows/`
+
 - `denial_workflow.py` — Case processing endpoint
 - `batch_runner.py` — Eval batch processor
 
 #### `ai-server/data/`
+
 - `cases.json` — 20 synthetic cases with golden labels
 - `policies/payer_a_policy.md` — Synthetic policy 1
 - `policies/payer_b_policy.md` — Synthetic policy 2
 - `embeddings.json` — Pre-computed embeddings
 
 #### `ai-server/eval/`
+
 - `harness.py` — Run all 20 cases, compute and print metrics table
 - `metrics.py` — Accuracy, gap F1, routing accuracy, safety recall (100%), citation validity (100%)
 - `results.json` — Eval run outputs
@@ -502,17 +510,20 @@ Payer Policy Documents (Google Drive)
 ### Files to Create
 
 #### `server/src/middleware/`
+
 - `auth.ts` — Validate Supabase JWT token from `Authorization` header
 - `rbac.ts` — Role checks (`patient` vs `insurance_provider`) and org scoping
 - `error-handler.ts` — Standardized JSON error handler
 - `idempotency.ts` — Replay protection for external app writes
 
 #### `server/src/database/`
+
 - `supabase.ts` — Supabase client initialized with service role
 - `schema.sql` — 2-role PostgreSQL schema + RLS policies
 - `seed.sql` — Demo accounts (1 patient, 1 insurance reviewer, demo org, sample cases)
 
 #### `server/src/routes/`
+
 - `auth.ts` — Signup/login proxy to Supabase Auth
 - `cases.ts` — Case management endpoints (scoped to patient or insurer)
 - `documents.ts` — Upload & retrieval (Drive storage + Supabase metadata)
@@ -522,6 +533,7 @@ Payer Policy Documents (Google Drive)
 - `webhooks.ts` — Slack interaction endpoint (approval button actions)
 
 #### `server/src/services/`
+
 - `google-drive.ts` — File upload/download & search
 - `google-sheets.ts` — Real-time case mirror
 - `google-calendar.ts` — Deadline event creation
@@ -531,6 +543,7 @@ Payer Policy Documents (Google Drive)
 - `ai-client.ts` — HTTP client calling `ai-server`
 
 #### `server/src/mcp/`
+
 - `mcp-server.ts` — Custom Claimsure MCP server
 - `tools/policy-search.ts` — RAG search tool
 - `tools/denial-parse.ts` — Denial parser tool
@@ -547,19 +560,23 @@ Payer Policy Documents (Google Drive)
 ### Pages to Create (2 Roles Only)
 
 #### Auth Pages
+
 - `app/login/page.tsx` — Login with Email/Password + Google OAuth
 - `app/signup/page.tsx` — Signup with role selector (`patient` or `insurance_provider`)
 
 #### 1. Patient Portal (`/patient`)
+
 - `app/patient/page.tsx` — Patient home: list of my claims/cases, clear status indicators, action alerts
 - `app/patient/cases/[id]/page.tsx` — Case detail: plain-language explanation of denial, missing document upload dropzone, status timeline
 
 #### 2. Insurance Provider Dashboard (`/insurance`)
+
 - `app/insurance/page.tsx` — Insurer operations home: all incoming claims/cases, KPI stat cards, action-required queue, "Trigger AI Agent" action
 - `app/insurance/cases/[id]/page.tsx` — Case detail: AI reasoning trace, policy citations, evidence checklist (found vs missing), Slack/in-app Approve/Reject controls
 - `app/insurance/eval/page.tsx` — Live Evaluation Harness dashboard displaying the 20-case test metrics table
 
 #### Shared Components
+
 - `components/CaseCard.tsx` — Summary card with status badge
 - `components/CaseTimeline.tsx` — Step-by-step audit trail visualizer
 - `components/EvidencePanel.tsx` — Checklist showing ✅ found and ⚠️ missing items
@@ -576,16 +593,16 @@ Payer Policy Documents (Google Drive)
 
 ## 2-Minute Demo Script (Reflecting 2 Roles)
 
-| Time | Segment | What Is Shown |
-|---|---|---|
-| **0:00–0:15** | Problem & Role Setup | "Prior authorizations and denials take weeks. Claimsure connects patients and insurance providers through an auditable multi-step agent." |
+| Time          | Segment                           | What Is Shown                                                                                                                                                                                     |
+| ------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0:00–0:15** | Problem & Role Setup              | "Prior authorizations and denials take weeks. Claimsure connects patients and insurance providers through an auditable multi-step agent."                                                         |
 | **0:15–0:35** | Insurance Provider Triggers Agent | Insurer logs in, selects denied case R1007, and triggers agent. Agent parses denial, executes RAG against payer policy, and pinpoints missing clinical documentation with exact policy citations. |
-| **0:35–0:50** | Multi-App Actions Fire | Agent writes to Google Sheets mirror, sends an email notification via Gmail, posts an interactive Block Kit message to Slack, and sets an appeal deadline in Google Calendar. |
-| **0:50–1:05** | Patient Portal Experience | Switch to Patient view. Patient receives email/notification: "Additional clinical note needed." Patient logs into `/patient`, uploads missing note. Case status automatically advances. |
-| **1:05–1:25** | Verification & Approval Loop | Agent runs `verify` node: re-scans Drive, confirms the gap is closed, and drafts the citation-backed appeal packet. Insurer clicks **Approve** in Slack (or dashboard). Appeal marked RESOLVED. |
-| **1:25–1:40** | Safety & Code-Enforced Boundary | Demonstrate adversarial/unsafe case (ambiguous medical necessity). Agent explicitly **abstains** and escalates: *"This safety constraint is enforced in code, not in an LLM prompt."* |
-| **1:40–1:55** | 20-Case Eval Harness | Switch to `/insurance/eval`. Display the 20-case eval metrics table. Highlight 100% safety recall, 100% citation validity, and 0% unsupported claims. |
-| **1:55–2:00** | Wrap-Up | "2 roles, 5 apps, custom MCP server, deterministic safety, and reproducible evaluation." |
+| **0:35–0:50** | Multi-App Actions Fire            | Agent writes to Google Sheets mirror, sends an email notification via Gmail, posts an interactive Block Kit message to Slack, and sets an appeal deadline in Google Calendar.                     |
+| **0:50–1:05** | Patient Portal Experience         | Switch to Patient view. Patient receives email/notification: "Additional clinical note needed." Patient logs into `/patient`, uploads missing note. Case status automatically advances.           |
+| **1:05–1:25** | Verification & Approval Loop      | Agent runs `verify` node: re-scans Drive, confirms the gap is closed, and drafts the citation-backed appeal packet. Insurer clicks **Approve** in Slack (or dashboard). Appeal marked RESOLVED.   |
+| **1:25–1:40** | Safety & Code-Enforced Boundary   | Demonstrate adversarial/unsafe case (ambiguous medical necessity). Agent explicitly **abstains** and escalates: _"This safety constraint is enforced in code, not in an LLM prompt."_             |
+| **1:40–1:55** | 20-Case Eval Harness              | Switch to `/insurance/eval`. Display the 20-case eval metrics table. Highlight 100% safety recall, 100% citation validity, and 0% unsupported claims.                                             |
+| **1:55–2:00** | Wrap-Up                           | "2 roles, 5 apps, custom MCP server, deterministic safety, and reproducible evaluation."                                                                                                          |
 
 ---
 
@@ -593,36 +610,40 @@ Payer Policy Documents (Google Drive)
 
 ### Pre-Work Tonight (Saturday, Sept 12) — ~3.5 hours
 
-| Task | Owner | Est. Time |
-|---|---|---|
-| Create Supabase project, configure Auth (Google OAuth + Email) | P2 | 20 min |
-| Run `schema.sql` (2-role schema) & `seed.sql` (demo patient + insurer) | P2 | 20 min |
-| Set up Google Cloud service account (Drive, Sheets, Calendar) + Gmail OAuth | P2 | 40 min |
-| Configure Slack bot with Socket Mode & interactive Block Kit | P2 | 20 min |
-| Verify LLM API keys & quotas | P1 | 10 min |
-| Generate synthetic data: 2 policies, 20 denial cases, golden labels in `cases.json` | P1 | 60 min |
-| Set up Next.js shell with dark theme, Tailwind, and Supabase client | P3 | 40 min |
+| Task                                                                                | Owner | Est. Time |
+| ----------------------------------------------------------------------------------- | ----- | --------- |
+| Create Supabase project, configure Auth (Google OAuth + Email)                      | P2    | 20 min    |
+| Run `schema.sql` (2-role schema) & `seed.sql` (demo patient + insurer)              | P2    | 20 min    |
+| Set up Google Cloud service account (Drive, Sheets, Calendar) + Gmail OAuth         | P2    | 40 min    |
+| Configure Slack bot with Socket Mode & interactive Block Kit                        | P2    | 20 min    |
+| Verify LLM API keys & quotas                                                        | P1    | 10 min    |
+| Generate synthetic data: 2 policies, 20 denial cases, golden labels in `cases.json` | P1    | 60 min    |
+| Set up Next.js shell with dark theme, Tailwind, and Supabase client                 | P3    | 40 min    |
 
 ---
 
 ### Build Day Schedule (9:30 AM – 4:00 PM PT)
 
 #### ⏰ 9:30–10:00 · Skeleton Verification (All 3)
+
 - **P1**: `ai-server` runs, environment verified, structured JSON validated
 - **P2**: Supabase connection green, auth middleware working, API credentials smoke-tested
 - **P3**: Next.js login/signup with role routing (`/patient` vs `/insurance`) working
 
 #### ⏰ 10:00–11:00 · Core Agent + Base Portals
+
 - **P1**: `CaseState` + `parse_denial` + `retrieve_requirements` + RAG pipeline
 - **P2**: Express auth routes, 2-role RBAC middleware, cases CRUD, Supabase queries
 - **P3**: Insurance Provider dashboard (`/insurance`) + Patient portal (`/patient`) base layouts
 
 #### ⏰ 11:00–12:00 · Evidence Pipeline + External Apps
+
 - **P1**: `scan_evidence` + deterministic `compute_gap` + `route` node
 - **P2**: Google Drive + Sheets + Gmail + Calendar services connected to Express
 - **P3**: Case detail views: Patient document upload UI & Insurer reasoning/evidence view
 
 #### ⏰ 12:00–12:45 · Act Layer + Slack Human-in-the-Loop
+
 - **P1**: `act` node dispatching to P2's integration endpoints
 - **P2**: Slack approval webhook + multi-channel notification engine (in-app, email, Slack)
 - **P3**: Insurer approval card UI + in-app notification bell
@@ -630,38 +651,43 @@ Payer Policy Documents (Google Drive)
 #### ⏰ 12:45–1:00 · 🍕 Quick Lunch Break
 
 #### ⏰ 1:00–1:45 · Verification Node + Appeal Assembly + MCP
+
 - **P1**: `assemble_appeal` + `verify` node (closing the loop)
 - **P2**: Custom MCP server exposing Claimsure tools + appeal routes
 - **P3**: Evaluation dashboard (`/insurance/eval`) + agent trace visualizer
 
 #### ⏰ 1:45–2:30 · Evaluation Harness (NON-NEGOTIABLE — 25% of Score)
+
 - **P1**: Run `python -m eval.harness` across 20 synthetic cases; compute and output metrics
 - **P2**: DRY_RUN fixtures for reliable demo execution
 - **P3**: Polish both dashboards, verify responsive layout and dark mode styling
 
 #### ⏰ 2:30–2:45 · 🧊 Code Freeze
+
 - **P1**: Run eval 3×, record variance
 - **P2**: Seed clean demo cases in Supabase and Google Drive
 - **P3**: Record backup demo screen capture
 
 #### ⏰ 2:45–3:30 · Demo Recording & Brief
+
 - **P1**: Write eval results & failure mode analysis for System Brief
 - **P2**: Write architecture & MCP sections for System Brief
 - **P3**: Record polished 2-minute demo video following script
 
 #### ⏰ 3:30–4:00 · Submission
+
 - **All**: Verify repo cleanliness, push final commits, submit demo video + reliability brief
 
 ---
 
 ## 🚨 Hard Cut Lines
 
-| Situation | Action |
-|---|---|
-| Behind at 11:00 AM | Drop Calendar & Gmail → focus on 3 core apps: Drive, Sheets, Slack |
+| Situation          | Action                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| Behind at 11:00 AM | Drop Calendar & Gmail → focus on 3 core apps: Drive, Sheets, Slack                              |
 | Behind at 12:00 PM | Simplify Patient portal to a single status tracker; prioritize Insurance Provider ops dashboard |
-| Behind at 1:00 PM | Use direct function calls for tools instead of standalone MCP process |
-| **NEVER CUT** | Supabase Auth + 2-Role RBAC, 20-case Evaluation Harness, and Audit Log |
+| Behind at 1:00 PM  | Use direct function calls for tools instead of standalone MCP process                           |
+| **NEVER CUT**      | Supabase Auth + 2-Role RBAC, 20-case Evaluation Harness, and Audit Log                          |
 
 ---
 
@@ -776,16 +802,16 @@ Claimsure/
 
 ## Eval Metrics (20 Cases)
 
-| Metric | Target |
-|---|---|
-| Denial classification accuracy | ≥ 85% |
-| Evidence gap F1 | ≥ 0.80 |
-| Routing accuracy | ≥ 90% |
-| Safety escalation recall (5 unsafe/ambiguous cases) | **100%** |
-| Citation validity | **100%** |
-| Unsupported claim rate | **0%** |
-| Median latency per case | Report in table |
-| Tool call failures recovered | Report in table |
+| Metric                                              | Target          |
+| --------------------------------------------------- | --------------- |
+| Denial classification accuracy                      | ≥ 85%           |
+| Evidence gap F1                                     | ≥ 0.80          |
+| Routing accuracy                                    | ≥ 90%           |
+| Safety escalation recall (5 unsafe/ambiguous cases) | **100%**        |
+| Citation validity                                   | **100%**        |
+| Unsupported claim rate                              | **0%**          |
+| Median latency per case                             | Report in table |
+| Tool call failures recovered                        | Report in table |
 
 ---
 

@@ -1,5 +1,8 @@
-import { Router } from 'express';
-import { handleSlackInteraction, webhookHealth } from '../controllers/webhooks.controller.js';
+import { Router } from "express";
+import {
+  handleSlackInteraction,
+  webhookHealth,
+} from "../controllers/webhooks.controller.js";
 
 const router = Router();
 
@@ -10,12 +13,12 @@ const router = Router();
  * Content-Type: application/x-www-form-urlencoded
  * Body: { payload: "<json string>" }
  */
-router.post('/slack', handleSlackInteraction);
+router.post("/slack", handleSlackInteraction);
 
 /**
  * GET /api/webhooks/health
  * Confirms the webhook endpoint is reachable.
  */
-router.get('/health', webhookHealth);
+router.get("/health", webhookHealth);
 
 export default router;

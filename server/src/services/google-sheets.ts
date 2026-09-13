@@ -4,29 +4,37 @@
  * Row format: [CaseNumber, Status, PatientId, InsurerOrg, ServiceType, UpdatedAt]
  */
 
-import { google, type sheets_v4 } from 'googleapis';
-import { env } from '../config/env.js';
-import { logger } from '../lib/logger.js';
-import { ServiceUnavailableError } from '../lib/errors.js';
-import type { Case } from '../types/index.js';
+import { google, type sheets_v4 } from "googleapis";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
+import { ServiceUnavailableError } from "../lib/errors.js";
+import type { Case } from "../types/index.js";
 
-const SHEET_NAME = 'Cases';
+const SHEET_NAME = "Cases";
 const HEADER_ROW = [
-  'Case Number', 'Status', 'Service Type', 'Service Code',
-  'Patient ID', 'Insurer Org ID', 'Created At', 'Updated At',
+  "Case Number",
+  "Status",
+  "Service Type",
+  "Service Code",
+  "Patient ID",
+  "Insurer Org ID",
+  "Created At",
+  "Updated At",
 ];
 
 function getSheetsClient(): sheets_v4.Sheets {
   if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    throw new ServiceUnavailableError('Google Sheets (service account not configured)');
+    throw new ServiceUnavailableError(
+      "Google Sheets (service account not configured)",
+    );
   }
 
   const auth = new google.auth.GoogleAuth({
     keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
-  return google.sheets({ version: 'v4', auth });
+  return google.sheets({ version: "v4", auth });
 }
 
 function caseToRow(c: Case): string[] {
@@ -34,7 +42,7 @@ function caseToRow(c: Case): string[] {
     c.case_number,
     c.status,
     c.service_type,
-    c.service_code ?? '',
+    c.service_code ?? "",
     c.patient_id,
     c.insurer_org_id,
     c.created_at,
@@ -56,23 +64,25 @@ export async function ensureHeaderRow(): Promise<void> {
       await sheets.spreadsheets.values.append({
         spreadsheetId: env.GOOGLE_SHEETS_ID,
         range: `${SHEET_NAME}!A1`,
-        valueInputOption: 'RAW',
+        valueInputOption: "RAW",
         requestBody: { values: [HEADER_ROW] },
       });
     }
   } catch (err) {
-    logger.warn('Failed to ensure Sheets header row', { err });
+    logger.warn("Failed to ensure Sheets header row", { err });
   }
 }
 
 export async function appendCaseRow(caseData: Case): Promise<void> {
   if (env.DRY_RUN) {
-    logger.debug('DRY_RUN: appendCaseRow', { caseNumber: caseData.case_number });
+    logger.debug("DRY_RUN: appendCaseRow", {
+      caseNumber: caseData.case_number,
+    });
     return;
   }
 
   if (!env.GOOGLE_SHEETS_ID) {
-    logger.warn('GOOGLE_SHEETS_ID not configured, skipping Sheets update');
+    logger.warn("GOOGLE_SHEETS_ID not configured, skipping Sheets update");
     return;
   }
 
@@ -81,19 +91,21 @@ export async function appendCaseRow(caseData: Case): Promise<void> {
     await sheets.spreadsheets.values.append({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
       range: `${SHEET_NAME}!A:H`,
-      valueInputOption: 'RAW',
+      valueInputOption: "RAW",
       requestBody: { values: [caseToRow(caseData)] },
     });
-    logger.info('Sheets row appended', { caseNumber: caseData.case_number });
+    logger.info("Sheets row appended", { caseNumber: caseData.case_number });
   } catch (err) {
-    logger.error('Sheets append failed', err);
+    logger.error("Sheets append failed", err);
     // Non-fatal: don't throw, just log
   }
 }
 
 export async function updateCaseRow(caseData: Case): Promise<void> {
   if (env.DRY_RUN) {
-    logger.debug('DRY_RUN: updateCaseRow', { caseNumber: caseData.case_number });
+    logger.debug("DRY_RUN: updateCaseRow", {
+      caseNumber: caseData.case_number,
+    });
     return;
   }
 
@@ -121,13 +133,13 @@ export async function updateCaseRow(caseData: Case): Promise<void> {
     await sheets.spreadsheets.values.update({
       spreadsheetId: env.GOOGLE_SHEETS_ID,
       range,
-      valueInputOption: 'RAW',
+      valueInputOption: "RAW",
       requestBody: { values: [caseToRow(caseData)] },
     });
 
-    logger.info('Sheets row updated', { caseNumber: caseData.case_number });
+    logger.info("Sheets row updated", { caseNumber: caseData.case_number });
   } catch (err) {
-    logger.error('Sheets update failed', err);
+    logger.error("Sheets update failed", err);
     // Non-fatal: don't throw
   }
 }

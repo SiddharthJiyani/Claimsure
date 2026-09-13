@@ -2,13 +2,13 @@
 
 > **ContextCarrier Export** — Attach this file to a new chat to continue your conversation.
 
-| Field | Value |
-|-------|-------|
-| **Source** | Claude |
-| **Date** | 12/09/2026, 09:11:22 |
-| **Export Mode** | Full Export |
-| **Total Messages** | 2 |
-| **Exported Messages** | 2 |
+| Field                 | Value                |
+| --------------------- | -------------------- |
+| **Source**            | Claude               |
+| **Date**              | 12/09/2026, 09:11:22 |
+| **Export Mode**       | Full Export          |
+| **Total Messages**    | 2                    |
+| **Exported Messages** | 2                    |
 
 ---
 
@@ -28,7 +28,7 @@ You are being provided with exported context from a previous conversation that r
 
 tell me the whole detailed implementation planing from strat to end workflow, incudling which technongies to be used like typescript, RAG, python aprt from that how can i connect external apps, using the apporach of MCP ., giove me step by step plan , also guide me with the number of the apps that can be used , and am making this for the hackathan i will orivide wiht it
 https://multiappagenthackathon.com/ the juding criteria
-JUDGING  30% Technical execution 25% Reliability & evaluation 20% Usefulness 15% Originality 10% Demo clarity
+JUDGING 30% Technical execution 25% Reliability & evaluation 20% Usefulness 15% Originality 10% Demo clarity
 
 ---
 
@@ -42,13 +42,13 @@ Your build window is **6.5 hours** (Sunday Sept 13, 9:30 AM–4:00 PM PT), and t
 
 ### 1. What the rubric is actually telling you
 
-| Weight | Criterion | What wins it | Cheapest way to get it |
-| --- | --- | --- | --- |
-| 30% | Technical execution | A real multi-step agent, not a prompt chain | LangGraph-style state machine + your own MCP server |
-| 25% | Reliability & evaluation | Numbers from a real test run | 20-case golden set + npm run eval that prints a table |
-| 20% | Usefulness | Judges believe a clinic would use it | One narrow, painful workflow done end-to-end |
-| 15% | Originality | Not "AI writes an appeal letter" | The verification loop and the refusal-to-decide escalation |
-| 10% | Demo clarity | 2 minutes, no dead air | Pre-seeded state, scripted, one rehearsal |
+| Weight | Criterion                | What wins it                                | Cheapest way to get it                                     |
+| ------ | ------------------------ | ------------------------------------------- | ---------------------------------------------------------- |
+| 30%    | Technical execution      | A real multi-step agent, not a prompt chain | LangGraph-style state machine + your own MCP server        |
+| 25%    | Reliability & evaluation | Numbers from a real test run                | 20-case golden set + npm run eval that prints a table      |
+| 20%    | Usefulness               | Judges believe a clinic would use it        | One narrow, painful workflow done end-to-end               |
+| 15%    | Originality              | Not "AI writes an appeal letter"            | The verification loop and the refusal-to-decide escalation |
+| 10%    | Demo clarity             | 2 minutes, no dead air                      | Pre-seeded state, scripted, one rehearsal                  |
 
 Reliability is 25% and almost nobody builds it. That's your edge. Budget a full hour for the eval harness even if it means cutting a feature.
 
@@ -84,18 +84,18 @@ Ten cases in the dataset is enough if the labels are real. Twenty is better and 
 
 Given your background (JS/TS, HTML/CSS, UX) and a 6.5-hour clock, Python + Streamlit buys you nothing and costs you a language switch plus an ugly demo. TypeScript keeps the agent, the MCP server, and the dashboard in one process and one deploy.
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Runtime | Node 20+, TypeScript, pnpm | One language |
-| App | Next.js (App Router) | Dashboard + API routes + a place to host the MCP server |
-| Agent orchestration | LangGraph.js, or a hand-rolled state machine | See note below |
-| LLM calls | Vercel AI SDK (ai) with Anthropic or OpenAI | Built-in MCP client, tool-calling, streaming |
-| MCP | @modelcontextprotocol/sdk | Both the client and your own server |
-| RAG | In-memory: chunk → embeddings → cosine similarity | 40 lines. Do not install a vector DB |
-| PDF parsing | pdf-parse or unpdf | Text-layer PDFs only; generate your synthetic PDFs with a text layer |
-| Persistence | SQLite via better-sqlite3 (or just JSON files) | Audit log + case state |
-| Tracing | Your own JSONL trace writer + a "Trace" tab | No vendor setup, demos beautifully |
-| UI | Tailwind + shadcn/ui | You'll make this look better than anyone else's Streamlit |
+| Layer               | Choice                                            | Why                                                                  |
+| ------------------- | ------------------------------------------------- | -------------------------------------------------------------------- |
+| Runtime             | Node 20+, TypeScript, pnpm                        | One language                                                         |
+| App                 | Next.js (App Router)                              | Dashboard + API routes + a place to host the MCP server              |
+| Agent orchestration | LangGraph.js, or a hand-rolled state machine      | See note below                                                       |
+| LLM calls           | Vercel AI SDK (ai) with Anthropic or OpenAI       | Built-in MCP client, tool-calling, streaming                         |
+| MCP                 | @modelcontextprotocol/sdk                         | Both the client and your own server                                  |
+| RAG                 | In-memory: chunk → embeddings → cosine similarity | 40 lines. Do not install a vector DB                                 |
+| PDF parsing         | pdf-parse or unpdf                                | Text-layer PDFs only; generate your synthetic PDFs with a text layer |
+| Persistence         | SQLite via better-sqlite3 (or just JSON files)    | Audit log + case state                                               |
+| Tracing             | Your own JSONL trace writer + a "Trace" tab       | No vendor setup, demos beautifully                                   |
+| UI                  | Tailwind + shadcn/ui                              | You'll make this look better than anyone else's Streamlit            |
 
 **On LangGraph.js:** use it only if you've written it before. If not, a plain `while` loop over a typed state object with a `step` discriminator is 60 lines, debuggable, and judges cannot tell the difference. Do not learn a framework during the build window.
 
@@ -107,17 +107,17 @@ Python only if you insist on a library that has no TS equivalent. You don't have
 
 Minimum is three. Aim for **five apps across two credential setups**, which is the efficiency trick:
 
-| # | App | Role in the loop | Auth | Setup cost |
-| --- | --- | --- | --- | --- |
-| 1 | Google Drive | Evidence repository the agent searches | Google service account | Low |
-| 2 | Google Sheets | Case management DB, visible state changes | Same service account | Low |
-| 3 | Google Calendar | Appeal deadline + peer-to-peer review slot | Same service account | Low |
-| 4 | Gmail | Outbound comms to provider admin | Google OAuth refresh token | Medium |
-| 5 | Slack | Human-in-the-loop approval with buttons | Bot token + Socket Mode | Low |
+| #   | App             | Role in the loop                           | Auth                       | Setup cost |
+| --- | --------------- | ------------------------------------------ | -------------------------- | ---------- |
+| 1   | Google Drive    | Evidence repository the agent searches     | Google service account     | Low        |
+| 2   | Google Sheets   | Case management DB, visible state changes  | Same service account       | Low        |
+| 3   | Google Calendar | Appeal deadline + peer-to-peer review slot | Same service account       | Low        |
+| 4   | Gmail           | Outbound comms to provider admin           | Google OAuth refresh token | Medium     |
+| 5   | Slack           | Human-in-the-loop approval with buttons    | Bot token + Socket Mode    | Low        |
 
 Two critical setup notes:
 
-- **Service account for Drive/Sheets/Calendar.** Create it in Google Cloud, download the JSON key, then *share* the Drive folder, the Sheet, and a Calendar with the service account's email address. This skips the OAuth consent screen entirely. Huge time saver.
+- **Service account for Drive/Sheets/Calendar.** Create it in Google Cloud, download the JSON key, then _share_ the Drive folder, the Sheet, and a Calendar with the service account's email address. This skips the OAuth consent screen entirely. Huge time saver.
 
 - **Gmail cannot use a service account** without Workspace domain-wide delegation. Either get a refresh token tonight via the OAuth playground with the `gmail.send` scope, or swap Gmail for Resend/SMTP. If Gmail auth is fighting you at 10 AM tomorrow, drop it and keep four apps. You're still over the minimum.
 
@@ -155,7 +155,7 @@ Verify the exact export names against the current AI SDK and MCP SDK docs when y
 
 **The pragmatic fallback you should plan for:** third-party MCP servers for Google Workspace vary a lot in quality and some will not expose the exact operation you need (creating a Calendar event with a specific attendee, appending a Sheets row). If a community server fights you for more than 20 minutes, **wrap `googleapis` directly as tools inside your own MCP server**. You still have a genuine MCP architecture, the apps are still connected, and you've lost 20 minutes instead of three hours. Decide this by 11 AM and don't revisit it.
 
-Route your Slack *approval* flow through Bolt with Socket Mode directly rather than through MCP, because you need to receive an inbound interaction, not just make an outbound call. MCP tools are for the agent calling out.
+Route your Slack _approval_ flow through Bolt with Socket Mode directly rather than through MCP, because you need to receive an inbound interaction, not just make an outbound call. MCP tools are for the agent calling out.
 
 ---
 
@@ -235,16 +235,16 @@ Those five are the ones you report on. "20/20 safety-critical cases correctly es
 
 `pnpm eval` runs the graph in `DRY_RUN=1` over all 20 cases, writes `eval/results.json` and prints:
 
-| Metric | How computed | Target |
-| --- | --- | --- |
-| Denial classification accuracy | exact match on denial_code | ≥ 85% |
-| Evidence gap F1 | set F1 of missing_evidence | ≥ 0.80 |
-| Routing accuracy | exact match on route | ≥ 90% |
-| Safety escalation recall | of the 5 unsafe cases, % routed human/abstain | 100% |
-| Citation validity | % of assertions whose policy_id exists in the corpus | 100% |
-| Unsupported claim rate | assertions with no citation ÷ total | 0% |
-| Median latency / case | wall clock | report it |
-| Tool call failures recovered | injected failures that the retry path survived | report it |
+| Metric                         | How computed                                         | Target    |
+| ------------------------------ | ---------------------------------------------------- | --------- |
+| Denial classification accuracy | exact match on denial_code                           | ≥ 85%     |
+| Evidence gap F1                | set F1 of missing_evidence                           | ≥ 0.80    |
+| Routing accuracy               | exact match on route                                 | ≥ 90%     |
+| Safety escalation recall       | of the 5 unsafe cases, % routed human/abstain        | 100%      |
+| Citation validity              | % of assertions whose policy_id exists in the corpus | 100%      |
+| Unsupported claim rate         | assertions with no citation ÷ total                  | 0%        |
+| Median latency / case          | wall clock                                           | report it |
+| Tool call failures recovered   | injected failures that the retry path survived       | report it |
 
 Run it three times and report variance. Temperature 0, pinned model version, fixed fixtures. If a metric is bad, **report it honestly and say what you'd fix**. Judges who care about evaluation respect a real 82% far more than a suspicious 100%.
 
@@ -300,19 +300,19 @@ Sleep. Seriously.
 
 ### 10. Hour-by-hour, 9:30 AM – 4:00 PM PT
 
-| Time | Block | Done means |
-| --- | --- | --- |
-| 9:30–10:00 | Skeleton | Repo runs, env loaded, all 5 app clients smoke-tested green |
-| 10:00–10:45 | claimsure-mcp v1 | policy_search + denial_parse working over the real corpus, callable from the agent |
-| 10:45–11:30 | Graph core | parse → retrieve → scan → gap → route produces correct CaseState for case R1007 in the terminal |
-| 11:30–12:15 | Act layer | Sheets row updates, Gmail sends, Calendar event created, Slack message posts. Idempotency keys in. |
-| 12:15–12:30 | Lunch, away from the screen |  |
-| 12:30–1:15 | Human loop + verify | Slack Approve button resumes the graph; verify re-scans and closes the case |
-| 1:15–2:00 | Eval harness | pnpm eval prints the metrics table for all 20 cases. Non-negotiable. |
-| 2:00–2:45 | Dashboard | Case list, one case detail view with reasoning + citations + trace, live-ish status |
-| 2:45–3:05 | Freeze | No new features. Seed demo state. Record a backup screen capture of the full flow. |
-| 3:05–3:30 | Demo record + rehearse | 2:00 or under, twice |
-| 3:30–4:00 | Reliability brief + README + submit | Submitted with 10 minutes to spare |
+| Time        | Block                               | Done means                                                                                         |
+| ----------- | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 9:30–10:00  | Skeleton                            | Repo runs, env loaded, all 5 app clients smoke-tested green                                        |
+| 10:00–10:45 | claimsure-mcp v1                    | policy_search + denial_parse working over the real corpus, callable from the agent                 |
+| 10:45–11:30 | Graph core                          | parse → retrieve → scan → gap → route produces correct CaseState for case R1007 in the terminal    |
+| 11:30–12:15 | Act layer                           | Sheets row updates, Gmail sends, Calendar event created, Slack message posts. Idempotency keys in. |
+| 12:15–12:30 | Lunch, away from the screen         |                                                                                                    |
+| 12:30–1:15  | Human loop + verify                 | Slack Approve button resumes the graph; verify re-scans and closes the case                        |
+| 1:15–2:00   | Eval harness                        | pnpm eval prints the metrics table for all 20 cases. Non-negotiable.                               |
+| 2:00–2:45   | Dashboard                           | Case list, one case detail view with reasoning + citations + trace, live-ish status                |
+| 2:45–3:05   | Freeze                              | No new features. Seed demo state. Record a backup screen capture of the full flow.                 |
+| 3:05–3:30   | Demo record + rehearse              | 2:00 or under, twice                                                                               |
+| 3:30–4:00   | Reliability brief + README + submit | Submitted with 10 minutes to spare                                                                 |
 
 Hard cut lines if you're behind:
 
@@ -371,4 +371,3 @@ Section 7 gains you points rather than losing them. Stating limits precisely is 
 2. - **Framework learning during the window.** If you haven't shipped LangGraph.js before, write the loop yourself.
 
 3. - **Building features until 3:50.** Freeze at 2:45. An unrecorded demo is a zero on 10% and hurts the other 90% by association.
-

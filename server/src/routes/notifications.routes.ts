@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth.js";
 import {
   listNotifications,
   markRead,
   markAllRead,
-} from '../controllers/notifications.controller.js';
+} from "../controllers/notifications.controller.js";
 
 const router = Router();
 
@@ -16,18 +16,18 @@ router.use(requireAuth);
  * Query: ?unread=true  (filter to unread only)
  * Returns: { notifications[], unread_count }
  */
-router.get('/', listNotifications);
+router.get("/", listNotifications);
 
 /**
  * PATCH /api/notifications/:id/read
  * Mark a single notification as read.
  */
-router.patch('/:id/read', markRead);
+router.patch("/:id/read", markRead);
 
 /**
  * PATCH /api/notifications/read-all
  * Mark all in-app notifications as read.
  */
-router.patch('/read-all', markAllRead);
+router.patch("/read-all", markAllRead);
 
 export default router;

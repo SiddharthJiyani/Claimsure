@@ -237,10 +237,7 @@
       "expected_route": "abstain",
       "actual_route": "abstain",
       "status": "ESCALATED",
-      "citations": [
-        "POL-A-2026-DIAG:Clause 4.1",
-        "POL-A-2026-DIAG:Clause 4.2"
-      ],
+      "citations": ["POL-A-2026-DIAG:Clause 4.1", "POL-A-2026-DIAG:Clause 4.2"],
       "latency_ms": 0.52
     },
     {
@@ -248,10 +245,7 @@
       "expected_route": "abstain",
       "actual_route": "abstain",
       "status": "ESCALATED",
-      "citations": [
-        "POL-A-2026-DIAG:Clause 4.1",
-        "POL-A-2026-DIAG:Clause 4.2"
-      ],
+      "citations": ["POL-A-2026-DIAG:Clause 4.1", "POL-A-2026-DIAG:Clause 4.2"],
       "latency_ms": 0.0
     }
   ]

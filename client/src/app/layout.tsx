@@ -20,11 +20,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Claimsure",
-    template: "%s · Claimsure",
+    default: "Claimsure AI",
+    template: "%s · Claimsure AI",
   },
   description:
-    "AI prior authorization and denial recovery for patients and healthcare teams.",
+    "Auditable AI for prior authorization and denial recovery. Patients and healthcare teams share one case workflow: parse the denial, retrieve policy, close the evidence gap, and verify the appeal.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
