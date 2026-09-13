@@ -6,17 +6,16 @@ import { CaseCard } from "@/components/CaseCard";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
+import { PrescriptionUploadModal } from "@/components/PrescriptionUploadModal";
 import { QueueSkeleton, StatCard } from "@/components/StatCard";
-import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { dayGreeting, displayName } from "@/lib/format";
 import { useCases } from "@/lib/use-workspace-data";
 
 export default function PatientDashboardPage() {
   const { profile, user } = useAuth();
-  const { cases, error, loading, reload, setError } = useCases();
-  const [serviceType, setServiceType] = useState("");
-  const [busy, setBusy] = useState(false);
+  const { cases, error, loading, reload } = useCases();
+  const [modalOpen, setModalOpen] = useState(false);
   const firstName = displayName({
     fullName: profile?.full_name,
     email: profile?.email ?? user?.email,
@@ -33,23 +32,6 @@ export default function PatientDashboardPage() {
     }),
     [cases],
   );
-
-  async function createCase(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    try {
-      await apiFetch("/cases", {
-        method: "POST",
-        body: JSON.stringify({ service_type: serviceType }),
-      });
-      setServiceType("");
-      await reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not submit claim");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <WorkspaceFrame>
@@ -113,28 +95,17 @@ export default function PatientDashboardPage() {
               Submit a denied or pending service
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Enter the service name from the denial letter. You can attach
-              evidence after the claim is created.
+              Upload the doctor’s prescription first. We parse the diagnosis
+              and the service to claim, save the file to Drive, then you
+              confirm before the claim is created.
             </p>
-            <form
-              onSubmit={createCase}
-              className="mt-4 flex flex-col gap-3 md:flex-row"
+            <button
+              type="button"
+              onClick={() => setModalOpen(true)}
+              className="cs-btn cs-btn-primary mt-4"
             >
-              <input
-                required
-                value={serviceType}
-                onChange={(event) => setServiceType(event.target.value)}
-                placeholder="Service on the denial, e.g. MRI lumbar spine"
-                className="cs-input flex-1"
-              />
-              <button
-                type="submit"
-                disabled={busy}
-                className="cs-btn cs-btn-primary"
-              >
-                {busy ? "Submitting…" : "Create claim"}
-              </button>
-            </form>
+              Upload prescription
+            </button>
           </div>
         </div>
       </section>
@@ -161,6 +132,12 @@ export default function PatientDashboardPage() {
           </div>
         )}
       </section>
+
+      <PrescriptionUploadModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreated={() => reload()}
+      />
     </WorkspaceFrame>
   );
 }

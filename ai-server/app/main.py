@@ -4,13 +4,12 @@ from typing import Optional, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv(override=True)
-except ImportError:
-    pass
+from app.services.env import load_ai_env
+
+load_ai_env()
 
 from app.workflows.denial_workflow import DenialWorkflow
+from app.services.prescription import parse_prescription
 from eval.harness import run_evaluation_harness
 
 app = FastAPI(
@@ -83,6 +82,31 @@ async def upload_and_analyze(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File processing error: {str(e)}")
+
+@app.post("/api/prescription/parse")
+async def parse_prescription_upload(
+    file: UploadFile = File(...),
+    payer_id: Optional[str] = Form(None),
+):
+    """
+    Parse a doctor's prescription: extract disease and the service to claim,
+    then retrieve matching policy clauses from the RAG corpus.
+    """
+    try:
+        file_bytes = await file.read()
+        filename = file.filename or "prescription.pdf"
+        result = parse_prescription(
+            file_bytes=file_bytes,
+            filename=filename,
+            payer_id=payer_id,
+            mime_type=file.content_type,
+        )
+        return {"success": True, **result}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prescription parse error: {str(e)}")
+
 
 @app.post("/api/workflow/process-case")
 async def process_case_endpoint(case_data: Dict[str, Any]):
