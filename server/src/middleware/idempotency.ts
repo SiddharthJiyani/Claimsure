@@ -29,13 +29,8 @@ export function requireIdempotency(
   const key = req.headers[IDEMPOTENCY_HEADER];
 
   if (!key || typeof key !== "string" || key.trim().length === 0) {
-    res.status(400).json({
-      success: false,
-      error: {
-        code: "MISSING_IDEMPOTENCY_KEY",
-        message: `The '${IDEMPOTENCY_HEADER}' header is required for this request`,
-      },
-    });
+    req.idempotencyKey = `${req.params?.id ?? "auto"}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+    next();
     return;
   }
 

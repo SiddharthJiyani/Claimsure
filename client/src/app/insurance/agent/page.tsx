@@ -32,8 +32,14 @@ export default function InsuranceAgentPage() {
   async function trigger(id: string) {
     setBusyId(id);
     try {
-      await apiFetch(`/cases/${id}/analyze`, { method: "POST" });
+      await apiFetch(`/cases/${id}/process`, {
+        method: "POST",
+        headers: { "Idempotency-Key": `${id}:process_${Date.now()}` },
+        body: JSON.stringify({}),
+      });
       await reload();
+      setTimeout(() => { void reload(); }, 2000);
+      setTimeout(() => { void reload(); }, 4000);
     } finally {
       setBusyId(null);
     }

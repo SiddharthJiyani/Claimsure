@@ -13,6 +13,12 @@ import {
 } from "../database/queries/cases.js";
 import { createAuditLog } from "../database/queries/audit.js";
 import { createDenialForCase } from "../database/queries/denials.js";
+import {
+  createAppeal,
+  getAppealByCase,
+  updateAppealStatus,
+} from "../database/queries/appeals.js";
+import { supabase } from "../database/supabase.js";
 import * as aiClient from "../services/ai-client.js";
 import * as sheetsService from "../services/google-sheets.js";
 import { createCaseReviewEvent } from "../services/google-calendar.js";
@@ -29,6 +35,7 @@ import type {
   UpdateCaseStatusInput,
   ProcessCaseInput,
 } from "../validators/cases.validator.js";
+import type { CaseStatus } from "../types/index.js";
 
 // ─── List Cases ───────────────────────────────────────────────────────────────
 
@@ -148,7 +155,7 @@ export async function createNewCase(
     createCaseReviewEvent({
       caseNumber: newCase.case_number,
       serviceType: newCase.service_type,
-      disease: newCase.payer_id ?? undefined,
+      ...(newCase.payer_id ? { disease: newCase.payer_id } : {}),
     }).catch(() => {});
 
     // Notify patient
@@ -252,24 +259,99 @@ export async function processCase(
       },
     });
 
+    const details = await getCaseWithDetails(id);
+    const denial = Array.isArray(details.denials) ? details.denials[0] : null;
+    const documents = Array.isArray(details.documents) ? details.documents : [];
+
     // Call AI server (async — returns immediately with ANALYZING status)
     const isDryRun = body.dry_run || env.DRY_RUN;
 
     // Fire and forget the agent — the agent will update status via webhooks/API
     aiClient
-      .processCase(id, isDryRun)
+      .processCase(id, isDryRun, {
+        case_number: existing.case_number,
+        patient_name: "Claimant",
+        payer_id: existing.payer_id,
+        service_type: existing.service_type,
+        service_code: existing.service_code,
+        ...(denial && typeof denial === "object"
+          ? {
+              denial_code: denial.denial_code,
+              denial_reason: denial.denial_reason,
+              raw_text: denial.raw_text,
+            }
+          : {}),
+        provided_documents: documents,
+      })
       .then(async (result) => {
         // Update final status based on agent result
         const finalStatus =
           result.final_node === "resolved"
             ? "RESOLVED"
-            : result.final_node === "escalated"
+            : result.status === "ESCALATED" || result.final_node === "escalated"
               ? "ESCALATED"
-              : result.route_decision === "human_review"
-                ? "AWAITING_REVIEW"
-                : "ACTION_REQUIRED";
+              : result.status === "APPEAL_READY" || result.final_node === "assemble_appeal"
+                ? "APPEAL_READY"
+                : result.route_decision === "human_review" || result.status === "AWAITING_REVIEW"
+                  ? "AWAITING_REVIEW"
+                  : result.status &&
+                      ["AWAITING_REVIEW", "ACTION_REQUIRED", "ESCALATED", "APPEAL_READY", "RESOLVED"].includes(
+                        result.status,
+                      )
+                    ? (result.status as CaseStatus)
+                    : "AWAITING_REVIEW";
 
         await updateCaseStatus(id, finalStatus).catch(() => {});
+        sheetsService.updateCaseRow({ ...existing, status: finalStatus }).catch(() => {});
+
+        await supabase.from("agent_state").insert({
+          case_id: id,
+          current_node: result.final_node,
+          state_data: result,
+          is_dry_run: isDryRun,
+        });
+
+        for (const trace of result.audit_trail) {
+          await createAuditLog({
+            case_id: id,
+            actor_type: "agent",
+            action: trace.action,
+            node: trace.node,
+            new_state: finalStatus,
+            ai_recommendation: trace.action,
+            ...(trace.confidence !== undefined
+              ? { confidence: trace.confidence }
+              : {}),
+            metadata: { timestamp: trace.timestamp },
+          }).catch(() => {});
+        }
+
+        const reviewText =
+          result.appeal_text ??
+          (finalStatus === "ESCALATED"
+            ? `⚠️ Human Escalation Required for Case ${existing.case_number}\n\nThis case was flagged by the clinical safety system and requires manual review by an insurance examiner or medical director.`
+            : `Human review required for case ${existing.case_number}.\n\n${
+                result.evidence_missing?.length
+                  ? `Missing clinical documentation:\n- ${result.evidence_missing.join("\n- ")}`
+                  : "The agent completed analysis and requires reviewer decision to submit the appeal."
+              }`);
+
+        if (reviewText) {
+          const existingAppeal = await getAppealByCase(id).catch(() => null);
+          if (
+            !existingAppeal ||
+            ["REJECTED", "ACCEPTED"].includes(existingAppeal.status)
+          ) {
+            const appeal = await createAppeal({
+              case_id: id,
+              appeal_text: reviewText,
+              ...(result.citations ? { citations: result.citations } : {}),
+            });
+            await updateAppealStatus(appeal.id, "PENDING_REVIEW").catch(
+              () => {},
+            );
+          }
+        }
 
         // Notify insurer of result
         notifyInsurersByOrg(

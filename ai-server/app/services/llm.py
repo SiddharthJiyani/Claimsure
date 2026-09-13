@@ -199,7 +199,7 @@ class LLMService:
             "Content-Type": "application/json",
         }
         payload = {
-            "model": "qwen/qwen3.6-27b",
+            "model": "llama-3.3-70b-versatile",
             "messages": [
                 {
                     "role": "system",

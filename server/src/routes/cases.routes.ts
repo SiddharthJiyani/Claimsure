@@ -69,6 +69,15 @@ router.post(
   processCase,
 );
 
+router.post(
+  "/:id/analyze",
+  requireIdempotency,
+  checkIdempotency,
+  validate(processCaseSchema),
+  processCase,
+);
+
+
 /**
  * GET /api/cases/:id/audit
  * Get append-only audit trail for a case.

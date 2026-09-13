@@ -17,6 +17,7 @@ import {
   notifyPatient,
   notifyInsurersByOrg,
 } from "../services/notifications.js";
+import * as sheetsService from "../services/google-sheets.js";
 import { sendSuccess, sendCreated } from "../lib/response.js";
 import { ForbiddenError, NotFoundError, ConflictError } from "../lib/errors.js";
 import type {
@@ -151,7 +152,10 @@ export async function updateAppeal(
       SUBMITTED: "SUBMITTED",
     };
     const newCaseStatus = caseStatusMap[body.status];
-    if (newCaseStatus) await updateCaseStatus(caseId, newCaseStatus);
+    if (newCaseStatus) {
+      await updateCaseStatus(caseId, newCaseStatus);
+      sheetsService.updateCaseRow({ ...caseData, status: newCaseStatus }).catch(() => {});
+    }
 
     await createAuditLog({
       case_id: caseId,

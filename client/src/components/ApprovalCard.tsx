@@ -6,9 +6,11 @@ import type { Appeal } from "@/lib/types";
 
 export function ApprovalCard({
   appeal,
+  caseId,
   onChanged,
 }: {
   appeal: Appeal;
+  caseId: string;
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
@@ -22,7 +24,12 @@ export function ApprovalCard({
     setBusy(action);
     setError(null);
     try {
-      await apiFetch(`/appeals/${appeal.id}/${action}`, { method: "POST" });
+      await apiFetch(`/cases/${caseId}/appeal/${appeal.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: action === "approve" ? "APPROVED" : "REJECTED",
+        }),
+      });
       onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Decision failed");

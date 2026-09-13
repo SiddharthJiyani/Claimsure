@@ -20,6 +20,7 @@ class SimpleMCPClient:
     def connect(self):
         # Spawn the Node MCP server
         env = os.environ.copy()
+        server_root = os.path.abspath(os.path.join(os.path.dirname(self.server_script_path), "..", ".."))
         self.process = subprocess.Popen(
             ["npx", "tsx", self.server_script_path],
             stdin=subprocess.PIPE,
@@ -27,7 +28,8 @@ class SimpleMCPClient:
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
-            env=env
+            env=env,
+            cwd=server_root,
         )
 
         # Start a thread to read responses
