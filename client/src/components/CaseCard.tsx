@@ -8,10 +8,14 @@ export function CaseCard({
   claim,
   href,
   subtitle,
+  onRemove,
+  removing,
 }: {
   claim: ClaimCase;
   href: string;
   subtitle?: string;
+  onRemove?: () => void;
+  removing?: boolean;
 }) {
   const missing = claim.documents?.filter((doc) => doc.is_missing).length ?? 0;
   return (
@@ -30,7 +34,25 @@ export function CaseCard({
             {subtitle ?? claim.payer_id ?? "Payer pending"}
           </p>
         </div>
-        <StatusBadge status={claim.status} />
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <StatusBadge status={claim.status} />
+          {onRemove &&
+          claim.status !== "RESOLVED" &&
+          claim.status !== "CLOSED" ? (
+            <button
+              type="button"
+              disabled={removing}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onRemove();
+              }}
+              className="text-xs font-medium text-danger hover:underline disabled:opacity-60"
+            >
+              {removing ? "Removing…" : "Remove"}
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="mt-4 flex items-center justify-between text-sm text-muted">
         <span>

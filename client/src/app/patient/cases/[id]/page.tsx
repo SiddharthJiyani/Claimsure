@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { CaseTimeline } from "@/components/CaseTimeline";
@@ -16,10 +16,12 @@ import type { ClaimCase } from "@/lib/types";
 
 export default function PatientCasePage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [claim, setClaim] = useState<ClaimCase | null>(null);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   async function load() {
     try {
@@ -55,6 +57,25 @@ export default function PatientCasePage() {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function removeClaim() {
+    if (!claim) return;
+    const confirmed = window.confirm(
+      `Remove claim ${claim.case_number}? Healthcare will stop reviewing it.`,
+    );
+    if (!confirmed) return;
+    setRemoving(true);
+    setError(null);
+    try {
+      await appFetch(`/api/workspace/cases/${claim.id}`, { method: "DELETE" });
+      router.push("/patient/claims");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not remove claim");
+    } finally {
+      setRemoving(false);
     }
   }
 
@@ -96,7 +117,19 @@ export default function PatientCasePage() {
             {claim.service_code ?? "Service code pending"}
           </p>
         </div>
-        <StatusBadge status={claim.status} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={claim.status} />
+          {claim.status !== "RESOLVED" && claim.status !== "CLOSED" ? (
+            <button
+              type="button"
+              disabled={removing}
+              onClick={() => void removeClaim()}
+              className="cs-btn cs-btn-ghost text-danger"
+            >
+              {removing ? "Removing…" : "Remove claim"}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {error ? (
