@@ -37,6 +37,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
+    try {
+      const response = await fetch("/api/me", { credentials: "include" });
+      if (response.ok) {
+        const body = (await response.json()) as { profile: Profile | null };
+        setProfile(
+          body.profile && isUserRole(body.profile.role) ? body.profile : null,
+        );
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // Fall back to a direct profiles read if the app route is unavailable.
+    }
     const { data: row } = await supabase
       .from("profiles")
       .select("id, email, full_name, role, organization_id, created_at")

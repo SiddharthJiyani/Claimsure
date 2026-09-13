@@ -1,27 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import { Bot } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { PageHeader } from "@/components/PageHeader";
+import { ErrorCallout } from "@/components/ErrorCallout";
+import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
+import { QueueSkeleton } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { apiFetch } from "@/lib/api";
 import { useCases } from "@/lib/use-workspace-data";
-import { useState } from "react";
 
 const NODES = [
-  "parse_denial",
-  "retrieve_requirements",
-  "scan_evidence",
-  "compute_gap",
-  "route",
-  "act",
-  "await_human",
-  "assemble_appeal",
-  "verify",
+  ["Parse denial", "Extract codes, dates, and reason language."],
+  ["Retrieve policy", "Pull payer medical-necessity clauses."],
+  ["Scan evidence", "Map uploaded records to required docs."],
+  ["Compute gap", "Score what is still missing."],
+  ["Route", "Rule-based path. Necessity always goes to review."],
+  ["Act", "Request records or draft the next step."],
+  ["Await review", "Hold for a healthcare decision."],
+  ["Assemble appeal", "Write a citation-backed letter."],
+  ["Verify", "Check citations before submit."],
 ];
 
 export default function InsuranceAgentPage() {
-  const { cases, error, reload } = useCases();
+  const { cases, error, loading, reload } = useCases();
   const [busyId, setBusyId] = useState<string | null>(null);
   const runnable = cases.filter(
     (claim) => !["RESOLVED", "CLOSED"].includes(claim.status),
@@ -38,68 +40,80 @@ export default function InsuranceAgentPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <WorkspaceFrame>
       <PageHeader
         eyebrow="Healthcare"
         title="AI agent console"
-        description="Trigger the 9-node denial workflow. Routing is rule-based; medical necessity always goes to human review."
+        description="Nine-node denial workflow. Routing is rule-based; medical necessity always stops for a human."
       />
 
-      <section className="cs-panel rounded-3xl p-6">
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">
-          State machine
-        </p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          {NODES.map((node, index) => (
+      <section className="cs-panel rounded-2xl p-5">
+        <p className="cs-kicker">State machine</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {NODES.map(([title, copy], index) => (
             <div
-              key={node}
-              className="rounded-2xl border border-border bg-background/50 px-3 py-3 text-sm"
+              key={title}
+              className="rounded-xl border border-border bg-background/40 px-3.5 py-3"
             >
-              <p className="font-mono text-[11px] text-muted">
+              <p className="font-mono text-[11px] text-accent">
                 {String(index + 1).padStart(2, "0")}
               </p>
-              <p className="mt-1 font-medium">{node.replaceAll("_", " ")}</p>
+              <p className="mt-1 text-sm font-semibold">{title}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">{copy}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <ErrorCallout message={error} onRetry={() => void reload()} />
+      ) : null}
 
-      {runnable.length === 0 ? (
-        <EmptyState
-          title="No runnable cases"
-          description="The agent runs on real org cases. Submit or wait for a patient claim first."
-        />
-      ) : (
-        <div className="space-y-3">
-          {runnable.map((claim) => (
-            <div
-              key={claim.id}
-              className="cs-panel flex flex-wrap items-center justify-between gap-3 rounded-3xl p-4"
-            >
-              <div>
-                <p className="font-mono text-xs text-muted">
-                  {claim.case_number}
-                </p>
-                <p className="font-semibold">{claim.service_type}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <StatusBadge status={claim.status} />
-                <button
-                  type="button"
-                  disabled={busyId === claim.id}
-                  onClick={() => void trigger(claim.id)}
-                  className="cs-btn cs-btn-primary"
-                >
-                  <Bot size={16} />
-                  {busyId === claim.id ? "Queuing…" : "Run agent"}
-                </button>
-              </div>
-            </div>
-          ))}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold">Runnable cases</h2>
+          <p className="mt-1 text-sm text-muted">
+            The agent only runs on live organization claims.
+          </p>
         </div>
-      )}
-    </div>
+        {loading ? (
+          <QueueSkeleton />
+        ) : runnable.length === 0 ? (
+          <EmptyState
+            icon={Bot}
+            title="No runnable cases"
+            description="Submit a patient claim first, or wait for one to arrive. The console will not invent work."
+          />
+        ) : (
+          <div className="cs-panel divide-y divide-border overflow-hidden rounded-2xl">
+            {runnable.map((claim) => (
+              <div
+                key={claim.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5"
+              >
+                <div>
+                  <p className="font-mono text-xs text-muted">
+                    {claim.case_number}
+                  </p>
+                  <p className="font-semibold">{claim.service_type}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <StatusBadge status={claim.status} />
+                  <button
+                    type="button"
+                    disabled={busyId === claim.id}
+                    onClick={() => void trigger(claim.id)}
+                    className="cs-btn cs-btn-primary"
+                  >
+                    <Bot size={16} />
+                    {busyId === claim.id ? "Queuing…" : "Run agent"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </WorkspaceFrame>
   );
 }

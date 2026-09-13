@@ -1,38 +1,101 @@
 "use client";
 
-import { CaseCard } from "@/components/CaseCard";
+import { useMemo, useState } from "react";
+import { Inbox } from "lucide-react";
+import { CaseQueueTable } from "@/components/CaseQueueTable";
 import { EmptyState } from "@/components/EmptyState";
-import { PageHeader } from "@/components/PageHeader";
+import { ErrorCallout } from "@/components/ErrorCallout";
+import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
+import { QueueSkeleton } from "@/components/StatCard";
 import { useCases } from "@/lib/use-workspace-data";
+import type { CaseStatus } from "@/lib/types";
+
+const FILTERS: Array<{ id: "all" | "review" | "running" | "done"; label: string }> =
+  [
+    { id: "all", label: "All" },
+    { id: "review", label: "Needs review" },
+    { id: "running", label: "In progress" },
+    { id: "done", label: "Resolved" },
+  ];
+
+const REVIEW: CaseStatus[] = [
+  "ACTION_REQUIRED",
+  "AWAITING_REVIEW",
+  "APPEAL_READY",
+];
+const RUNNING: CaseStatus[] = [
+  "PENDING",
+  "ANALYZING",
+  "SUBMITTED",
+  "VERIFYING",
+  "ESCALATED",
+];
+const DONE: CaseStatus[] = ["RESOLVED", "CLOSED"];
 
 export default function InsuranceCasesPage() {
-  const { cases, error } = useCases();
+  const { cases, error, loading, reload } = useCases();
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
+
+  const visible = useMemo(() => {
+    if (filter === "review") {
+      return cases.filter((claim) => REVIEW.includes(claim.status));
+    }
+    if (filter === "running") {
+      return cases.filter((claim) => RUNNING.includes(claim.status));
+    }
+    if (filter === "done") {
+      return cases.filter((claim) => DONE.includes(claim.status));
+    }
+    return cases;
+  }, [cases, filter]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <WorkspaceFrame>
       <PageHeader
         eyebrow="Healthcare"
         title="Case queue"
-        description="Every claim assigned to your organization, including resolved and closed."
+        description="Every claim assigned to your organization, including resolved and closed work."
       />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {cases.length === 0 ? (
+
+      <div className="flex flex-wrap gap-2">
+        {FILTERS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setFilter(item.id)}
+            className={`rounded-full border px-3 py-1.5 text-sm ${
+              filter === item.id
+                ? "border-accent/40 bg-accent/12 text-foreground"
+                : "border-border bg-surface text-muted hover:text-foreground"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {error ? (
+        <ErrorCallout message={error} onRetry={() => void reload()} />
+      ) : null}
+
+      {loading ? (
+        <QueueSkeleton rows={6} />
+      ) : visible.length === 0 ? (
         <EmptyState
-          title="No org cases"
-          description="Cases arrive when a patient in your organization submits a denied or pending service."
+          icon={Inbox}
+          title={cases.length === 0 ? "No organization cases" : "Nothing in this filter"}
+          description={
+            cases.length === 0
+              ? "Cases arrive when a patient in your organization submits a denied or pending service."
+              : "Try another filter to see the rest of the queue."
+          }
         />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {cases.map((claim) => (
-            <CaseCard
-              key={claim.id}
-              claim={claim}
-              href={`/insurance/cases/${claim.id}`}
-              subtitle="Org-assigned claim"
-            />
-          ))}
-        </div>
+        <CaseQueueTable
+          cases={visible}
+          hrefFor={(claim) => `/insurance/cases/${claim.id}`}
+        />
       )}
-    </div>
+    </WorkspaceFrame>
   );
 }

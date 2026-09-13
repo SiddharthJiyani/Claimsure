@@ -1,12 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { DocumentList } from "@/components/DocumentList";
+import { ErrorCallout } from "@/components/ErrorCallout";
 import { EvidencePanel } from "@/components/EvidencePanel";
+import { WorkspaceFrame } from "@/components/PageHeader";
+import { QueueSkeleton } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, appFetch } from "@/lib/api";
 import type { ClaimCase } from "@/lib/types";
 
 export default function PatientCasePage() {
@@ -18,10 +23,19 @@ export default function PatientCasePage() {
 
   async function load() {
     try {
-      const data = await apiFetch<{ case: ClaimCase }>(`/cases/${params.id}`);
+      const data = await appFetch<{ case: ClaimCase }>(
+        `/api/workspace/cases/${params.id}`,
+      );
       setClaim(data.case);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load case");
+      setError(null);
+    } catch {
+      try {
+        const data = await apiFetch<{ case: ClaimCase }>(`/cases/${params.id}`);
+        setClaim(data.case);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not load case");
+      }
     }
   }
 
@@ -52,7 +66,15 @@ export default function PatientCasePage() {
   }
 
   if (!claim) {
-    return <p className="text-sm text-muted">{error ?? "Loading case…"}</p>;
+    return (
+      <WorkspaceFrame>
+        {error ? (
+          <ErrorCallout message={error} onRetry={() => void load()} />
+        ) : (
+          <QueueSkeleton rows={5} />
+        )}
+      </WorkspaceFrame>
+    );
   }
 
   const denial = claim.denials?.[0];
@@ -62,23 +84,35 @@ export default function PatientCasePage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <WorkspaceFrame>
+      <Link
+        href="/patient/claims"
+        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
+      >
+        <ArrowLeft size={14} />
+        Back to claims
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs text-muted">{claim.case_number}</p>
-          <h1 className="mt-1 text-3xl font-semibold">{claim.service_type}</h1>
-          <p className="mt-1 text-sm text-muted">
+          <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">
+            {claim.service_type}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
             {claim.service_code ?? "Service code pending"}
           </p>
         </div>
         <StatusBadge status={claim.status} />
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <ErrorCallout message={error} onRetry={() => void load()} />
+      ) : null}
 
-      <section className="cs-panel rounded-3xl p-5">
-        <h2 className="text-lg font-semibold">What happened</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">
+      <section className="cs-panel rounded-2xl p-5">
+        <p className="cs-kicker">What happened</p>
+        <p className="mt-3 text-sm leading-6 text-muted">
           {denial?.denial_reason ??
             "This claim is awaiting payer review. When a denial arrives, Claimsure will explain it here in plain language."}
         </p>
@@ -90,17 +124,17 @@ export default function PatientCasePage() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="cs-panel rounded-3xl p-5">
-          <h2 className="text-lg font-semibold">Evidence checklist</h2>
+        <section className="cs-panel rounded-2xl p-5">
+          <p className="cs-kicker">Evidence checklist</p>
           <div className="mt-4">
             <EvidencePanel documents={claim.documents ?? []} />
           </div>
         </section>
-        <section className="cs-panel rounded-3xl p-5">
-          <h2 className="text-lg font-semibold">Upload a missing record</h2>
-          <p className="mt-1 text-sm text-muted">
-            Files are stored as metadata for now (Drive comes next). Uploading a
-            missing note moves the case back to analysis.
+        <section className="cs-panel rounded-2xl p-5">
+          <p className="cs-kicker">Upload a missing record</p>
+          <p className="mt-3 text-sm text-muted">
+            Files are stored as metadata for now. Uploading a missing note moves
+            the case back to analysis.
           </p>
           <form onSubmit={upload} className="mt-4 space-y-3">
             <input
@@ -124,12 +158,12 @@ export default function PatientCasePage() {
         </section>
       </div>
 
-      <section className="cs-panel rounded-3xl p-5">
-        <h2 className="text-lg font-semibold">Status timeline</h2>
+      <section className="cs-panel rounded-2xl p-5">
+        <p className="cs-kicker">Status timeline</p>
         <div className="mt-4">
           <CaseTimeline logs={logs} />
         </div>
       </section>
-    </div>
+    </WorkspaceFrame>
   );
 }

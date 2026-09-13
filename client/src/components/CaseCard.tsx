@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { relativeTime } from "@/lib/format";
 import type { ClaimCase } from "@/lib/types";
 
 export function CaseCard({
@@ -16,15 +17,17 @@ export function CaseCard({
   return (
     <Link
       href={href}
-      className="cs-panel block rounded-2xl p-4 transition hover:border-accent/40"
+      className="cs-panel block rounded-2xl p-4 transition hover:border-accent/35"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="font-mono text-xs text-muted">{claim.case_number}</p>
-          <h3 className="mt-1 text-base font-semibold">{claim.service_type}</h3>
+          <h3 className="mt-1 truncate text-base font-semibold">
+            {claim.service_type}
+          </h3>
           <p className="mt-1 text-sm text-muted">
-            {claim.service_code ?? "No CPT"} ·{" "}
-            {subtitle ?? claim.payer_id ?? "Payer"}
+            {claim.service_code ?? "CPT pending"} ·{" "}
+            {subtitle ?? claim.payer_id ?? "Payer pending"}
           </p>
         </div>
         <StatusBadge status={claim.status} />
@@ -34,6 +37,8 @@ export function CaseCard({
           {missing > 0
             ? `${missing} document${missing === 1 ? "" : "s"} missing`
             : "Evidence complete"}
+          <span className="text-border"> · </span>
+          {relativeTime(claim.updated_at)}
         </span>
         <span className="inline-flex items-center gap-1 text-accent">
           Open <ChevronRight size={14} />

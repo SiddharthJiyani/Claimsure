@@ -4,21 +4,28 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, FileUp, FolderOpen } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { EmptyState } from "@/components/EmptyState";
-import { PageHeader } from "@/components/PageHeader";
-import { StatCard } from "@/components/StatCard";
+import { ErrorCallout } from "@/components/ErrorCallout";
+import { PageHeader, WorkspaceFrame } from "@/components/PageHeader";
+import { QueueSkeleton, StatCard } from "@/components/StatCard";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { dayGreeting, displayName } from "@/lib/format";
 import { useCases } from "@/lib/use-workspace-data";
 
 export default function PatientDashboardPage() {
-  const { profile } = useAuth();
-  const { cases, error, reload, setError } = useCases();
+  const { profile, user } = useAuth();
+  const { cases, error, loading, reload, setError } = useCases();
   const [serviceType, setServiceType] = useState("");
   const [busy, setBusy] = useState(false);
+  const firstName = displayName({
+    fullName: profile?.full_name,
+    email: profile?.email ?? user?.email,
+  }).split(" ")[0];
 
   const stats = useMemo(
     () => ({
-      open: cases.filter((claim) => !["RESOLVED", "CLOSED"].includes(claim.status)).length,
+      open: cases.filter((claim) => !["RESOLVED", "CLOSED"].includes(claim.status))
+        .length,
       action: cases.filter((claim) => claim.status === "ACTION_REQUIRED").length,
       resolved: cases.filter((claim) => claim.status === "RESOLVED").length,
     }),
@@ -43,23 +50,26 @@ export default function PatientDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <WorkspaceFrame>
       <PageHeader
         eyebrow="Patient workspace"
-        title={`Denial recovery${profile?.full_name ? ` · ${profile.full_name.split(" ")[0]}` : ""}`}
-        description="Track your prior-authorization and denial cases, upload missing clinical evidence, and follow appeal status. Only your claims appear here."
+        title={`${dayGreeting()}, ${firstName}`}
+        description="Track prior-authorization and denial cases, upload missing clinical evidence, and follow appeal status. Only your claims appear here."
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="cs-panel grid gap-0 overflow-hidden rounded-2xl md:grid-cols-3">
         {[
-          ["1", "Submit the denied service", "Start from the denial or pending prior-auth request."],
-          ["2", "Upload missing records", "Clinical notes and orders the payer still needs."],
-          ["3", "Watch status move", "Action required, appeal, or resolved — in one timeline."],
+          ["01", "Submit the denied service", "Start from the denial or pending prior-auth request."],
+          ["02", "Upload missing records", "Clinical notes and orders the payer still needs."],
+          ["03", "Watch status move", "Action required, appeal, or resolved — in one timeline."],
         ].map(([step, title, copy]) => (
-          <div key={step} className="cs-panel rounded-2xl p-4">
-            <p className="font-mono text-xs text-accent">{step}</p>
+          <div
+            key={step}
+            className="border-t border-border px-5 py-4 first:border-t-0 md:border-l md:border-t-0 md:first:border-l-0"
+          >
+            <p className="font-mono text-[11px] text-accent">{step}</p>
             <p className="mt-2 text-sm font-semibold">{title}</p>
-            <p className="mt-1 text-xs leading-5 text-muted">{copy}</p>
+            <p className="mt-1 text-sm leading-6 text-muted">{copy}</p>
           </div>
         ))}
       </div>
@@ -76,10 +86,10 @@ export default function PatientDashboardPage() {
       </div>
 
       {error ? (
-        <p className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
+        <ErrorCallout message={error} onRetry={() => void reload()} />
       ) : null}
 
-      <section className="cs-panel rounded-3xl p-6">
+      <section className="cs-panel rounded-2xl p-5">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 rounded-xl bg-accent/12 p-2 text-accent">
             <FileUp size={18} />
@@ -105,9 +115,11 @@ export default function PatientDashboardPage() {
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Your claims</h2>
-        {cases.length === 0 ? (
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Your claims</h2>
+        {loading ? (
+          <QueueSkeleton />
+        ) : cases.length === 0 ? (
           <EmptyState
             title="No claims yet"
             description="When a payer denies or delays a service, create the claim above. Nothing is preloaded."
@@ -115,11 +127,16 @@ export default function PatientDashboardPage() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {cases.map((claim) => (
-              <CaseCard key={claim.id} claim={claim} href={`/patient/cases/${claim.id}`} subtitle="Your claim" />
+              <CaseCard
+                key={claim.id}
+                claim={claim}
+                href={`/patient/cases/${claim.id}`}
+                subtitle="Your claim"
+              />
             ))}
           </div>
         )}
       </section>
-    </div>
+    </WorkspaceFrame>
   );
 }

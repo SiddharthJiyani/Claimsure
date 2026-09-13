@@ -1,14 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bot } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
 import { AgentTrace } from "@/components/AgentTrace";
 import { ApprovalCard } from "@/components/ApprovalCard";
 import { CaseTimeline } from "@/components/CaseTimeline";
+import { ErrorCallout } from "@/components/ErrorCallout";
 import { EvidencePanel } from "@/components/EvidencePanel";
+import { WorkspaceFrame } from "@/components/PageHeader";
+import { QueueSkeleton } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, appFetch } from "@/lib/api";
 import type { ClaimCase } from "@/lib/types";
 
 export default function InsuranceCasePage() {
@@ -19,10 +23,19 @@ export default function InsuranceCasePage() {
 
   async function load() {
     try {
-      const data = await apiFetch<{ case: ClaimCase }>(`/cases/${params.id}`);
+      const data = await appFetch<{ case: ClaimCase }>(
+        `/api/workspace/cases/${params.id}`,
+      );
       setClaim(data.case);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load case");
+      setError(null);
+    } catch {
+      try {
+        const data = await apiFetch<{ case: ClaimCase }>(`/cases/${params.id}`);
+        setClaim(data.case);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not load case");
+      }
     }
   }
 
@@ -44,7 +57,15 @@ export default function InsuranceCasePage() {
   }
 
   if (!claim) {
-    return <p className="text-sm text-muted">{error ?? "Loading case…"}</p>;
+    return (
+      <WorkspaceFrame>
+        {error ? (
+          <ErrorCallout message={error} onRetry={() => void load()} />
+        ) : (
+          <QueueSkeleton rows={5} />
+        )}
+      </WorkspaceFrame>
+    );
   }
 
   const denial = claim.denials?.[0];
@@ -55,14 +76,24 @@ export default function InsuranceCasePage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <WorkspaceFrame>
+      <Link
+        href="/insurance/cases"
+        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
+      >
+        <ArrowLeft size={14} />
+        Back to queue
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs text-muted">{claim.case_number}</p>
-          <h1 className="mt-1 text-3xl font-semibold">{claim.service_type}</h1>
-          <p className="mt-1 text-sm text-muted">
+          <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">
+            {claim.service_type}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
             {claim.service_code ?? "CPT pending"} · payer{" "}
-            {claim.payer_id ?? "unknown"}
+            {claim.payer_id ?? "pending"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -79,30 +110,32 @@ export default function InsuranceCasePage() {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <ErrorCallout message={error} onRetry={() => void load()} />
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="cs-panel rounded-3xl p-5">
-          <h2 className="text-lg font-semibold">Denial</h2>
-          <p className="mt-2 text-sm text-muted">
+        <section className="cs-panel rounded-2xl p-5">
+          <p className="cs-kicker">Denial</p>
+          <p className="mt-3 text-sm leading-6 text-muted">
             {denial?.denial_reason ?? "No denial letter parsed yet."}
           </p>
           {denial?.denial_code ? (
-            <p className="mt-2 font-mono text-xs text-accent">
+            <p className="mt-3 font-mono text-xs text-accent">
               {denial.denial_code}
             </p>
           ) : null}
         </section>
-        <section className="cs-panel rounded-3xl p-5">
-          <h2 className="text-lg font-semibold">Evidence</h2>
+        <section className="cs-panel rounded-2xl p-5">
+          <p className="cs-kicker">Evidence</p>
           <div className="mt-3">
             <EvidencePanel documents={claim.documents ?? []} />
           </div>
         </section>
       </div>
 
-      <section className="cs-panel rounded-3xl p-5">
-        <h2 className="text-lg font-semibold">Agent reasoning</h2>
+      <section className="cs-panel rounded-2xl p-5">
+        <p className="cs-kicker">Agent reasoning</p>
         <div className="mt-3">
           <AgentTrace states={claim.agent_state ?? []} />
         </div>
@@ -111,18 +144,17 @@ export default function InsuranceCasePage() {
       {appeal ? (
         <ApprovalCard appeal={appeal} onChanged={() => void load()} />
       ) : (
-        <p className="text-sm text-muted">
-          No appeal draft yet. Trigger the agent to generate one after evidence
-          is complete.
-        </p>
+        <div className="cs-panel rounded-2xl px-5 py-6 text-sm text-muted">
+          No appeal draft yet. Trigger the agent after evidence is complete.
+        </div>
       )}
 
-      <section className="cs-panel rounded-3xl p-5">
-        <h2 className="text-lg font-semibold">Audit trail</h2>
+      <section className="cs-panel rounded-2xl p-5">
+        <p className="cs-kicker">Audit trail</p>
         <div className="mt-4">
           <CaseTimeline logs={logs} />
         </div>
       </section>
-    </div>
+    </WorkspaceFrame>
   );
 }

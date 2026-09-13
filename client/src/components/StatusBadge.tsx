@@ -29,7 +29,7 @@ const LABELS: Record<CaseStatus, string> = {
 export function StatusBadge({ status }: { status: CaseStatus }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}
     >
       {LABELS[status]}
     </span>
