@@ -8,23 +8,12 @@ import { z } from "zod";
 
 const envSchema = z.object({
   // Server
-<<<<<<< HEAD
   PORT: z.coerce.number().int().positive().default(5001),
   NODE_ENV: z.enum(['development', 'production', 'test'] as const).default('development'),
   DRY_RUN: z
     .string()
     .default('false')
     .transform((v) => v.toLowerCase() === 'true'),
-=======
-  PORT: z.coerce.number().int().positive().default(5000),
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-  DRY_RUN: z
-    .string()
-    .transform((v) => v.toLowerCase() === "true")
-    .default("false"),
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
   // Supabase
   SUPABASE_URL: z.string().url({ message: "SUPABASE_URL must be a valid URL" }),
@@ -78,15 +67,9 @@ function loadEnv() {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-<<<<<<< HEAD
     console.error('❌ Invalid environment configuration:');
     result.error.issues.forEach((err) => {
       console.error(`  ${err.path.join('.')}: ${err.message}`);
-=======
-    console.error("❌ Invalid environment configuration:");
-    result.error.errors.forEach((err) => {
-      console.error(`  ${err.path.join(".")}: ${err.message}`);
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
     process.exit(1);
   }

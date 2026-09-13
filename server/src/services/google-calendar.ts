@@ -3,30 +3,16 @@
  * Events are added to the shared calendar (GOOGLE_CALENDAR_ID).
  */
 
-<<<<<<< HEAD
 import { google, type calendar_v3 } from 'googleapis';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { getGoogleAuth } from './google-auth.js';
-=======
-import { google, type calendar_v3 } from "googleapis";
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 const DRY_RUN_EVENT_ID = "DRY_RUN_EVENT_ID";
 
 function getCalendarClient(): calendar_v3.Calendar {
-<<<<<<< HEAD
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/calendar']);
   return google.calendar({ version: 'v3', auth });
-=======
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ["https://www.googleapis.com/auth/calendar"],
-  });
-  return google.calendar({ version: "v3", auth });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 }
 
 export interface CalendarEvent {
@@ -59,13 +45,8 @@ export async function createAppealDeadlineEvent(
     };
   }
 
-<<<<<<< HEAD
   if (!env.GOOGLE_CALENDAR_ID) {
     logger.warn('Calendar not configured, skipping event creation');
-=======
-  if (!env.GOOGLE_CALENDAR_ID || !env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    logger.warn("Calendar not configured, skipping event creation");
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     return {
       id: "NOT_CONFIGURED",
       summary: input.summary,

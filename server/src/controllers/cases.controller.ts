@@ -42,18 +42,9 @@ export async function getCases(
 
     // Build org-scoped filter based on role
     const filter =
-<<<<<<< HEAD
       user.role === 'patient'
         ? { patient_id: user.id, ...(query.status !== undefined ? { status: query.status } : {}) }
         : { ...(user.organization_id !== undefined ? { insurer_org_id: user.organization_id } : {}), ...(query.status !== undefined ? { status: query.status } : {}) } as any;
-=======
-      user.role === "patient"
-        ? { patient_id: user.id, status: query.status }
-        : {
-            insurer_org_id: user.organization_id ?? undefined,
-            status: query.status,
-          };
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
     const result = await listCases(filter, {
       page: query.page,

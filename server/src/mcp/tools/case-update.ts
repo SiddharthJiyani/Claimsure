@@ -112,20 +112,9 @@ export function caseUpdateTool(server: McpServer): void {
 
         // Cache idempotency result
         if (idempotency_key) {
-<<<<<<< HEAD
           void supabase
             .from('idempotency_keys')
             .upsert({ key: idempotency_key, response: result }, { onConflict: 'key' });
-=======
-          supabase
-            .from("idempotency_keys")
-            .upsert(
-              { key: idempotency_key, response: result },
-              { onConflict: "key" },
-            )
-            .then(() => {})
-            .catch(() => {});
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
         }
 
         logger.info("MCP case_update completed", { case_id, status });

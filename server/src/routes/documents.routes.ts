@@ -1,23 +1,13 @@
-<<<<<<< HEAD
 import multer from 'multer';
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-=======
-import { Router } from "express";
-import { requireAuth } from "../middleware/auth.js";
-import { validate } from "../middleware/validate.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 import {
   listDocuments,
   uploadDocument,
   updateDocumentMissing,
-<<<<<<< HEAD
 } from '../controllers/documents.controller.js';
 import { uploadDocumentAndAnalyze } from '../controllers/upload.controller.js';
-=======
-} from "../controllers/documents.controller.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 import {
   createDocumentSchema,
   markMissingSchema,

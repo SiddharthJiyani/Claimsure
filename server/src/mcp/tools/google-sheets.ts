@@ -22,10 +22,10 @@ function caseFromArgs(args: {
   case_number: string;
   status: CaseStatus;
   service_type: string;
-  service_code?: string;
+  service_code?: string | undefined;
   patient_id: string;
   insurer_org_id: string;
-  payer_id?: string;
+  payer_id?: string | undefined;
 }): Case {
   const now = new Date().toISOString();
   return {

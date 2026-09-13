@@ -4,7 +4,6 @@
  * or falls back to SMTP configuration if configured.
  */
 
-<<<<<<< HEAD
 import { google } from 'googleapis';
 import nodemailer, { type Transporter } from 'nodemailer';
 import { env } from '../config/env.js';
@@ -38,20 +37,6 @@ function getGmailClient() {
     env.GMAIL_SENDER_EMAIL,
   );
   return google.gmail({ version: 'v1', auth });
-=======
-import { google } from "googleapis";
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
-
-function getGmailClient() {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ["https://www.googleapis.com/auth/gmail.send"],
-    // For service account with domain-wide delegation:
-    clientOptions: { subject: env.GMAIL_SENDER_EMAIL },
-  });
-  return google.gmail({ version: "v1", auth });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 }
 
 export interface SendEmailInput {
@@ -87,7 +72,6 @@ export async function sendEmail(
     return { messageId: "DRY_RUN_MSG_ID" };
   }
 
-<<<<<<< HEAD
   if (smtpConfigured()) {
     try {
       const res = await getSmtpClient().sendMail({
@@ -114,11 +98,6 @@ export async function sendEmail(
   if (!env.GMAIL_SENDER_EMAIL) {
     logger.warn('Gmail and SMTP are not configured, skipping email send');
     return { messageId: 'NOT_CONFIGURED' };
-=======
-  if (!env.GMAIL_SENDER_EMAIL || !env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    logger.warn("Gmail not configured, skipping email send");
-    return { messageId: "NOT_CONFIGURED" };
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   }
 
   try {

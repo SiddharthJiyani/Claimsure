@@ -3,16 +3,10 @@
  * All agent processing requests flow through here.
  */
 
-<<<<<<< HEAD
 
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { ServiceUnavailableError } from '../lib/errors.js';
-=======
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
-import { ServiceUnavailableError } from "../lib/errors.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 const BASE_URL = env.AI_SERVER_URL;
 const TIMEOUT_MS = env.AI_SERVER_TIMEOUT_MS;
@@ -102,13 +96,8 @@ async function request<T>(
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
       method,
-<<<<<<< HEAD
       headers: { 'Content-Type': 'application/json' },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-=======
-      headers: { "Content-Type": "application/json" },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
       signal: controller.signal,
     });
 
@@ -134,16 +123,8 @@ async function request<T>(
 /**
  * processCase — triggers the full 9-node agent on a case.
  */
-<<<<<<< HEAD
 export async function processCase(caseId: string, dryRun = false): Promise<ProcessCaseResult> {
   const response = await request<WorkflowProcessResponse>('POST', '/api/workflow/process-case', {
-=======
-export async function processCase(
-  caseId: string,
-  dryRun = false,
-): Promise<ProcessCaseResult> {
-  return request<ProcessCaseResult>("POST", "/api/process-case", {
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     case_id: caseId,
     dry_run: dryRun || env.DRY_RUN,
   });

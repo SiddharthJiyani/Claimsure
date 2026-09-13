@@ -4,7 +4,6 @@
  * Production: switch signUp back to getAnonClient() and enable email confirmation in Supabase dashboard.
  */
 
-<<<<<<< HEAD
 import type { Request, Response, NextFunction } from 'express';
 import { getAnonClient, getServiceClient } from '../database/supabase.js';
 import { createProfile, getProfileById } from '../database/queries/profiles.js';
@@ -12,18 +11,6 @@ import { sendSuccess, sendCreated } from '../lib/response.js';
 import { AuthenticationError, ConflictError } from '../lib/errors.js';
 import type { AuthUser } from '../types/index.js';
 import type { SignUpInput, LoginInput, ResetPasswordInput } from '../validators/auth.validator.js';
-=======
-import type { Request, Response, NextFunction } from "express";
-import { supabaseAnon } from "../database/supabase.js";
-import { createProfile, upsertProfile } from "../database/queries/profiles.js";
-import { sendSuccess, sendCreated } from "../lib/response.js";
-import { AuthenticationError, ConflictError } from "../lib/errors.js";
-import type {
-  SignUpInput,
-  LoginInput,
-  ResetPasswordInput,
-} from "../validators/auth.validator.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 export async function signUp(
   req: Request,
@@ -47,14 +34,9 @@ export async function signUp(
     });
 
     if (error) {
-<<<<<<< HEAD
       const msg = error.message.toLowerCase();
       if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique')) {
         throw new ConflictError('An account with this email already exists');
-=======
-      if (error.message.toLowerCase().includes("already registered")) {
-        throw new ConflictError("An account with this email already exists");
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
       }
       throw new AuthenticationError(error.message);
     }
@@ -80,14 +62,10 @@ export async function signUp(
           role: profile.role,
           organization_id: profile.organization_id,
         },
-        session: data.session,
+        session: null,
       },
-<<<<<<< HEAD
-    }, 'Account created. You can log in immediately.');
-=======
-      "Account created. Please check your email for verification.",
+      "Account created. You can log in immediately."
     );
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
@@ -110,7 +88,6 @@ export async function login(
       throw new AuthenticationError("Invalid email or password");
     }
 
-<<<<<<< HEAD
     let profile;
     try {
       profile = await getProfileById(data.user.id);
@@ -123,18 +100,6 @@ export async function login(
         role: data.user.user_metadata?.['role'] as 'patient' | 'insurance_provider' ?? 'patient',
       });
     }
-=======
-    // Upsert profile (handles edge cases where profile may not exist yet)
-    await upsertProfile({
-      id: data.user.id,
-      email: data.user.email ?? body.email,
-      full_name:
-        (data.user.user_metadata?.["full_name"] as string) ?? "Unknown",
-      role:
-        (data.user.user_metadata?.["role"] as
-          "patient" | "insurance_provider") ?? "patient",
-    });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
     sendSuccess(
       res,
@@ -146,23 +111,15 @@ export async function login(
           token_type: data.session.token_type,
         },
         user: {
-          id: data.user.id,
-          email: data.user.email,
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          role: profile.role,
+          organization_id: profile.organization_id,
         },
       },
-<<<<<<< HEAD
-      user: {
-        id: profile.id,
-        email: profile.email,
-        full_name: profile.full_name,
-        role: profile.role,
-        organization_id: profile.organization_id,
-      },
-    }, 'Login successful');
-=======
-      "Login successful",
+      "Login successful"
     );
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
@@ -179,13 +136,8 @@ export async function logout(
       throw new AuthenticationError("Bearer token required");
     }
 
-<<<<<<< HEAD
     await getAnonClient().auth.signOut();
     sendSuccess(res, null, 'Logged out successfully');
-=======
-    await supabaseAnon.auth.signOut();
-    sendSuccess(res, null, "Logged out successfully");
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     next(err);
   }
@@ -212,18 +164,9 @@ export async function resetPassword(
   try {
     const body = req.body as ResetPasswordInput;
 
-<<<<<<< HEAD
     const { error } = await getAnonClient().auth.resetPasswordForEmail(body.email, {
       redirectTo: `${process.env['CORS_ALLOWED_ORIGINS']?.split(',')[0]}/reset-password`,
     });
-=======
-    const { error } = await supabaseAnon.auth.resetPasswordForEmail(
-      body.email,
-      {
-        redirectTo: `${process.env["CORS_ALLOWED_ORIGINS"]?.split(",")[0]}/reset-password`,
-      },
-    );
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
     if (error) throw new AuthenticationError(error.message);
 

@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const documentTypeEnum = z.enum([
-<<<<<<< HEAD
   'denial_letter',
   'clinical_note',
   'mri_report',
@@ -11,17 +10,6 @@ const documentTypeEnum = z.enum([
   'policy_document',
   'other',
 ] as const);
-=======
-  "denial_letter",
-  "clinical_note",
-  "mri_report",
-  "lab_result",
-  "prior_auth_form",
-  "appeal_letter",
-  "policy_document",
-  "other",
-]);
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 export const createDocumentSchema = z.object({
   name: z.string().min(1, "Document name is required").max(255),

@@ -33,15 +33,7 @@ export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
 export function sendSuccess<T>(
   res: Response,
   data: T,
-<<<<<<< HEAD
   optionsOrMessage?: string | { message?: string; statusCode?: number; meta?: Record<string, unknown> },
-=======
-  options?: {
-    message?: string;
-    statusCode?: number;
-    meta?: Record<string, unknown>;
-  },
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 ): void {
   const options = typeof optionsOrMessage === 'string' ? { message: optionsOrMessage } : optionsOrMessage;
   const { message, statusCode = 200, meta } = options ?? {};

@@ -4,19 +4,11 @@
  * Row format: [CaseNumber, Status, PatientId, InsurerOrg, ServiceType, UpdatedAt]
  */
 
-<<<<<<< HEAD
 import { google, type sheets_v4 } from 'googleapis';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import type { Case } from '../types/index.js';
 import { getGoogleAuth } from './google-auth.js';
-=======
-import { google, type sheets_v4 } from "googleapis";
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
-import { ServiceUnavailableError } from "../lib/errors.js";
-import type { Case } from "../types/index.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 const SHEET_NAME = "Cases";
 const HEADER_ROW = [
@@ -31,23 +23,8 @@ const HEADER_ROW = [
 ];
 
 function getSheetsClient(): sheets_v4.Sheets {
-<<<<<<< HEAD
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
   return google.sheets({ version: 'v4', auth });
-=======
-  if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    throw new ServiceUnavailableError(
-      "Google Sheets (service account not configured)",
-    );
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-
-  return google.sheets({ version: "v4", auth });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 }
 
 function caseToRow(c: Case): string[] {
@@ -112,23 +89,14 @@ export async function ensureHeaderRow(): Promise<void> {
     if (!hasExpectedHeader) {
       await sheets.spreadsheets.values.update({
         spreadsheetId: env.GOOGLE_SHEETS_ID,
-<<<<<<< HEAD
         range: `${SHEET_NAME}!A1:H1`,
         valueInputOption: 'RAW',
-=======
-        range: `${SHEET_NAME}!A1`,
-        valueInputOption: "RAW",
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
         requestBody: { values: [HEADER_ROW] },
       });
     }
   } catch (err) {
-<<<<<<< HEAD
     logger.warn('Failed to ensure Sheets header row', { err });
     throw err;
-=======
-    logger.warn("Failed to ensure Sheets header row", { err });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   }
 }
 
@@ -157,13 +125,8 @@ export async function appendCaseRow(caseData: Case): Promise<void> {
     });
     logger.info("Sheets row appended", { caseNumber: caseData.case_number });
   } catch (err) {
-<<<<<<< HEAD
     logger.error('Sheets append failed', err);
     throw err;
-=======
-    logger.error("Sheets append failed", err);
-    // Non-fatal: don't throw, just log
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   }
 }
 
@@ -206,12 +169,7 @@ export async function updateCaseRow(caseData: Case): Promise<void> {
 
     logger.info("Sheets row updated", { caseNumber: caseData.case_number });
   } catch (err) {
-<<<<<<< HEAD
     logger.error('Sheets update failed', err);
     throw err;
-=======
-    logger.error("Sheets update failed", err);
-    // Non-fatal: don't throw
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   }
 }

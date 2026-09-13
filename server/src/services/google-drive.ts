@@ -5,41 +5,18 @@
  * the actual binary content lives only in Drive.
  */
 
-<<<<<<< HEAD
 import { google, type drive_v3 } from 'googleapis';
 import { Readable } from 'stream';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 import { ServiceUnavailableError } from '../lib/errors.js';
 import { getGoogleAuth } from './google-auth.js';
-=======
-import { google, type drive_v3 } from "googleapis";
-import { Readable } from "stream";
-import { env } from "../config/env.js";
-import { logger } from "../lib/logger.js";
-import { ServiceUnavailableError } from "../lib/errors.js";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 
 function getDriveClient(): drive_v3.Drive {
-<<<<<<< HEAD
   const auth = getGoogleAuth(['https://www.googleapis.com/auth/drive']);
   return google.drive({ version: 'v3', auth });
-=======
-  if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
-    throw new ServiceUnavailableError(
-      "Google Drive (service account not configured)",
-    );
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    keyFile: env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ["https://www.googleapis.com/auth/drive"],
-  });
-
-  return google.drive({ version: "v3", auth });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 }
 
 // ─── DRY_RUN Fixtures ─────────────────────────────────────────────────────────
@@ -119,12 +96,8 @@ export async function getFileMetadata(fileId: string): Promise<DriveFile> {
     const drive = getDriveClient();
     const res = await drive.files.get({
       fileId,
-<<<<<<< HEAD
       supportsAllDrives: true,
       fields: 'id, name, mimeType, webViewLink, size, createdTime',
-=======
-      fields: "id, name, mimeType, webViewLink, size, createdTime",
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
     return res.data as DriveFile;
   } catch (err) {
@@ -147,15 +120,10 @@ export async function listFilesInFolder(
 
     const res = await drive.files.list({
       q: `'${targetFolder}' in parents and trashed = false`,
-<<<<<<< HEAD
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
       fields: 'files(id, name, mimeType, webViewLink, size, createdTime)',
       orderBy: 'createdTime desc',
-=======
-      fields: "files(id, name, mimeType, webViewLink, size, createdTime)",
-      orderBy: "createdTime desc",
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
 
     return (res.data.files ?? []) as DriveFile[];
@@ -180,13 +148,9 @@ export async function searchFiles(
 
     const res = await drive.files.list({
       q: `name contains '${query}'${folderClause} and trashed = false`,
-<<<<<<< HEAD
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
       fields: 'files(id, name, mimeType, webViewLink, size, createdTime)',
-=======
-      fields: "files(id, name, mimeType, webViewLink, size, createdTime)",
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     });
 
     return (res.data.files ?? []) as DriveFile[];
@@ -202,13 +166,8 @@ export async function downloadFileContent(fileId: string): Promise<Buffer> {
   try {
     const drive = getDriveClient();
     const res = await drive.files.get(
-<<<<<<< HEAD
       { fileId, alt: 'media', supportsAllDrives: true },
       { responseType: 'arraybuffer' },
-=======
-      { fileId, alt: "media" },
-      { responseType: "arraybuffer" },
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
     );
     return Buffer.from(res.data as ArrayBuffer);
   } catch (err) {
@@ -225,13 +184,8 @@ export async function deleteFile(fileId: string): Promise<void> {
 
   try {
     const drive = getDriveClient();
-<<<<<<< HEAD
     await drive.files.delete({ fileId, supportsAllDrives: true });
     logger.info('Drive file deleted', { fileId });
-=======
-    await drive.files.delete({ fileId });
-    logger.info("Drive file deleted", { fileId });
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
   } catch (err) {
     logger.error("Drive delete failed", err);
     throw new ServiceUnavailableError("Google Drive");
