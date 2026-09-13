@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { AuthSplit, ShieldMark, authFieldClass } from "@/components/AuthSplit";
+import {
+  AuthSplit,
+  ShieldMark,
+  authFieldClass,
+  authPrimaryButtonClass,
+} from "@/components/AuthSplit";
 import { GoogleButton } from "@/components/GoogleButton";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured, siteUrl } from "@/lib/env";
@@ -66,26 +71,26 @@ function LoginForm() {
   return (
     <AuthSplit>
       <div className="mb-5 flex items-center gap-3 lg:hidden">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#2dd4bf] text-[#04201c]">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-accent-ink">
           <ShieldMark />
         </span>
         <span className="text-lg font-bold">Claimsure AI</span>
       </div>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2dd4bf]">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
           Welcome back
         </p>
         <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Sign in</h2>
-        <p className="mt-2 text-sm leading-6 text-[#9aabc2]">
+        <p className="mt-2 text-sm leading-6 text-muted">
           One door for patients and healthcare teams. Your role opens the right
           workspace.
         </p>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center">
+      <div className="mt-8">
         {!configured ? (
-          <p className="mb-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
+          <p className="mb-4 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm text-warn">
             Add your Supabase keys to{" "}
             <span className="font-mono">client/.env.local</span>.
           </p>
@@ -117,29 +122,29 @@ function LoginForm() {
           <div className="flex justify-end">
             <Link
               href="/forgot-password"
-              className="text-xs text-[#9aabc2] hover:text-[#2dd4bf]"
+              className="text-xs text-muted hover:text-accent"
             >
               Forgot password?
             </Link>
           </div>
           {error ? (
-            <p className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-sm text-rose-300">
+            <p className="rounded-xl border border-danger/20 bg-danger/10 px-3 py-2 text-sm text-danger">
               {error}
             </p>
           ) : null}
           <button
             type="submit"
             disabled={busy || !configured}
-            className="w-full rounded-full bg-[#2dd4bf] px-5 py-2.5 text-sm font-semibold text-[#04201c] transition hover:bg-[#5eead4] disabled:cursor-not-allowed disabled:opacity-55"
+            className={authPrimaryButtonClass}
           >
             {busy ? "Signing in…" : "Sign in with email"}
           </button>
         </form>
 
-        <div className="my-4 flex items-center gap-3 text-xs text-[#9aabc2]">
-          <span className="h-px flex-1 bg-[#243247]" />
+        <div className="my-4 flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-border" />
           OR
-          <span className="h-px flex-1 bg-[#243247]" />
+          <span className="h-px flex-1 bg-border" />
         </div>
 
         <GoogleButton
@@ -149,11 +154,11 @@ function LoginForm() {
         />
       </div>
 
-      <p className="pt-4 text-center text-sm text-[#9aabc2]">
+      <p className="mt-8 text-center text-sm text-muted">
         New here?{" "}
         <Link
           href="/signup"
-          className="font-medium text-[#2dd4bf] hover:underline"
+          className="font-medium text-accent hover:underline"
         >
           Create an account
         </Link>

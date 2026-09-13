@@ -13,6 +13,8 @@
   --color-muted: var(--cs-muted);
   --color-accent: var(--cs-accent);
   --color-accent-2: var(--cs-accent-2);
+  --color-accent-ink: var(--cs-accent-ink);
+  --color-placeholder: var(--cs-placeholder);
   --color-danger: var(--cs-danger);
   --color-warn: var(--cs-warn);
   --color-success: var(--cs-success);
