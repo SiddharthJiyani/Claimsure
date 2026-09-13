@@ -54,7 +54,7 @@ export function ApprovalCard({
             type="button"
             disabled={busy !== null}
             onClick={() => void decide("approve")}
-            className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-background disabled:opacity-60"
+            className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-[color:var(--cs-accent-ink)] disabled:opacity-60"
           >
             {busy === "approve" ? "Approving…" : "Approve"}
           </button>

@@ -53,7 +53,7 @@ export default function InsuranceAgentPage() {
           {NODES.map(([title, copy], index) => (
             <div
               key={title}
-              className="rounded-xl border border-border bg-background/40 px-3.5 py-3"
+              className="rounded-xl border border-border bg-surface-2/80 px-3.5 py-3"
             >
               <p className="font-mono text-[11px] text-accent">
                 {String(index + 1).padStart(2, "0")}

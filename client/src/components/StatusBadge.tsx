@@ -1,16 +1,16 @@
 import type { CaseStatus } from "@/lib/types";
 
 const STYLES: Record<CaseStatus, string> = {
-  PENDING: "bg-slate-500/15 text-slate-200 border-slate-400/30",
-  ANALYZING: "bg-sky-500/15 text-sky-200 border-sky-400/30",
-  ACTION_REQUIRED: "bg-amber-500/15 text-amber-200 border-amber-400/30",
-  AWAITING_REVIEW: "bg-violet-500/15 text-violet-200 border-violet-400/30",
-  APPEAL_READY: "bg-teal-500/15 text-teal-200 border-teal-400/30",
-  SUBMITTED: "bg-blue-500/15 text-blue-200 border-blue-400/30",
-  VERIFYING: "bg-cyan-500/15 text-cyan-200 border-cyan-400/30",
-  RESOLVED: "bg-emerald-500/15 text-emerald-200 border-emerald-400/30",
-  ESCALATED: "bg-rose-500/15 text-rose-200 border-rose-400/30",
-  CLOSED: "bg-zinc-500/15 text-zinc-300 border-zinc-400/30",
+  PENDING: "cs-status-pending",
+  ANALYZING: "cs-status-analyzing",
+  ACTION_REQUIRED: "cs-status-action",
+  AWAITING_REVIEW: "cs-status-review",
+  APPEAL_READY: "cs-status-appeal",
+  SUBMITTED: "cs-status-submitted",
+  VERIFYING: "cs-status-verifying",
+  RESOLVED: "cs-status-resolved",
+  ESCALATED: "cs-status-escalated",
+  CLOSED: "cs-status-closed",
 };
 
 const LABELS: Record<CaseStatus, string> = {
@@ -28,10 +28,6 @@ const LABELS: Record<CaseStatus, string> = {
 
 export function StatusBadge({ status }: { status: CaseStatus }) {
   return (
-    <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}
-    >
-      {LABELS[status]}
-    </span>
+    <span className={`cs-status ${STYLES[status]}`}>{LABELS[status]}</span>
   );
 }

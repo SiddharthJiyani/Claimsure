@@ -10,13 +10,15 @@ import { QueueSkeleton } from "@/components/StatCard";
 import { useCases } from "@/lib/use-workspace-data";
 import type { CaseStatus } from "@/lib/types";
 
-const FILTERS: Array<{ id: "all" | "review" | "running" | "done"; label: string }> =
-  [
-    { id: "all", label: "All" },
-    { id: "review", label: "Needs review" },
-    { id: "running", label: "In progress" },
-    { id: "done", label: "Resolved" },
-  ];
+const FILTERS: Array<{
+  id: "all" | "review" | "running" | "done";
+  label: string;
+}> = [
+  { id: "all", label: "All" },
+  { id: "review", label: "Needs review" },
+  { id: "running", label: "In progress" },
+  { id: "done", label: "Resolved" },
+];
 
 const REVIEW: CaseStatus[] = [
   "ACTION_REQUIRED",
@@ -83,7 +85,11 @@ export default function InsuranceCasesPage() {
       ) : visible.length === 0 ? (
         <EmptyState
           icon={Inbox}
-          title={cases.length === 0 ? "No organization cases" : "Nothing in this filter"}
+          title={
+            cases.length === 0
+              ? "No organization cases"
+              : "Nothing in this filter"
+          }
           description={
             cases.length === 0
               ? "Cases arrive when a patient in your organization submits a denied or pending service."

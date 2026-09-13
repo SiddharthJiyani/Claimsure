@@ -4,7 +4,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
 
-const themeBoot = `(function(){try{var t=localStorage.getItem("claimsure-theme");document.documentElement.dataset.theme=t==="light"?"light":"dark";}catch(e){document.documentElement.dataset.theme="dark";}})();`;
+const themeBoot = `(function(){try{var t=localStorage.getItem("claimsure-theme")==="light"?"light":"dark";var r=document.documentElement;r.setAttribute("data-theme",t);r.style.colorScheme=t;r.classList.toggle("light",t==="light");r.classList.toggle("dark",t==="dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +31,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      data-theme="dark"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className} h-full antialiased`}
     >
       <head>
+        <meta name="theme-color" content="#070b12" />
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>
       <body className="flex min-h-full flex-col">

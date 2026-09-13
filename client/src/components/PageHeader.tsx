@@ -40,9 +40,5 @@ export function WorkspaceFrame({
       : width === "medium"
         ? "max-w-4xl"
         : "max-w-6xl";
-  return (
-    <div className={`mx-auto w-full space-y-7 ${max}`}>
-      {children}
-    </div>
-  );
+  return <div className={`mx-auto w-full space-y-7 ${max}`}>{children}</div>;
 }

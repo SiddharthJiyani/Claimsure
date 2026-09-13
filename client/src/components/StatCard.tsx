@@ -33,7 +33,7 @@ export function QueueSkeleton({ rows = 4 }: { rows?: number }) {
       {Array.from({ length: rows }, (_, index) => (
         <div
           key={index}
-          className="h-16 animate-pulse border-t border-border/70 first:border-t-0"
+          className="cs-skeleton h-16 border-t border-border/70 first:border-t-0"
           style={{ opacity: 1 - index * 0.12 }}
         />
       ))}

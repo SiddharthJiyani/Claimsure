@@ -29,7 +29,8 @@ export function NotificationList() {
   }
 
   if (loading) return <QueueSkeleton rows={3} />;
-  if (error) return <ErrorCallout message={error} onRetry={() => void reload()} />;
+  if (error)
+    return <ErrorCallout message={error} onRetry={() => void reload()} />;
 
   if (items.length === 0) {
     return (
@@ -53,7 +54,9 @@ export function NotificationList() {
                 ) : null}
                 <p className="text-sm font-semibold">{item.title}</p>
               </div>
-              <p className="mt-1 text-sm leading-6 text-muted">{item.message}</p>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                {item.message}
+              </p>
               <p className="mt-2 text-xs text-muted">
                 {relativeTime(item.created_at)}
               </p>

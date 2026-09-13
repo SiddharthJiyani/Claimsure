@@ -33,15 +33,30 @@ const PATIENT_SECTIONS = [
   {
     label: "Care",
     links: [
-      { href: "/patient", label: "Overview", icon: Home, badge: "open" as const },
-      { href: "/patient/claims", label: "Claims", icon: FolderOpen, badge: "all" as const },
+      {
+        href: "/patient",
+        label: "Overview",
+        icon: Home,
+        badge: "open" as const,
+      },
+      {
+        href: "/patient/claims",
+        label: "Claims",
+        icon: FolderOpen,
+        badge: "all" as const,
+      },
       { href: "/patient/documents", label: "Documents", icon: Files },
     ],
   },
   {
     label: "Account",
     links: [
-      { href: "/patient/notifications", label: "Alerts", icon: Bell, badge: "alerts" as const },
+      {
+        href: "/patient/notifications",
+        label: "Alerts",
+        icon: Bell,
+        badge: "alerts" as const,
+      },
       { href: "/patient/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -51,21 +66,41 @@ const INSURER_SECTIONS = [
   {
     label: "Review",
     links: [
-      { href: "/insurance", label: "Operations", icon: Activity, badge: "open" as const },
-      { href: "/insurance/cases", label: "Case queue", icon: Inbox, badge: "open" as const },
+      {
+        href: "/insurance",
+        label: "Operations",
+        icon: Activity,
+        badge: "open" as const,
+      },
+      {
+        href: "/insurance/cases",
+        label: "Case queue",
+        icon: Inbox,
+        badge: "open" as const,
+      },
     ],
   },
   {
     label: "Intelligence",
     links: [
-      { href: "/insurance/agent", label: "AI agent", icon: Bot, badge: "open" as const },
+      {
+        href: "/insurance/agent",
+        label: "AI agent",
+        icon: Bot,
+        badge: "open" as const,
+      },
       { href: "/insurance/eval", label: "Eval harness", icon: FileSearch },
     ],
   },
   {
     label: "Account",
     links: [
-      { href: "/insurance/notifications", label: "Alerts", icon: Bell, badge: "alerts" as const },
+      {
+        href: "/insurance/notifications",
+        label: "Alerts",
+        icon: Bell,
+        badge: "alerts" as const,
+      },
       { href: "/insurance/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -148,7 +183,9 @@ export function Sidebar({
 
   const nav = (
     <>
-      <div className={`flex items-center px-3 py-4 ${collapsed ? "justify-center" : "justify-between gap-2"}`}>
+      <div
+        className={`flex shrink-0 items-center px-3 py-3 ${collapsed ? "justify-center" : "justify-between gap-2"}`}
+      >
         <BrandMark
           href={home}
           subtitle={`${roleLabel(role)} workspace`}
@@ -165,7 +202,7 @@ export function Sidebar({
       </div>
 
       {!collapsed ? (
-        <div className="mx-3 mb-3 rounded-xl border border-border bg-background/70 px-3 py-2">
+        <div className="mx-3 mb-2 shrink-0 rounded-xl border border-border bg-surface-2/80 px-3 py-1.5">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium">{roleLabel(role)}</p>
             <span className="inline-flex items-center gap-1 text-[11px] text-accent">
@@ -173,24 +210,24 @@ export function Sidebar({
               Live
             </span>
           </div>
-          <p className="mt-0.5 truncate text-[11px] text-muted">
+          <p className="truncate text-[11px] text-muted">
             {profile?.organization_name ??
               (role === "patient" ? "Personal workspace" : "Organization desk")}
           </p>
         </div>
       ) : null}
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-2 pb-3">
+      <nav className="min-h-0 flex-1 space-y-2.5 overflow-hidden px-2">
         {sections.map((section) => (
           <div key={section.label}>
             {collapsed ? (
-              <div className="mx-auto mb-2 h-px w-6 bg-border" />
+              <div className="mx-auto mb-1.5 h-px w-6 bg-border" />
             ) : (
               <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
                 {section.label}
               </p>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {section.links.map((link) => {
                 const active = isActive(pathname, link.href);
                 const LinkIcon = link.icon;
@@ -200,11 +237,11 @@ export function Sidebar({
                     key={link.href}
                     href={link.href}
                     title={collapsed ? link.label : undefined}
-                    className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition ${
+                    className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm transition ${
                       collapsed ? "justify-center px-0" : ""
                     } ${
                       active
-                        ? "bg-accent/12 text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]"
+                        ? "bg-accent/12 text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--cs-accent)_30%,transparent)]"
                         : "text-muted hover:bg-surface-2 hover:text-foreground"
                     }`}
                   >
@@ -230,7 +267,9 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className={`mt-auto space-y-3 border-t border-border px-3 py-3 ${collapsed ? "px-2" : ""}`}>
+      <div
+        className={`mt-auto shrink-0 space-y-2 border-t border-border px-3 py-2.5 ${collapsed ? "px-2" : ""}`}
+      >
         {collapsed ? (
           <div className="flex flex-col items-center gap-2">
             <ThemeToggle compact />
@@ -239,7 +278,9 @@ export function Sidebar({
           <ThemeToggle />
         )}
 
-        <div className={`flex items-center gap-3 ${collapsed ? "flex-col" : ""}`}>
+        <div
+          className={`flex items-center gap-3 ${collapsed ? "flex-col" : ""}`}
+        >
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/12 text-xs font-semibold text-accent">
             {initials(name)}
           </div>
@@ -274,13 +315,13 @@ export function Sidebar({
       {mobileOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm lg:hidden"
+          className="cs-overlay fixed inset-0 z-40 backdrop-blur-sm lg:hidden"
           aria-label="Close sidebar"
           onClick={onCloseMobile}
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-surface/95 shadow-[var(--shadow-panel)] backdrop-blur-xl transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
+        className={`cs-sidebar fixed inset-y-0 left-0 z-50 flex h-svh max-h-svh w-72 flex-col overflow-hidden border-r border-border shadow-[var(--cs-shadow-panel)] backdrop-blur-xl transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:translate-x-0 lg:self-start lg:shadow-none ${
           collapsed ? "lg:w-[4.75rem]" : "lg:w-72"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
@@ -332,7 +373,7 @@ export function AppShell({
         onCloseMobile={() => setMobileOpen(false)}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-border/80 bg-background/70 px-4 py-3 backdrop-blur-md lg:px-6">
+        <header className="cs-header flex items-center justify-between border-b border-border/80 px-4 py-3 backdrop-blur-md lg:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -348,10 +389,16 @@ export function AppShell({
               onClick={toggleCollapsed}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {collapsed ? <ChevronRight size={16} /> : <PanelLeftClose size={16} />}
+              {collapsed ? (
+                <ChevronRight size={16} />
+              ) : (
+                <PanelLeftClose size={16} />
+              )}
             </button>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{pageTitle(pathname)}</p>
+              <p className="truncate text-sm font-medium">
+                {pageTitle(pathname)}
+              </p>
               <p className="truncate text-xs text-muted">
                 {roleLabel(role)} · live workspace
               </p>

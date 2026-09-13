@@ -18,7 +18,9 @@ const EXPECTED = [
 
 export default function EvalPage() {
   const [metrics, setMetrics] = useState<EvalMetric[]>([]);
-  const [note, setNote] = useState("Waiting for an eval run from the AI server.");
+  const [note, setNote] = useState(
+    "Waiting for an eval run from the AI server.",
+  );
 
   useEffect(() => {
     apiFetch<{ metrics: EvalMetric[]; cases?: number }>("/eval")
@@ -32,7 +34,9 @@ export default function EvalPage() {
       })
       .catch(() => {
         setMetrics([]);
-        setNote("Eval results appear only after the AI server publishes a run.");
+        setNote(
+          "Eval results appear only after the AI server publishes a run.",
+        );
       });
   }, []);
 
