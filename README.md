@@ -6,15 +6,15 @@ Claimsure analyzes insurance claim denial documents, retrieves relevant policy r
 
 ## ✨ What It Does
 
-* 📄 Parses insurance claim denial documents
-* 🧠 Uses AI agents to analyze denial reasons
-* 📚 Retrieves relevant policy information using RAG
-* 🔍 Evaluates available evidence and identifies missing documentation
-* 🤖 Makes structured routing decisions based on confidence and safety rules
-* 👤 Escalates uncertain or sensitive cases for human review
-* 🔌 Connects with external applications using MCP
-* ✅ Verifies outcomes before marking workflows as complete
-* 📊 Tracks agent decisions and workflow history
+- 📄 Parses insurance claim denial documents
+- 🧠 Uses AI agents to analyze denial reasons
+- 📚 Retrieves relevant policy information using RAG
+- 🔍 Evaluates available evidence and identifies missing documentation
+- 🤖 Makes structured routing decisions based on confidence and safety rules
+- 👤 Escalates uncertain or sensitive cases for human review
+- 🔌 Connects with external applications using MCP
+- ✅ Verifies outcomes before marking workflows as complete
+- 📊 Tracks agent decisions and workflow history
 
 ---
 
@@ -137,34 +137,34 @@ Insurance Claim Denial
 
 ### 🖥️ Frontend
 
-* Next.js
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
+- Next.js
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
 
 ### ⚙️ Backend
 
-* Node.js
-* Express.js
-* TypeScript
+- Node.js
+- Express.js
+- TypeScript
 
 ### 🧠 AI Server
 
-* Python
-* FastAPI
-* Pydantic
-* AI Agents
-* RAG
-* Embeddings
-* Vector Database
+- Python
+- FastAPI
+- Pydantic
+- AI Agents
+- RAG
+- Embeddings
+- Vector Database
 
 ### 🔌 Integrations
 
-* Model Context Protocol (MCP)
-* Google Drive
-* Gmail
-* Google Sheets
-* Slack
+- Model Context Protocol (MCP)
+- Google Drive
+- Gmail
+- Google Sheets
+- Slack
 
 ---
 
@@ -172,16 +172,16 @@ Insurance Claim Denial
 
 Claimsure is designed with reliability and safety as core priorities.
 
-* Structured AI outputs
-* Schema validation using Pydantic
-* Deterministic logic where AI reasoning is unnecessary
-* Retrieval grounded in policy documents
-* Human-in-the-loop escalation
-* Confidence-based routing
-* Audit logging
-* Idempotent actions
-* Verification after actions
-* Automated evaluation and testing
+- Structured AI outputs
+- Schema validation using Pydantic
+- Deterministic logic where AI reasoning is unnecessary
+- Retrieval grounded in policy documents
+- Human-in-the-loop escalation
+- Confidence-based routing
+- Audit logging
+- Idempotent actions
+- Verification after actions
+- Automated evaluation and testing
 
 ---
 
