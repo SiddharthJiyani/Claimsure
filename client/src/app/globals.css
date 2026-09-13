@@ -300,6 +300,26 @@ button {
   opacity: 0.55;
 }
 
+.cs-btn-danger {
+  background: var(--cs-danger);
+  color: var(--cs-on-danger);
+  border: 1px solid color-mix(in oklab, var(--cs-danger) 80%, #7f1d1d);
+}
+
+.cs-btn-danger:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.cs-btn-success {
+  background: var(--cs-success);
+  color: #ffffff;
+  border: 1px solid color-mix(in oklab, var(--cs-success) 80%, #064e3b);
+}
+
+.cs-btn-success:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
 .cs-btn-ghost {
   border: 1px solid var(--cs-border);
   color: var(--cs-fg);

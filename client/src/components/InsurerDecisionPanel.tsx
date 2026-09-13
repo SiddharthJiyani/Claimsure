@@ -167,39 +167,42 @@ export function InsurerDecisionPanel({ claim, onChanged }: InsurerDecisionPanelP
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-xs text-muted">
               <Send size={13} className="text-accent" />
-              <span>Recipient: <strong>Patient</strong> (via email & dashboard)</span>
+              <span>
+                Recipient: <strong className="text-foreground">Patient</strong>{" "}
+                (email and dashboard)
+              </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
               <button
                 type="button"
                 disabled={busy !== null}
                 onClick={() => void handleClaimDecision("REJECTED")}
-                className="inline-flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 hover:bg-rose-500/20 disabled:opacity-50 transition"
+                className="cs-btn cs-btn-danger w-full sm:w-auto"
               >
                 <XCircle size={16} />
                 {busy === "REJECTED"
                   ? "Rejecting…"
                   : hasPendingAppeal
-                  ? "Uphold Rejection"
-                  : "Reject Claim"}
+                    ? "Uphold rejection"
+                    : "Reject claim"}
               </button>
 
               <button
                 type="button"
                 disabled={busy !== null}
                 onClick={() => void handleClaimDecision("ACCEPTED")}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition shadow-sm"
+                className="cs-btn cs-btn-success w-full sm:w-auto"
               >
                 <CheckCircle2 size={16} />
                 {busy === "ACCEPTED"
                   ? "Approving…"
                   : hasPendingAppeal
-                  ? "Accept Appeal (Overturn)"
-                  : "Accept Claim (Approve)"}
+                    ? "Accept appeal"
+                    : "Accept claim"}
               </button>
             </div>
           </div>
