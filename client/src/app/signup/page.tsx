@@ -13,9 +13,9 @@ import {
 } from "@/components/AuthSplit";
 import { GoogleButton } from "@/components/GoogleButton";
 import { createClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured, siteUrl } from "@/lib/env";
+import { isSupabaseConfigured, siteUrl, apiUrl } from "@/lib/env";
 import { rememberPendingRole } from "@/lib/pending-role";
-import { roleHome, type UserRole } from "@/lib/types";
+import { type UserRole } from "@/lib/types";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -43,27 +43,30 @@ export default function SignupPage() {
     setMessage(null);
     try {
       rememberPendingRole(role, organizationName);
-      const supabase = createClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // Call the Express backend /auth/signup API
+      const payload: Record<string, string> = {
         email,
         password,
-        options: {
-          emailRedirectTo: `${siteUrl()}/auth/callback?role=${role}`,
-          data: {
-            full_name: fullName,
-            role,
-            organization_name:
-              role === "insurance_provider" ? organizationName : "",
-          },
-        },
-      });
-      if (signUpError) throw signUpError;
-      if (!data.session) {
-        setMessage("Check your email to confirm the account, then sign in.");
-        return;
+        full_name: fullName,
+        role,
+      };
+      if (role === "insurance_provider" && organizationName) {
+        payload["organization_name"] = organizationName;
       }
-      router.push(roleHome(role));
-      router.refresh();
+      const res = await fetch(`${apiUrl()}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json() as { success: boolean; error?: { code?: string; message?: string } | string };
+      if (!res.ok || !body.success) {
+        const errMsg = typeof body.error === 'string'
+          ? body.error
+          : body.error?.message ?? "Sign up failed";
+        throw new Error(errMsg);
+      }
+      setMessage("Account created! Sign in to continue.");
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {

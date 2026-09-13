@@ -14,6 +14,7 @@ export const signUpSchema = z.object({
       "Invalid organization ID",
     )
     .optional(),
+  organization_name: z.string().min(1).max(200).optional(),
 });
 
 export const loginSchema = z.object({

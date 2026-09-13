@@ -6,7 +6,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import { getAnonClient, getServiceClient } from '../database/supabase.js';
-import { createProfile, getProfileById } from '../database/queries/profiles.js';
+import { upsertProfile, getProfileById } from '../database/queries/profiles.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
 import { AuthenticationError, ConflictError } from '../lib/errors.js';
 import type { AuthUser } from '../types/index.js';
@@ -43,13 +43,27 @@ export async function signUp(
 
     if (!data.user) throw new AuthenticationError("Failed to create user");
 
-    // Create the profile row with role + org scoping
-    const profile = await createProfile({
+    // Resolve organization_id for insurance_provider accounts
+    let organization_id: string | undefined = body.organization_id;
+    if (!organization_id && body.role === 'insurance_provider' && body.organization_name) {
+      const { data: orgData, error: orgError } = await getServiceClient()
+        .from('organizations')
+        .insert({ name: body.organization_name, type: 'insurance_provider' })
+        .select('id')
+        .single();
+      if (orgError || !orgData) {
+        throw new Error('Failed to create organization: ' + (orgError?.message ?? 'unknown'));
+      }
+      organization_id = orgData.id as string;
+    }
+
+    // Upsert the profile row — the Supabase trigger may have already created it
+    const profile = await upsertProfile({
       id: data.user.id,
       email: body.email,
       full_name: body.full_name,
       role: body.role,
-      ...(body.organization_id !== undefined ? { organization_id: body.organization_id } : {}),
+      ...(organization_id !== undefined ? { organization_id } : {}),
     });
 
     sendCreated(
