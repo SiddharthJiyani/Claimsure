@@ -11,7 +11,7 @@ import {
 } from "@/components/AuthSplit";
 import { GoogleButton } from "@/components/GoogleButton";
 import { createClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured, siteUrl } from "@/lib/env";
+import { isSupabaseConfigured, siteUrl, apiUrl } from "@/lib/env";
 import { isUserRole, roleHome } from "@/lib/types";
 
 function LoginForm() {
@@ -29,24 +29,39 @@ function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Call the Express backend /auth/login API
+      const res = await fetch(`${apiUrl()}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-      if (signInError) throw signInError;
-      const { data: auth } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", auth.user?.id ?? "")
-        .maybeSingle();
-      if (!profile || !isUserRole(profile.role)) {
+      const body = await res.json() as {
+        success: boolean;
+        data?: {
+          session: { access_token: string; refresh_token: string };
+          user: { role: string };
+        };
+        error?: { code?: string; message?: string } | string;
+      };
+      if (!res.ok || !body.success || !body.data) {
+        const errMsg = typeof body.error === 'string'
+          ? body.error
+          : body.error?.message ?? "Sign in failed";
+        throw new Error(errMsg);
+      }
+      // Write the tokens into Supabase SSR cookies so the proxy can protect routes
+      const supabase = createClient();
+      await supabase.auth.setSession({
+        access_token: body.data.session.access_token,
+        refresh_token: body.data.session.refresh_token,
+      });
+      const role = body.data.user.role;
+      if (!isUserRole(role)) {
         router.push("/");
         router.refresh();
         return;
       }
-      router.push(next.startsWith("/") ? next : roleHome(profile.role));
+      router.push(next.startsWith("/") ? next : roleHome(role));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
