@@ -163,20 +163,23 @@ export function Sidebar({
     fullName: profile?.full_name,
     email: profile?.email ?? user?.email,
   });
+  const casesList = Array.isArray(cases) ? cases : [];
+  const itemsList = Array.isArray(items) ? items : [];
+
   const openCount = useMemo(
     () =>
-      cases.filter((claim) => !["RESOLVED", "CLOSED"].includes(claim.status))
+      casesList.filter((claim) => !["RESOLVED", "CLOSED"].includes(claim?.status))
         .length,
-    [cases],
+    [casesList],
   );
   const unread = useMemo(
-    () => items.filter((item) => !item.is_read).length,
-    [items],
+    () => itemsList.filter((item) => !item?.is_read).length,
+    [itemsList],
   );
 
   function badgeFor(kind?: "open" | "all" | "alerts") {
     if (kind === "open") return openCount;
-    if (kind === "all") return cases.length;
+    if (kind === "all") return casesList.length;
     if (kind === "alerts") return unread;
     return 0;
   }

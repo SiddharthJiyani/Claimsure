@@ -37,16 +37,17 @@ export default function PatientDashboardPage() {
     }
   }
 
+  const casesList = Array.isArray(cases) ? cases : [];
   const stats = useMemo(
     () => ({
-      open: cases.filter(
-        (claim) => !["RESOLVED", "CLOSED"].includes(claim.status),
+      open: casesList.filter(
+        (claim) => !["RESOLVED", "CLOSED"].includes(claim?.status),
       ).length,
-      action: cases.filter((claim) => claim.status === "ACTION_REQUIRED")
+      action: casesList.filter((claim) => claim?.status === "ACTION_REQUIRED")
         .length,
-      resolved: cases.filter((claim) => claim.status === "RESOLVED").length,
+      resolved: casesList.filter((claim) => claim?.status === "RESOLVED").length,
     }),
-    [cases],
+    [casesList],
   );
 
   return (

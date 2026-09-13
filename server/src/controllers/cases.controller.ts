@@ -353,33 +353,34 @@ export async function processCase(
           }
         }
 
-        // Notify insurer of result
+        // Notify insurer — analysis is ready, they need to Accept or Reject
         notifyInsurersByOrg(
           existing.insurer_org_id,
           id,
-          result.route_decision === "human_review"
-            ? "approval_request"
-            : result.final_node === "escalated"
-              ? "escalation"
-              : "case_update",
-          "AI Analysis Complete",
-          `Agent completed analysis for case ${existing.case_number}. Decision: ${result.route_decision}`,
+          "analysis_ready_for_insurer",
+          "Claim Analysis Ready — Decision Required",
+          `AI analysis complete for case ${existing.case_number}. Please review and Accept or Reject.`,
           {
             caseNumber: existing.case_number,
-            agentSummary: result.appeal_text ?? "",
+            agentSummary: result.appeal_text ?? `Analysis complete for ${existing.service_type}. Route: ${result.route_decision ?? "human_review"}.`,
             confidence: result.confidence,
             serviceType: existing.service_type,
           },
         ).catch(() => {});
 
-        // Notify patient
+        // Notify patient — their claim has been analyzed, insurer will decide
         notifyPatient(
           existing.patient_id,
           id,
-          "case_update",
-          "Your Case Is Being Processed",
-          `We're reviewing case ${existing.case_number}. You'll be notified when action is required.`,
-          { caseNumber: existing.case_number },
+          "analysis_ready_for_insurer",
+          "Your Claim Has Been Analyzed",
+          `Analysis for case ${existing.case_number} is complete. Your insurer will now review and make their decision.`,
+          {
+            caseNumber: existing.case_number,
+            serviceType: existing.service_type,
+            agentSummary: result.appeal_text ?? `Policy evaluation completed for ${existing.service_type}.`,
+            confidence: result.confidence,
+          },
         ).catch(() => {});
       })
       .catch((err) => {

@@ -148,6 +148,63 @@ def rag_search(
         for clause in result.get("matched_clauses", [])
     ]
 
+@app.get("/api/policies")
+def list_policies_endpoint():
+    """List all ingested policy documents and their indexed clauses."""
+    return {
+        "success": True,
+        "policies": policy_retriever.list_policies()
+    }
+
+@app.post("/api/policies/upload")
+async def upload_policy_endpoint(
+    file: UploadFile = File(...),
+    payer_id: Optional[str] = Form(None),
+    org_name: Optional[str] = Form(None),
+):
+    """
+    Insurance providers upload their policy document (PDF, Markdown, or text).
+    Document is parsed, chunked, embedded, and added to the RAG policy corpus.
+    """
+    try:
+        file_bytes = await file.read()
+        filename = file.filename or "uploaded_policy.md"
+
+        # Save raw policy document to policies dir
+        policies_dir = policy_retriever.policies_dir
+        os.makedirs(policies_dir, exist_ok=True)
+        save_path = os.path.join(policies_dir, filename)
+        with open(save_path, "wb") as f:
+            f.write(file_bytes)
+
+        # Extract text & chunk
+        from app.services.document_parser import DocumentParser
+        from app.rag.chunker import chunk_policy_text
+
+        text = DocumentParser.extract_text(file_bytes, filename)
+        if not text.strip():
+            try:
+                text = file_bytes.decode("utf-8", errors="ignore")
+            except Exception:
+                pass
+
+        pid = (payer_id or org_name or os.path.splitext(filename)[0]).lower().replace(" ", "_")
+        chunks = chunk_policy_text(text, filename, pid)
+        chunk_dicts = [c.to_dict() for c in chunks]
+
+        # Add to retriever & embeddings store
+        policy_retriever.add_chunks(chunk_dicts)
+
+        return {
+            "success": True,
+            "filename": filename,
+            "payer_id": pid,
+            "clauses_indexed": len(chunks),
+            "message": f"Successfully ingested {len(chunks)} policy clauses into RAG knowledge base for {pid}."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to ingest policy: {str(e)}")
+
 @app.post("/api/workflow/verify")
 async def verify_endpoint(payload: Dict[str, Any]):
     """

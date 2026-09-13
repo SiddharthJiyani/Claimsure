@@ -87,6 +87,10 @@ export function PrescriptionUploadModal({
       setError("Confirm the service you want to claim.");
       return;
     }
+    if (!insurerOrgId.trim()) {
+      setError("Insurance provider is compulsory. Please select your insurance provider to proceed.");
+      return;
+    }
     setCreating(true);
     setError(null);
     try {
@@ -208,16 +212,18 @@ export function PrescriptionUploadModal({
             ) : null}
 
             <label className="block text-sm font-medium">
-              Health provider
+              <div className="flex items-center justify-between">
+                <span>Insurance Provider <span className="text-danger">*</span></span>
+                <span className="text-xs font-semibold text-danger">Compulsory</span>
+              </div>
               <select
+                required
                 value={insurerOrgId}
                 onChange={(event) => setInsurerOrgId(event.target.value)}
-                className="cs-input mt-1.5"
+                className="cs-input mt-1.5 border-accent/40"
               >
                 <option value="">
-                  {organizations.length
-                    ? "Select a health provider"
-                    : "Default provider (first available)"}
+                  Select Insurance Provider (Required)
                 </option>
                 {organizations.map((org) => (
                   <option key={org.id} value={org.id}>

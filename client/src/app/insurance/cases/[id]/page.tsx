@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Bot } from "lucide-react";
 import { AgentTrace } from "@/components/AgentTrace";
-import { ApprovalCard } from "@/components/ApprovalCard";
+import { InsurerDecisionPanel } from "@/components/InsurerDecisionPanel";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { ConnectedServicesPanel } from "@/components/ConnectedServicesPanel";
 import { ErrorCallout } from "@/components/ErrorCallout";
@@ -247,17 +247,10 @@ export default function InsuranceCasePage() {
         ) : null}
       </section>
 
-      {appeal ? (
-        <ApprovalCard
-          appeal={appeal}
-          caseId={claim.id}
-          onChanged={() => void load()}
-        />
-      ) : (
-        <div className="cs-panel rounded-2xl px-5 py-6 text-sm text-muted">
-          No appeal draft yet. Trigger the agent after evidence is complete.
-        </div>
-      )}
+      <InsurerDecisionPanel
+        claim={claim}
+        onChanged={() => void load()}
+      />
 
       <section className="cs-panel rounded-2xl p-5">
         <p className="cs-kicker">Audit trail</p>

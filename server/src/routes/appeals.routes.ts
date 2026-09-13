@@ -1,15 +1,20 @@
+/**
+ * Appeals routes — role-correct model:
+ *
+ *   GET  /api/cases/:id/appeal     → Both roles can view
+ *   GET  /api/cases/:id/appeals    → List all appeals (both roles)
+ *   POST /api/cases/:id/appeal     → Patient only: submit an appeal after rejection
+ */
+
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import {
   getAppeal,
-  createNewAppeal,
-  updateAppeal,
+  submitPatientAppeal,
+  getAppealsForCase,
+  submitAppealSchema,
 } from "../controllers/appeals.controller.js";
-import {
-  createAppealSchema,
-  updateAppealSchema,
-} from "../validators/appeals.validator.js";
 
 const router: Router = Router({ mergeParams: true });
 
@@ -17,23 +22,21 @@ router.use(requireAuth);
 
 /**
  * GET /api/cases/:id/appeal
- * Get the current appeal for a case.
+ * Get the latest appeal for a case. Both patients (own) and insurers (org) can view.
  */
 router.get("/", getAppeal);
 
 /**
- * POST /api/cases/:id/appeal
- * Create an appeal for a case. Insurance providers only.
- * Body: { appeal_text?, citations? }
+ * GET /api/cases/:id/appeals
+ * List all appeals for a case.
  */
-router.post("/", validate(createAppealSchema), createNewAppeal);
+router.get("/all", getAppealsForCase);
 
 /**
- * PATCH /api/cases/:id/appeal/:appealId
- * Update appeal status: PENDING_REVIEW → APPROVED → SUBMITTED or REJECTED.
- * Insurance providers only.
- * Body: { status, appeal_text?, citations? }
+ * POST /api/cases/:id/appeal
+ * PATIENT ONLY: Submit an appeal when their claim was rejected.
+ * Body: { appeal_text: string, citations?: [...] }
  */
-router.patch("/:appealId", validate(updateAppealSchema), updateAppeal);
+router.post("/", validate(submitAppealSchema), submitPatientAppeal);
 
 export default router;

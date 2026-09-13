@@ -8,6 +8,7 @@ import { CaseTimeline } from "@/components/CaseTimeline";
 import { DocumentList } from "@/components/DocumentList";
 import { ErrorCallout } from "@/components/ErrorCallout";
 import { EvidencePanel } from "@/components/EvidencePanel";
+import { PatientAppealPanel } from "@/components/PatientAppealPanel";
 import { WorkspaceFrame } from "@/components/PageHeader";
 import { QueueSkeleton } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -183,6 +184,11 @@ export default function PatientCasePage() {
           </div>
         </section>
       </div>
+
+      <PatientAppealPanel
+        claim={claim}
+        onChanged={() => void load()}
+      />
 
       <section className="cs-panel rounded-2xl p-5">
         <p className="cs-kicker">Status timeline</p>
