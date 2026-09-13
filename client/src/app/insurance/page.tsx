@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Activity, AlertTriangle, Bot, CheckCircle2, Inbox } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Bot,
+  CheckCircle2,
+  Inbox,
+} from "lucide-react";
 import { CaseQueueTable } from "@/components/CaseQueueTable";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorCallout } from "@/components/ErrorCallout";
@@ -103,7 +109,11 @@ export default function InsuranceDashboardPage() {
           hint="Ready for a human decision"
           icon={AlertTriangle}
         />
-        <StatCard label="Agent running" value={stats.analyzing} icon={Activity} />
+        <StatCard
+          label="Agent running"
+          value={stats.analyzing}
+          icon={Activity}
+        />
         <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle2} />
       </div>
 

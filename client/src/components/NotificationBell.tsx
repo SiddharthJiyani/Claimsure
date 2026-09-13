@@ -69,13 +69,13 @@ export function NotificationBell() {
       >
         <Bell size={18} />
         {unread > 0 ? (
-          <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] text-white">
+          <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] text-[color:var(--cs-on-danger)]">
             {unread}
           </span>
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
+        <div className="cs-popover absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-2xl border border-border">
           <div className="flex items-center justify-between border-b border-border px-3 py-2 text-sm font-medium">
             Alerts
             <Link

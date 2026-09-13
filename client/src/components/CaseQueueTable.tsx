@@ -29,7 +29,7 @@ export function CaseQueueTable({
           return (
             <li
               key={claim.id}
-              className="grid items-center gap-3 border-t border-border/80 px-4 py-3 first:border-t-0 md:grid-cols-[7rem_1fr_10rem_6.5rem_auto]"
+              className="grid items-center gap-3 border-t border-border/80 px-4 py-3 transition hover:bg-surface-2/70 first:border-t-0 md:grid-cols-[7rem_1fr_10rem_6.5rem_auto]"
             >
               <Link
                 href={hrefFor(claim)}

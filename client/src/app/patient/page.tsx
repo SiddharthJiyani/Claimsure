@@ -24,9 +24,11 @@ export default function PatientDashboardPage() {
 
   const stats = useMemo(
     () => ({
-      open: cases.filter((claim) => !["RESOLVED", "CLOSED"].includes(claim.status))
+      open: cases.filter(
+        (claim) => !["RESOLVED", "CLOSED"].includes(claim.status),
+      ).length,
+      action: cases.filter((claim) => claim.status === "ACTION_REQUIRED")
         .length,
-      action: cases.filter((claim) => claim.status === "ACTION_REQUIRED").length,
       resolved: cases.filter((claim) => claim.status === "RESOLVED").length,
     }),
     [cases],
@@ -59,9 +61,21 @@ export default function PatientDashboardPage() {
 
       <div className="cs-panel grid gap-0 overflow-hidden rounded-2xl md:grid-cols-3">
         {[
-          ["01", "Submit the denied service", "Start from the denial or pending prior-auth request."],
-          ["02", "Upload missing records", "Clinical notes and orders the payer still needs."],
-          ["03", "Watch status move", "Action required, appeal, or resolved — in one timeline."],
+          [
+            "01",
+            "Submit the denied service",
+            "Start from the denial or pending prior-auth request.",
+          ],
+          [
+            "02",
+            "Upload missing records",
+            "Clinical notes and orders the payer still needs.",
+          ],
+          [
+            "03",
+            "Watch status move",
+            "Action required, appeal, or resolved — in one timeline.",
+          ],
         ].map(([step, title, copy]) => (
           <div
             key={step}
@@ -95,11 +109,17 @@ export default function PatientDashboardPage() {
             <FileUp size={18} />
           </span>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold">Submit a denied or pending service</h2>
+            <h2 className="text-lg font-semibold">
+              Submit a denied or pending service
+            </h2>
             <p className="mt-1 text-sm text-muted">
-              Enter the service name from the denial letter. You can attach evidence after the claim is created.
+              Enter the service name from the denial letter. You can attach
+              evidence after the claim is created.
             </p>
-            <form onSubmit={createCase} className="mt-4 flex flex-col gap-3 md:flex-row">
+            <form
+              onSubmit={createCase}
+              className="mt-4 flex flex-col gap-3 md:flex-row"
+            >
               <input
                 required
                 value={serviceType}
@@ -107,7 +127,11 @@ export default function PatientDashboardPage() {
                 placeholder="Service on the denial, e.g. MRI lumbar spine"
                 className="cs-input flex-1"
               />
-              <button type="submit" disabled={busy} className="cs-btn cs-btn-primary">
+              <button
+                type="submit"
+                disabled={busy}
+                className="cs-btn cs-btn-primary"
+              >
                 {busy ? "Submitting…" : "Create claim"}
               </button>
             </form>

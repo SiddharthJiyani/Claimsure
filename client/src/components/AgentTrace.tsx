@@ -21,7 +21,7 @@ export function AgentTrace({ states }: { states: AgentState[] }) {
             Node: {state.current_node}
             {state.is_dry_run ? " · dry run" : ""}
           </summary>
-          <pre className="mt-3 overflow-x-auto text-xs text-muted">
+          <pre className="cs-code mt-3 overflow-x-auto rounded-lg p-3 text-xs text-muted">
             {JSON.stringify(state.state_data, null, 2)}
           </pre>
         </details>

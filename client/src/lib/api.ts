@@ -1,7 +1,10 @@
 import { apiUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/client";
 
-export async function appFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function appFetch<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");

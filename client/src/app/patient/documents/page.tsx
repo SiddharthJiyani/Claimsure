@@ -34,7 +34,9 @@ export default function PatientDocumentsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {withDocs.map((claim) => (
             <section key={claim.id} className="cs-panel rounded-2xl p-5">
-              <p className="font-mono text-xs text-muted">{claim.case_number}</p>
+              <p className="font-mono text-xs text-muted">
+                {claim.case_number}
+              </p>
               <h2 className="mt-1 font-semibold">{claim.service_type}</h2>
               <div className="mt-4">
                 <EvidencePanel documents={claim.documents ?? []} />

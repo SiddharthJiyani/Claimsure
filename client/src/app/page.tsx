@@ -70,7 +70,7 @@ export default async function Home() {
               {NODES.map((node, index) => (
                 <li
                   key={node}
-                  className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-2xl border border-border bg-surface-2/80 px-3 py-2 text-sm"
                 >
                   <span className="text-muted">
                     {String(index + 1).padStart(2, "0")}
@@ -120,7 +120,7 @@ export default async function Home() {
             {NODES.map((node) => (
               <div
                 key={node}
-                className="rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm"
+                className="rounded-2xl border border-border bg-surface-2/80 px-4 py-3 text-sm"
               >
                 {node}
               </div>

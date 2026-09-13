@@ -11,7 +11,7 @@ export function BrandMark({
 }) {
   return (
     <Link href={href} className="flex min-w-0 items-center gap-3">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-[15px] font-bold text-[color:var(--accent-ink)]">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-[15px] font-bold text-[color:var(--cs-accent-ink)]">
         C
       </span>
       {compact ? (
@@ -22,7 +22,9 @@ export function BrandMark({
             Claimsure
           </span>
           {subtitle ? (
-            <span className="block truncate text-xs text-muted">{subtitle}</span>
+            <span className="block truncate text-xs text-muted">
+              {subtitle}
+            </span>
           ) : null}
         </span>
       )}

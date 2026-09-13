@@ -72,8 +72,8 @@ export function SettingsPanel() {
         <div className="mt-5 border-t border-border pt-4">
           <p className="text-xs text-muted">Appearance</p>
           <p className="mt-1 mb-3 text-sm text-muted">
-            Switch the workspace between light and dark. Your choice is saved on
-            this device.
+            Light theme uses a clinical white desk. Dark theme keeps the night
+            operations look. The choice is saved on this device.
           </p>
           <ThemeToggle />
         </div>
