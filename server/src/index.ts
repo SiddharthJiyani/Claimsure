@@ -1,31 +1,9 @@
-<<<<<<< HEAD
-import 'dotenv/config';
-import express, { type Express } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
-=======
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import { isSupabaseConfigured } from "./database/supabase.js";
-import { errorHandler } from "./middleware/error-handler.js";
-import authRouter from "./routes/auth.js";
-import casesRouter from "./routes/cases.js";
-import documentsRouter from "./routes/documents.js";
-import appealsRouter from "./routes/appeals.js";
-import notificationsRouter from "./routes/notifications.js";
-import evalRouter from "./routes/eval.js";
-import demoRouter from "./routes/demo.js";
-
 import "dotenv/config";
-import express from "express";
+import express, { type Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
->>>>>>> 8e03df3be291ef26f96390f030b1d64f10bb0d5d
 
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
