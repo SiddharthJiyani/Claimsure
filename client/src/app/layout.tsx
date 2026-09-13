@@ -4,7 +4,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
 
-const themeBoot = `(function(){try{var t=localStorage.getItem("claimsure-theme")==="light"?"light":"dark";var r=document.documentElement;r.setAttribute("data-theme",t);r.style.colorScheme=t;r.classList.toggle("light",t==="light");r.classList.toggle("dark",t==="dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
+const themeBoot = `(function(){try{var t=localStorage.getItem("claimsure-theme")==="light"?"light":"dark";var r=document.documentElement;var light=t==="light";r.setAttribute("data-theme",t);r.style.colorScheme=t;r.style.backgroundColor=light?"#f3f6fb":"#070b12";r.style.setProperty("--cs-bg",light?"#f3f6fb":"#070b12");r.style.setProperty("--cs-fg",light?"#102033":"#f3f6fb");r.style.setProperty("--cs-surface",light?"#ffffff":"#0e1522");r.style.setProperty("--cs-surface-2",light?"#e8eef6":"#151d2d");r.style.setProperty("--cs-sidebar",light?"#ffffff":"#0b1220");r.style.setProperty("--cs-border",light?"#d0dae8":"#243247");r.style.setProperty("--cs-muted",light?"#4b5d73":"#9aabc2");r.classList.toggle("light",light);r.classList.toggle("dark",!light);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
