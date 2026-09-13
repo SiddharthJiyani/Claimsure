@@ -19,7 +19,7 @@ export default function InsuranceCasesPage() {
       {cases.length === 0 ? (
         <EmptyState
           title="No org cases"
-          description="Load demo cases from Operations after a patient account exists."
+          description="Cases arrive when a patient in your organization submits a denied or pending service."
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">

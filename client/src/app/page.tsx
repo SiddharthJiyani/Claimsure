@@ -60,11 +60,11 @@ export default async function Home() {
           </div>
           <div className="cs-panel rounded-3xl p-5">
             <p className="text-xs uppercase tracking-[0.18em] text-muted">
-              Agent trace · R1007
+              Denial recovery workflow
             </p>
-            <p className="mt-2 text-lg font-semibold">MRI Lumbar Spine</p>
+            <p className="mt-2 text-lg font-semibold">Nine-node agent</p>
             <p className="text-sm text-muted">
-              Medical necessity gap · policy A §4.2
+              Parse → retrieve policy → scan evidence → decide
             </p>
             <ol className="mt-5 space-y-2">
               {NODES.map((node, index) => (
@@ -76,17 +76,6 @@ export default async function Home() {
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span className="flex-1 px-3">{node}</span>
-                  <span
-                    className={
-                      index < 4
-                        ? "text-success"
-                        : index === 4
-                          ? "text-accent"
-                          : "text-muted"
-                    }
-                  >
-                    {index < 4 ? "done" : index === 4 ? "live" : "queued"}
-                  </span>
                 </li>
               ))}
             </ol>

@@ -19,7 +19,7 @@ export default function PatientClaimsPage() {
       {cases.length === 0 ? (
         <EmptyState
           title="No claims yet"
-          description="Submit a claim from Overview, or load the demo set there."
+          description="Submit a denied or pending service from Overview. This list stays empty until you do."
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">

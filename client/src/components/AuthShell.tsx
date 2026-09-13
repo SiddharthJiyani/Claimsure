@@ -11,7 +11,7 @@ export function AuthShell({
 }) {
   return (
     <div className="auth-grid min-h-full">
-      <MarketingNav />
+      <MarketingNav /> 
       <div className="grid min-h-[calc(100vh-4rem)] place-items-center px-4 py-10">
         <div className="cs-panel w-full max-w-lg rounded-3xl p-8">
           <p className="text-xs uppercase tracking-[0.18em] text-accent">

@@ -69,7 +69,7 @@ export default function InsuranceAgentPage() {
       {runnable.length === 0 ? (
         <EmptyState
           title="No runnable cases"
-          description="Open Operations and load demo cases to exercise the agent."
+          description="The agent runs on real org cases. Submit or wait for a patient claim first."
         />
       ) : (
         <div className="space-y-3">
